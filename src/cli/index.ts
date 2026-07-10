@@ -16,8 +16,15 @@ import { developerAgent } from '../agents/builtin/developer.js';
 import { reviewerAgent } from '../agents/builtin/reviewer.js';
 import { createMCPClient } from '../mcp/client.js';
 import { createMCPServer } from '../mcp/server.js';
+import { createWorkflowEngine } from '../workflows/engine.js';
+import { codeReviewPipeline } from '../workflows/builtin/code-review-pipeline.js';
+import { createSpecParser } from '../spec/parser.js';
+import { createSpecValidator } from '../spec/validator.js';
+import { createSpecGenerator } from '../spec/generator.js';
 import type { AgentDefinition, ToolExecutor } from '../agents/types.js';
 import type { ToolResult } from '../core/ai/types.js';
+import type { WorkflowDefinition } from '../workflows/types.js';
+import type { SpecGenerationTarget } from '../spec/types.js';
 
 const config = loadConfig();
 const logger = createLogger(config.logLevel);
@@ -27,13 +34,21 @@ const pluginLoader = createPluginLoader();
 const pluginManager = createPluginManager(pluginLoader);
 const skillManager = createSkillManager();
 const agentRunner = createAgentRunner();
+const workflowEngine = createWorkflowEngine();
+const specParser = createSpecParser();
+const specValidator = createSpecValidator();
+const specGenerator = createSpecGenerator();
 
-// Registrar skills y agentes built-in
+// Registrar skills, agentes y workflows built-in
 skillManager.register(codeReviewSkill);
 
 const builtInAgents: Record<string, AgentDefinition> = {
   developer: developerAgent,
   reviewer: reviewerAgent,
+};
+
+const builtInWorkflows: Record<string, WorkflowDefinition> = {
+  'code-review': codeReviewPipeline,
 };
 
 const program = new Command();
@@ -356,7 +371,6 @@ agentCommand
     console.log();
     
     try {
-      // Configurar AI
       const factory = createConnectorFactory();
       const providerName = options.provider ?? config.defaultProvider;
       const providerConfig = config.providers[providerName as keyof typeof config.providers];
@@ -376,12 +390,9 @@ agentCommand
       
       const aiManager = createAIManager(registry);
       
-      // Tool executor simple (sin MCPs reales por ahora)
       const toolExecutor: ToolExecutor = {
         execute: async (name: string, args: Record<string, unknown>): Promise<ToolResult> => {
           console.log(chalk.blue(`  🔧 Tool: ${name}`), chalk.gray(JSON.stringify(args)));
-          
-          // Placeholder: simular ejecución de herramientas
           return {
             toolCallId: name,
             content: `Tool '${name}' executed successfully with args: ${JSON.stringify(args)}`,
@@ -390,7 +401,6 @@ agentCommand
         listTools: () => agent.tools ?? [],
       };
       
-      // Ejecutar agente
       const result = await agentRunner.run(agent, objective, {
         session: {
           id: `cli_${Date.now()}`,
@@ -465,7 +475,6 @@ mcpCommand
       
       console.log(chalk.green(`✓ Connected to ${name}`));
       
-      // Listar herramientas disponibles
       const tools = await client.listTools();
       if (tools.length > 0) {
         console.log(chalk.cyan('\nAvailable tools:'));
@@ -489,7 +498,6 @@ mcpCommand
     try {
       const server = createMCPServer();
       
-      // Registrar algunas herramientas de ejemplo
       server.registerTool(
         {
           name: 'get_project_info',
@@ -535,7 +543,6 @@ mcpCommand
       console.log(chalk.green('✓ MCP server is running'));
       console.log(chalk.gray('Send JSON-RPC requests via stdin. Press Ctrl+C to stop.'));
       
-      // Mantener el proceso vivo
       process.on('SIGINT', async () => {
         console.log();
         await server.stop();
@@ -567,6 +574,296 @@ mcpCommand
       console.log(`  ${statusIcon} ${chalk.bold(server.name)}`);
       console.log(chalk.gray(`    Command: ${server.command}`));
       console.log(chalk.gray(`    Status: ${server.enabled ? 'configured' : 'disabled'}`));
+      console.log();
+    }
+  });
+
+// Comando: workflow
+const workflowCommand = program
+  .command('workflow')
+  .description('Manage and run workflows');
+
+workflowCommand
+  .command('list')
+  .description('List available workflows')
+  .action(() => {
+    console.log(chalk.cyan('Available workflows:\n'));
+    
+    for (const [name, workflow] of Object.entries(builtInWorkflows)) {
+      console.log(`  ${chalk.bold(name)} v${workflow.version}`);
+      console.log(chalk.gray(`    ${workflow.description}`));
+      console.log(chalk.gray(`    Steps: ${workflow.steps.length}`));
+      if (workflow.triggers) {
+        console.log(chalk.gray(`    Triggers: ${workflow.triggers.map(t => t.type).join(', ')}`));
+      }
+      console.log();
+    }
+  });
+
+workflowCommand
+  .command('run <name>')
+  .description('Run a workflow')
+  .option('-p, --provider <name>', 'AI provider to use')
+  .action(async (name: string, options: { provider?: string }) => {
+    const workflow = builtInWorkflows[name];
+    
+    if (!workflow) {
+      console.log(chalk.red(`Unknown workflow: ${name}`));
+      console.log(chalk.gray(`Available workflows: ${Object.keys(builtInWorkflows).join(', ')}`));
+      return;
+    }
+    
+    console.log(chalk.cyan(`Running workflow: ${workflow.name}`));
+    console.log(chalk.gray(`Description: ${workflow.description}`));
+    console.log(chalk.gray(`Steps: ${workflow.steps.length}`));
+    console.log();
+    
+    try {
+      // Configurar AI
+      const factory = createConnectorFactory();
+      const providerName = options.provider ?? config.defaultProvider;
+      const providerConfig = config.providers[providerName as keyof typeof config.providers];
+      
+      if (!providerConfig || !providerConfig.enabled) {
+        console.log(chalk.red(`Provider '${providerName}' is not enabled.`));
+        return;
+      }
+      
+      const connector = factory.create(providerName as any, providerConfig);
+      const registry = createAIRegistry();
+      registry.register(connector);
+      
+      const aiManager = createAIManager(registry);
+      
+      const toolExecutor: ToolExecutor = {
+        execute: async (name: string, args: Record<string, unknown>): Promise<ToolResult> => {
+          console.log(chalk.blue(`  🔧 Tool: ${name}`), chalk.gray(JSON.stringify(args)));
+          return {
+            toolCallId: name,
+            content: `Tool '${name}' executed`,
+          };
+        },
+        listTools: () => [],
+      };
+      
+      const result = await workflowEngine.execute(workflow, {
+        session: {
+          id: `wf_${Date.now()}`,
+          project: process.cwd(),
+          mode: config.mode,
+          provider: providerName as any,
+          startedAt: new Date(),
+          mcpServers: [],
+        },
+        agentRunner,
+        aiManager,
+        toolExecutor,
+        agents: builtInAgents,
+        onEvent: (event) => {
+          switch (event.type) {
+            case 'workflow:start':
+              console.log(chalk.gray('Workflow started'));
+              break;
+            case 'step:start':
+              console.log(chalk.gray(`  ▶ ${event.stepId}`));
+              break;
+            case 'step:complete':
+              console.log(chalk.green(`  ✓ ${event.stepId} completed`));
+              break;
+            case 'step:error':
+              console.log(chalk.red(`  ✗ ${event.stepId} failed`));
+              break;
+            case 'step:skip':
+              console.log(chalk.yellow(`  ↷ ${event.stepId} skipped`));
+              break;
+            case 'workflow:complete':
+              console.log(chalk.green('\n✓ Workflow completed'));
+              break;
+            case 'workflow:error':
+              console.log(chalk.red('\n✗ Workflow failed'));
+              break;
+          }
+        },
+      });
+      
+      if (result.success) {
+        console.log(chalk.gray(`Duration: ${(result.totalDuration / 1000).toFixed(1)}s`));
+        console.log(chalk.gray(`Steps completed: ${result.steps.filter(s => s.success).length}/${result.steps.length}`));
+      } else {
+        console.log(chalk.red(`Error: ${result.error}`));
+      }
+      
+    } catch (error) {
+      console.log(chalk.red('✗ Workflow execution failed:'));
+      console.log(chalk.red((error as Error).message));
+    }
+  });
+
+// Comando: spec
+const specCommand = program
+  .command('spec')
+  .description('Manage specifications (SDD/OpenSpec)');
+
+specCommand
+  .command('parse <file>')
+  .description('Parse a specification file')
+  .action((file: string) => {
+    console.log(chalk.cyan(`Parsing: ${file}`));
+    
+    const result = specParser.parseFile(file);
+    
+    if (!result.success || !result.document) {
+      console.log(chalk.red('Parse failed:'));
+      for (const error of result.errors) {
+        console.log(chalk.red(`  ✗ ${error.message}`));
+      }
+      return;
+    }
+    
+    console.log(chalk.green('✓ Parse successful\n'));
+    console.log(chalk.bold(result.document.metadata.title));
+    console.log(chalk.gray(`Version: ${result.document.metadata.version}`));
+    console.log(chalk.gray(`Format: ${result.document.format}`));
+    console.log(chalk.gray(`Sections: ${result.document.sections.length}`));
+    
+    if (result.warnings.length > 0) {
+      console.log(chalk.yellow(`\nWarnings: ${result.warnings.length}`));
+      for (const warning of result.warnings) {
+        console.log(chalk.yellow(`  ⚠ ${warning.message}`));
+      }
+    }
+    
+    console.log(chalk.cyan('\nSections:'));
+    for (const section of result.document.sections) {
+      console.log(`  ${chalk.bold(section.title)} [${section.type}]`);
+      console.log(chalk.gray(`    ${section.content.slice(0, 100)}${section.content.length > 100 ? '...' : ''}`));
+    }
+  });
+
+specCommand
+  .command('validate <file>')
+  .description('Validate a specification file')
+  .action((file: string) => {
+    console.log(chalk.cyan(`Validating: ${file}`));
+    
+    const parseResult = specParser.parseFile(file);
+    
+    if (!parseResult.success || !parseResult.document) {
+      console.log(chalk.red('Parse failed - cannot validate:'));
+      for (const error of parseResult.errors) {
+        console.log(chalk.red(`  ✗ ${error.message}`));
+      }
+      return;
+    }
+    
+    const validationResult = specValidator.validate(parseResult.document);
+    
+    console.log();
+    console.log(chalk.bold('Validation Summary:'));
+    console.log(chalk.gray(`  Sections: ${validationResult.summary.total}`));
+    console.log(chalk.gray(`  Passed: ${validationResult.summary.passed}`));
+    console.log(chalk.red(`  Failed: ${validationResult.summary.failed}`));
+    console.log(chalk.yellow(`  Warnings: ${validationResult.summary.warnings}`));
+    
+    if (validationResult.errors.length > 0) {
+      console.log(chalk.red('\nErrors:'));
+      for (const error of validationResult.errors) {
+        console.log(chalk.red(`  ✗ [${error.validationId}] ${error.message}`));
+        if (error.location) {
+          console.log(chalk.gray(`    Location: ${error.location}`));
+        }
+      }
+    }
+    
+    if (validationResult.warnings.length > 0) {
+      console.log(chalk.yellow('\nWarnings:'));
+      for (const warning of validationResult.warnings) {
+        console.log(chalk.yellow(`  ⚠ [${warning.validationId}] ${warning.message}`));
+        if (warning.suggestion) {
+          console.log(chalk.gray(`    Suggestion: ${warning.suggestion}`));
+        }
+      }
+    }
+    
+    if (validationResult.valid) {
+      console.log(chalk.green('\n✓ Specification is valid'));
+    } else {
+      console.log(chalk.red('\n✗ Specification has errors'));
+    }
+  });
+
+specCommand
+  .command('generate <file>')
+  .description('Generate code from a specification')
+  .option('-t, --target <target>', 'Generation target')
+  .option('-o, --output <dir>', 'Output directory')
+  .action((file: string, options: { target?: string; output?: string }) => {
+    console.log(chalk.cyan(`Generating from: ${file}`));
+    
+    const parseResult = specParser.parseFile(file);
+    
+    if (!parseResult.success || !parseResult.document) {
+      console.log(chalk.red('Parse failed - cannot generate:'));
+      for (const error of parseResult.errors) {
+        console.log(chalk.red(`  ✗ ${error.message}`));
+      }
+      return;
+    }
+    
+    const target = (options.target ?? 'typescript-types') as SpecGenerationTarget;
+    console.log(chalk.gray(`Target: ${target}`));
+    
+    const genResult = specGenerator.generate({
+      spec: parseResult.document,
+      target,
+      config: {
+        outputDir: options.output,
+      },
+    });
+    
+    if (genResult.success) {
+      console.log(chalk.green(`✓ Generated ${genResult.files.length} files:\n`));
+      
+      for (const file of genResult.files) {
+        console.log(`  ${chalk.bold(file.path)}`);
+        console.log(chalk.gray(`    Language: ${file.language}`));
+        console.log(chalk.gray(`    ${file.description}`));
+        console.log();
+      }
+    } else {
+      console.log(chalk.red('Generation failed:'));
+      for (const error of genResult.errors) {
+        console.log(chalk.red(`  ✗ ${error}`));
+      }
+    }
+    
+    if (genResult.warnings.length > 0) {
+      console.log(chalk.yellow('Warnings:'));
+      for (const warning of genResult.warnings) {
+        console.log(chalk.yellow(`  ⚠ ${warning}`));
+      }
+    }
+  });
+
+specCommand
+  .command('list-targets')
+  .description('List available generation targets')
+  .action(() => {
+    console.log(chalk.cyan('Available generation targets:\n'));
+    
+    const targets: Array<{ name: SpecGenerationTarget; description: string }> = [
+      { name: 'typescript-types', description: 'Generate TypeScript type definitions' },
+      { name: 'openapi-spec', description: 'Generate OpenAPI 3.0 specification' },
+      { name: 'api-scaffold', description: 'Generate Express API scaffold' },
+      { name: 'data-models', description: 'Generate data model classes' },
+      { name: 'test-templates', description: 'Generate test templates' },
+      { name: 'documentation', description: 'Generate markdown documentation' },
+      { name: 'custom', description: 'Custom generation target (requires template)' },
+    ];
+    
+    for (const target of targets) {
+      console.log(`  ${chalk.bold(target.name)}`);
+      console.log(chalk.gray(`    ${target.description}`));
       console.log();
     }
   });
