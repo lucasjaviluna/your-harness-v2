@@ -11,6 +11,13 @@ import { createPluginLoader } from '../plugins/loader.js';
 import { createPluginManager } from '../plugins/manager.js';
 import { createSkillManager } from '../skills/manager.js';
 import { codeReviewSkill } from '../skills/templates/code-review.js';
+import { createAgentRunner } from '../agents/runner.js';
+import { developerAgent } from '../agents/builtin/developer.js';
+import { reviewerAgent } from '../agents/builtin/reviewer.js';
+import { createMCPClient } from '../mcp/client.js';
+import { createMCPServer } from '../mcp/server.js';
+import type { AgentDefinition, ToolExecutor } from '../agents/types.js';
+import type { ToolResult } from '../core/ai/types.js';
 
 const config = loadConfig();
 const logger = createLogger(config.logLevel);
@@ -19,9 +26,15 @@ const logger = createLogger(config.logLevel);
 const pluginLoader = createPluginLoader();
 const pluginManager = createPluginManager(pluginLoader);
 const skillManager = createSkillManager();
+const agentRunner = createAgentRunner();
 
-// Registrar skills built-in
+// Registrar skills y agentes built-in
 skillManager.register(codeReviewSkill);
+
+const builtInAgents: Record<string, AgentDefinition> = {
+  developer: developerAgent,
+  reviewer: reviewerAgent,
+};
 
 const program = new Command();
 
@@ -300,6 +313,261 @@ skillCommand
     } catch (error) {
       console.log(chalk.red('✗ Disable failed:'));
       console.log(chalk.red((error as Error).message));
+    }
+  });
+
+// Comando: agent
+const agentCommand = program
+  .command('agent')
+  .description('Manage and run AI agents');
+
+agentCommand
+  .command('list')
+  .description('List available agents')
+  .action(() => {
+    console.log(chalk.cyan('Available agents:\n'));
+    
+    for (const [name, agent] of Object.entries(builtInAgents)) {
+      console.log(`  ${chalk.bold(name)} v${agent.version}`);
+      console.log(chalk.gray(`    ${agent.description}`));
+      console.log(chalk.gray(`    Tools: ${agent.tools?.map(t => t.name).join(', ') ?? 'none'}`));
+      console.log(chalk.gray(`    Max iterations: ${agent.maxIterations}`));
+      console.log();
+    }
+  });
+
+agentCommand
+  .command('run <agent> <objective>')
+  .description('Run an agent with an objective')
+  .option('-p, --provider <name>', 'AI provider to use')
+  .option('-m, --model <name>', 'Model to use')
+  .action(async (agentName: string, objective: string, options: { provider?: string; model?: string }) => {
+    const agent = builtInAgents[agentName];
+    
+    if (!agent) {
+      console.log(chalk.red(`Unknown agent: ${agentName}`));
+      console.log(chalk.gray(`Available agents: ${Object.keys(builtInAgents).join(', ')}`));
+      return;
+    }
+    
+    console.log(chalk.cyan(`Running agent: ${agent.name}`));
+    console.log(chalk.gray(`Objective: ${objective}`));
+    console.log(chalk.gray(`Provider: ${options.provider ?? config.defaultProvider}`));
+    console.log();
+    
+    try {
+      // Configurar AI
+      const factory = createConnectorFactory();
+      const providerName = options.provider ?? config.defaultProvider;
+      const providerConfig = config.providers[providerName as keyof typeof config.providers];
+      
+      if (!providerConfig || !providerConfig.enabled) {
+        console.log(chalk.red(`Provider '${providerName}' is not enabled.`));
+        return;
+      }
+      
+      if (options.model) {
+        providerConfig.model = options.model;
+      }
+      
+      const connector = factory.create(providerName as any, providerConfig);
+      const registry = createAIRegistry();
+      registry.register(connector);
+      
+      const aiManager = createAIManager(registry);
+      
+      // Tool executor simple (sin MCPs reales por ahora)
+      const toolExecutor: ToolExecutor = {
+        execute: async (name: string, args: Record<string, unknown>): Promise<ToolResult> => {
+          console.log(chalk.blue(`  🔧 Tool: ${name}`), chalk.gray(JSON.stringify(args)));
+          
+          // Placeholder: simular ejecución de herramientas
+          return {
+            toolCallId: name,
+            content: `Tool '${name}' executed successfully with args: ${JSON.stringify(args)}`,
+          };
+        },
+        listTools: () => agent.tools ?? [],
+      };
+      
+      // Ejecutar agente
+      const result = await agentRunner.run(agent, objective, {
+        session: {
+          id: `cli_${Date.now()}`,
+          project: process.cwd(),
+          mode: config.mode,
+          provider: providerName as any,
+          startedAt: new Date(),
+          mcpServers: [],
+        },
+        toolExecutor,
+        aiManager,
+        onEvent: (event) => {
+          switch (event.type) {
+            case 'step:start':
+              console.log(chalk.gray(`  Step ${(event.data as any).iteration + 1}...`));
+              break;
+            case 'tool:start':
+              console.log(chalk.blue(`  🔧 Executing tool...`));
+              break;
+            case 'tool:complete':
+              const toolStep = event.data as any;
+              console.log(chalk.green(`  ✓ Tool completed in ${toolStep.duration}ms`));
+              break;
+            case 'agent:error':
+              console.log(chalk.red(`  ✗ Error: ${(event.data as any).error}`));
+              break;
+          }
+        },
+      });
+      
+      console.log();
+      
+      if (result.success) {
+        console.log(chalk.green('✓ Agent completed successfully'));
+        console.log(chalk.gray(`  Iterations: ${result.iterations}`));
+        console.log(chalk.gray(`  Duration: ${(result.totalDuration / 1000).toFixed(1)}s`));
+        console.log();
+        console.log(chalk.white(result.finalMessage));
+      } else {
+        console.log(chalk.red('✗ Agent failed'));
+        console.log(chalk.red(`  Error: ${result.error}`));
+      }
+      
+    } catch (error) {
+      console.log(chalk.red('✗ Agent execution failed:'));
+      console.log(chalk.red((error as Error).message));
+    }
+  });
+
+// Comando: mcp
+const mcpCommand = program
+  .command('mcp')
+  .description('Manage MCP servers and clients');
+
+mcpCommand
+  .command('connect <name>')
+  .description('Connect to an MCP server')
+  .option('-u, --url <url>', 'Server URL')
+  .option('-t, --type <type>', 'Connection type (stdio, sse)')
+  .action(async (name: string, options: { url?: string; type?: string }) => {
+    try {
+      const client = createMCPClient({
+        name,
+        command: name,
+        enabled: true,
+        ...(options.url && { url: options.url }),
+        ...(options.type && { type: options.type as any }),
+      });
+      
+      console.log(chalk.gray(`Connecting to MCP server '${name}'...`));
+      await client.connect();
+      
+      console.log(chalk.green(`✓ Connected to ${name}`));
+      
+      // Listar herramientas disponibles
+      const tools = await client.listTools();
+      if (tools.length > 0) {
+        console.log(chalk.cyan('\nAvailable tools:'));
+        for (const tool of tools) {
+          console.log(`  ${chalk.bold(tool.name)}: ${tool.description}`);
+        }
+      }
+      
+      await client.disconnect();
+      
+    } catch (error) {
+      console.log(chalk.red('✗ Connection failed:'));
+      console.log(chalk.red((error as Error).message));
+    }
+  });
+
+mcpCommand
+  .command('start')
+  .description('Start a local MCP server')
+  .action(async () => {
+    try {
+      const server = createMCPServer();
+      
+      // Registrar algunas herramientas de ejemplo
+      server.registerTool(
+        {
+          name: 'get_project_info',
+          description: 'Get information about the current project',
+          inputSchema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        async () => {
+          return {
+            name: 'your-harness',
+            version: config.version,
+            mode: config.mode,
+            cwd: process.cwd(),
+          };
+        }
+      );
+      
+      server.registerTool(
+        {
+          name: 'echo',
+          description: 'Echoes back the input message',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                description: 'Message to echo',
+              },
+            },
+            required: ['message'],
+          },
+        },
+        async (args) => {
+          return { echoed: args.message };
+        }
+      );
+      
+      console.log(chalk.cyan('Starting MCP server...'));
+      await server.start();
+      
+      console.log(chalk.green('✓ MCP server is running'));
+      console.log(chalk.gray('Send JSON-RPC requests via stdin. Press Ctrl+C to stop.'));
+      
+      // Mantener el proceso vivo
+      process.on('SIGINT', async () => {
+        console.log();
+        await server.stop();
+        process.exit(0);
+      });
+      
+    } catch (error) {
+      console.log(chalk.red('✗ Server start failed:'));
+      console.log(chalk.red((error as Error).message));
+    }
+  });
+
+mcpCommand
+  .command('status')
+  .description('Show MCP connection status')
+  .action(() => {
+    console.log(chalk.cyan('MCP Status:\n'));
+    
+    const configuredServers = config.mcpServers ?? [];
+    
+    if (configuredServers.length === 0) {
+      console.log(chalk.gray('No MCP servers configured.'));
+      console.log(chalk.gray('Add servers in ~/.your-harness/config.yml'));
+      return;
+    }
+    
+    for (const server of configuredServers) {
+      const statusIcon = server.enabled ? chalk.green('●') : chalk.red('○');
+      console.log(`  ${statusIcon} ${chalk.bold(server.name)}`);
+      console.log(chalk.gray(`    Command: ${server.command}`));
+      console.log(chalk.gray(`    Status: ${server.enabled ? 'configured' : 'disabled'}`));
+      console.log();
     }
   });
 
