@@ -1,6 +1,6 @@
 import type { PluginInstance, PluginStatus, PluginHook, PluginContext } from './types.js';
 import type { PluginLoader } from './loader.js';
-import type { ConnectorMetadata } from '../../core/connector.js';
+import type { ConnectorMetadata } from '../core/connector.js';
 
 export interface PluginManager {
   /** Instala un plugin desde una ruta */

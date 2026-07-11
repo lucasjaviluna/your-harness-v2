@@ -1,4 +1,4 @@
-import type { ConnectorMetadata } from '../../core/connector.js';
+import type { ConnectorMetadata } from '../core/connector.js';
 
 export type PluginStatus = 'installed' | 'enabled' | 'disabled' | 'error';
 

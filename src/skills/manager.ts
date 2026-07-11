@@ -1,5 +1,5 @@
 import type { SkillDefinition, SkillInstance, SkillContext, SkillExecutionResult, SkillCategory } from './types.js';
-import type { PromptBuilder } from '../../core/prompt/builder.js';
+import type { PromptBuilder } from '../core/prompt/builder.js';
 
 export interface SkillManager {
   /** Registra una nueva skill */

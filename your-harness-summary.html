@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>your-harness – Resumen de Arquitectura</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --border: #30363d;
+            --text: #c9d1d9;
+            --heading: #f0f6fc;
+            --accent: #58a6ff;
+            --green: #3fb950;
+            --yellow: #d2991d;
+            --red: #f85149;
+            --code-bg: #1c2128;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem 1.5rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1, h2, h3, h4 { color: var(--heading); margin-top: 2rem; margin-bottom: 0.75rem; }
+        h1 { font-size: 2.2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+        h2 { font-size: 1.6rem; }
+        h3 { font-size: 1.2rem; }
+        p { margin-bottom: 1rem; }
+        ul, ol { margin: 0.5rem 0 1rem 1.5rem; }
+        li { margin-bottom: 0.4rem; }
+        code {
+            background: var(--code-bg);
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            font-family: 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 0.9em;
+        }
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-size: 0.85rem;
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.15em 0.6em;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 0.4em;
+            background: var(--surface);
+            border: 1px solid var(--border);
+        }
+        .badge.accent { background: var(--accent); color: #000; }
+        .badge.green { background: var(--green); color: #000; }
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.2rem;
+            margin: 1.2rem 0;
+        }
+        .strength { color: var(--green); }
+        .weakness { color: var(--yellow); }
+        .caution { color: var(--red); }
+        hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+    </style>
+</head>
+<body>
+    <h1>🤖 your-harness</h1>
+    <p>
+        <span class="badge accent">v0.1.0</span>
+        <span class="badge green">CLI-first</span>
+        <span class="badge">TypeScript</span>
+        <span class="badge">Node.js</span>
+    </p>
+    <p>
+        <strong>your-harness</strong> es un arnés de desarrollo potenciado por inteligencia artificial, 
+        diseñado como herramienta de línea de comandos centralizada y extensible. 
+        Orquesta agentes, habilidades (skills), plugins, servidores MCP, workflows y especificaciones SDD/OpenSpec, 
+        con soporte para múltiples proveedores de IA.
+    </p>
+
+    <hr>
+
+    <h2>🧱 Arquitectura General</h2>
+    <p>El sistema sigue un diseño modular en capas, con fuerte separación de responsabilidades:</p>
+    <ol>
+        <li><strong>CLI</strong> – Punto de entrada único (<code>yh</code>), construido con Commander y Chalk.</li>
+        <li><strong>Core</strong> – Núcleo funcional: config, logger, eventos, contexto, conectores, managers de IA y MCP, builder de prompts.</li>
+        <li><strong>Proveedores IA</strong> – Implementaciones concretas para Copilot, Claude, OpenAI, modelos locales (Ollama) y endpoints custom.</li>
+        <li><strong>Plugins & Skills</strong> – Sistema de plugins cargables dinámicamente y skills con templates e inyección de system prompts.</li>
+        <li><strong>Agentes</strong> – Ejecución autónoma con loop de razonamiento, uso de herramientas y límites de iteración.</li>
+        <li><strong>MCP</strong> – Cliente y servidor JSON-RPC 2.0 para integrar herramientas externas.</li>
+        <li><strong>Workflows</strong> – Motor de workflows con DAGs, pasos paralelos, condiciones y reintentos.</li>
+        <li><strong>SDD / OpenSpec</strong> – Parser multi-formato, validador y generador de código a partir de especificaciones.</li>
+    </ol>
+
+    <h2>📁 Estructura del Proyecto (50 archivos)</h2>
+    <pre>
+src/
+├── cli/index.ts
+├── types/index.ts
+├── core/
+│   ├── config.ts, logger.ts, connector.ts, events.ts, context.ts, harness.ts
+│   ├── ai/ (types, connector, registry, manager)
+│   ├── mcp/ (types, connector, registry, manager)
+│   └── prompt/ (builder, registry)
+├── connectors/ (copilot, claude, openai, local, custom, factory)
+├── plugins/ (types, loader, manager, builtin/hello-world)
+├── skills/ (types, manager, templates/code-review)
+├── agents/ (types, runner, builtin/developer, builtin/reviewer)
+├── mcp/ (client, server)
+├── workflows/ (types, engine, builtin/code-review-pipeline)
+└── spec/ (types, parser, validator, generator)
+    </pre>
+
+    <h2>⚡ Características principales</h2>
+    <div class="card">
+        <ul>
+            <li><strong>CLI contextual:</strong> Modos de trabajo (<code>frontend</code>, <code>backend</code>, <code>devops</code>, <code>testing</code>).</li>
+            <li><strong>Multi-proveedor IA:</strong> Copilot, Claude, OpenAI, local (Ollama), custom. Selección por defecto, fallback automático y testeo interactivo.</li>
+            <li><strong>Plugins dinámicos:</strong> Instalación desde ruta local o paquete npm, ciclo de vida con hooks, comandos exportables.</li>
+            <li><strong>Skills componibles:</strong> System prompts inyectables, templates con variables, dependencias entre skills.</li>
+            <li><strong>Agentes autónomos:</strong> Developer y Reviewer incluidos; loop de razonamiento con tool calling, límite de iteraciones, eventos de progreso.</li>
+            <li><strong>MCP nativo:</strong> Cliente para conectar a servidores externos; servidor integrable que expone herramientas del harness.</li>
+            <li><strong>Workflows complejos:</strong> Motor basado en DAG, pasos secuenciales/paralelos, condiciones, reintentos, timeouts, pipelines predefinidos (code‑review).</li>
+            <li><strong>SDD/OpenSpec:</strong> Parseo de Markdown (con frontmatter YAML), YAML puro, JSON; validación estructural y generación de artefactos (tipos TypeScript, OpenAPI, scaffold, tests, documentación).</li>
+            <li><strong>Arquitectura preparada para futuro:</strong> Sistema de memoria externo (vía MCP) previsto, sin acoplamiento.</li>
+        </ul>
+    </div>
+
+    <h2>✅ Puntos fuertes</h2>
+    <ul>
+        <li class="strength">✔ Diseño modular y extensible – cada pieza puede reemplazarse o ampliarse sin romper el resto.</li>
+        <li class="strength">✔ Enfoque funcional – código predecible, sin efectos secundarios ocultos, tipado estricto.</li>
+        <li class="strength">✔ CLI completo – más de 25 comandos documentados y listos para usar.</li>
+        <li class="strength">✔ Abstracción de IA – cambio de proveedor sin modificar agentes o workflows.</li>
+        <li class="strength">✔ Preparado para MCP – tu sistema de memoria encaja como un servidor MCP externo que se auto‑registra.</li>
+        <li class="strength">✔ Código base limpio y homogéneo – patrones consistentes en todos los módulos.</li>
+    </ul>
+
+    <h2>⚠️ Áreas de mejora (y limitaciones actuales)</h2>
+    <ul>
+        <li class="weakness">⚠ Las herramientas de los agentes (<code>read_file</code>, <code>write_file</code>, etc.) retornan respuestas simuladas; falta implementación real con <code>fs</code> y <code>child_process</code>.</li>
+        <li class="weakness">⚠ El transporte MCP está simulado – se necesita integrar stdio/subprocess y HTTP SSE reales.</li>
+        <li class="weakness">⚠ La escritura de configuración (YAML) es un placeholder; actualmente solo se lee y fusiona.</li>
+        <li class="weakness">⚠ No hay tests unitarios ni de integración implementados.</li>
+        <li class="weakness">⚠ La evaluación de condiciones en workflows es muy básica (sin analizador de expresiones seguro).</li>
+        <li class="weakness">⚠ El sistema de memoria (tu proyecto con Postgres+pgvector) está diseñado pero no integrado.</li>
+        <li class="weakness">⚠ No existe UI gráfica ni modo interactivo fuera de la terminal.</li>
+    </ul>
+
+    <h2>🗺️ Consideraciones a corto, mediano y largo plazo</h2>
+
+    <h3>🔹 Corto plazo (próximas semanas)</h3>
+    <ul>
+        <li>Implementar ejecución real de herramientas de agente (filesystem, comandos).</li>
+        <li>Integrar transporte MCP real (usando el SDK de MCP o implementación manual con child_process y fetch).</li>
+        <li>Escribir tests unitarios para los módulos core (config, eventos, registry, managers).</li>
+        <li>Completar la persistencia de configuración (lectura/escritura YAML real).</li>
+        <li>Añadir un par de skills/workflows adicionales como ejemplos concretos.</li>
+    </ul>
+
+    <h3>🔸 Mediano plazo (1‑3 meses)</h3>
+    <ul>
+        <li>Conectar tu sistema de memoria externo mediante MCP (<code>memory-cli setup --harness</code>).</li>
+        <li>Desarrollar un mecanismo sencillo de descubrimiento/instalación de plugins (por ej. desde npm o rutas locales).</li>
+        <li>Ampliar los triggers de workflows: watchers de archivos, git hooks, cron.</li>
+        <li>Crear una interfaz de usuario básica (TUI con Ink.js o Electron) para visualizar sesiones y workflows.</li>
+        <li>Agregar métricas de uso y telemetría opcional para mejora continua.</li>
+    </ul>
+
+    <h3>🔹 Largo plazo (6+ meses)</h3>
+    <ul>
+        <li>Soporte multi‑usuario y colaboración en equipo.</li>
+        <li>Sincronización de configuración y memoria en la nube.</li>
+        <li>Integración con IDEs (extensión de VS Code).</li>
+        <li>Aprendizaje continuo: el sistema mejora sus sugerencias basándose en sesiones anteriores.</li>
+        <li>Ciclo SDD completo: sincronización bidireccional entre especificaciones y código real.</li>
+        <li>Marketplace de plugins, skills y agentes comunitarios.</li>
+    </ul>
+
+    <h2>🧭 Próximos pasos sugeridos</h2>
+    <p>Con la base sólida terminada, te recomiendo avanzar en este orden:</p>
+    <ol>
+        <li><strong>1. Implementar herramientas reales de agente</strong> – Dar vida a <code>read_file</code>, <code>write_file</code>, <code>run_command</code> usando <code>fs</code> y <code>child_process</code>. Esto hará que los agentes sean realmente funcionales.</li>
+        <li><strong>2. Activar transporte MCP real</strong> – Adaptar el cliente MCP para usar stdio (spawn de proceso) y/o HTTP SSE. Así podrás conectar tu futuro <code>memory-cli</code> sin simulaciones.</li>
+        <li><strong>3. Crear una suite de tests</strong> – Empezar con <code>vitest</code> probando config, eventos, registro de AI y managers. Esto blindará el núcleo.</li>
+        <li><strong>4. Integrar tu sistema de memoria</strong> – Una vez que el cliente MCP funcione, conectar tu <code>memory-cli</code> como servidor externo y aprovechar sus tools desde los agentes.</li>
+        <li><strong>5. Refinar la experiencia de CLI</strong> – Agregar prompts interactivos (<code>inquirer</code>), autocompletado y mejores mensajes de error.</li>
+    </ol>
+    <p>¿Te gustaría que abordemos el <strong>punto 1</strong> (herramientas reales de agente) o prefieres planificar la integración de la memoria? 🚀</p>
+</body>
+</html>

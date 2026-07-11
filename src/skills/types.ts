@@ -1,4 +1,4 @@
-import type { Message, ToolDefinition } from '../../core/ai/types.js';
+import type { Message, ToolDefinition } from '../core/ai/types.js';
 
 export type SkillCategory = 
   | 'code-generation'
