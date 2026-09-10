@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Harness — Informe del Proyecto</title>
+  <style>
+    :root {
+      --bg: #0b0e14;
+      --bg-alt: #11151e;
+      --bg-card: #161b26;
+      --border: #232a3b;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --accent: #38bdf8;
+      --accent-2: #818cf8;
+      --accent-3: #34d399;
+      --accent-4: #fbbf24;
+      --danger: #f87171;
+      --radius: 12px;
+      --max-width: 1080px;
+      --font-mono: 'Consolas', 'JetBrains Mono', 'Fira Code', monospace;
+      --font-sans: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      line-height: 1.65;
+      min-height: 100vh;
+    }
+
+    ::selection { background: rgba(56, 189, 248, 0.25); }
+
+    .container { max-width: var(--max-width); margin: 0 auto; padding: 0 24px; }
+
+    /* -------- Hero -------- */
+    .hero {
+      position: relative;
+      padding: 90px 0 70px;
+      background:
+        radial-gradient(700px 300px at 75% -10%, rgba(56, 189, 248, 0.12), transparent 60%),
+        radial-gradient(600px 300px at 15% 110%, rgba(129, 140, 248, 0.10), transparent 60%),
+        var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .hero .badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      background: rgba(56, 189, 248, 0.07);
+      padding: 4px 12px;
+      border-radius: 999px;
+      letter-spacing: 0.5px;
+      margin-bottom: 22px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 14px;
+    }
+
+    .hero h1 .grad {
+      background: linear-gradient(110deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero .subtitle {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 720px;
+      margin-bottom: 26px;
+    }
+
+    .hero .meta-row {
+      display: flex; gap: 12px; flex-wrap: wrap;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: var(--text-dim);
+    }
+
+    .hero .meta-row .chip {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 8px;
+    }
+
+    /* -------- Nav -------- */
+    .nav {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(11, 14, 20, 0.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav .container {
+      display: flex; align-items: center; gap: 22px;
+      height: 54px;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13.5px;
+      padding: 5px 0;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .nav a:hover { color: var(--text); }
+    .nav a.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* -------- Sections -------- */
+    section {
+      padding: 64px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    section:last-of-type { border-bottom: none; }
+
+    .section-kicker {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 18px;
+    }
+
+    h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    p { color: var(--text-muted); margin-bottom: 14px; }
+
+    p strong { color: var(--text); }
+
+    /* -------- Cards -------- */
+    .grid {
+      display: grid;
+      gap: 16px;
+      margin: 22px 0;
+    }
+
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(56, 189, 248, 0.45);
+    }
+
+    .card .icon {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      display: inline-block;
+    }
+
+    .card h4 {
+      font-size: 0.99rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .card p { font-size: 0.9rem; margin-bottom: 0; }
+
+    /* -------- Flow Diagrams -------- */
+    .flow {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 0;
+      margin: 26px 0;
+      padding: 26px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .flow .node {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 22px;
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: var(--text);
+      min-width: 160px;
+      text-align: center;
+    }
+
+    .flow .node.hl { border-color: rgba(56, 189, 248, 0.5); color: var(--accent); }
+    .flow .node.alt { border-color: rgba(129, 140, 248, 0.5); color: var(--accent-2); }
+    .flow .node.acc { border-color: rgba(52, 211, 153, 0.5); color: var(--accent-3); }
+
+    .flow .arrow {
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      padding: 4px 0;
+      line-height: 1;
+    }
+
+    .flow-horizontal {
+      display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+      gap: 0;
+      margin: 26px 0;
+      padding: 26px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .flow-horizontal .node {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 18px;
+      font-size: 0.88rem;
+      color: var(--text);
+      text-align: center;
+    }
+
+    .flow-horizontal .sep {
+      color: var(--text-dim);
+      padding: 0 8px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+    }
+
+    /* -------- Two-column layout -------- */
+    .cols {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 26px;
+      margin: 18px 0;
+    }
+
+    .cols .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .cols .panel h4 {
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+
+    /* -------- Lists -------- */
+    ul.tight { list-style: none; }
+    ul.tight li {
+      padding: 7px 0;
+      padding-left: 24px;
+      position: relative;
+      color: var(--text-muted);
+      font-size: 0.93rem;
+      border-bottom: 1px solid rgba(35, 42, 59, 0.5);
+    }
+    ul.tight li:last-child { border-bottom: none; }
+    ul.tight li::before {
+      content: '';
+      position: absolute; left: 4px; top: 15px;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.7;
+    }
+    ul.tight li strong { color: var(--text); }
+
+    /* -------- Code blocks -------- */
+    .code {
+      background: #0d1118;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.7;
+      overflow-x: auto;
+      color: #a5d6ff;
+      margin: 16px 0;
+    }
+
+    .code .cm { color: var(--text-dim); }
+    .code .kw { color: #c792ea; }
+    .code .st { color: #a5d6ff; }
+    .code .fn { color: #82aaff; }
+
+    /* -------- Tree -------- */
+    .tree { font-family: var(--font-mono); font-size: 0.85rem; line-height: 1.65; color: var(--text-muted); }
+    .tree .dir { color: var(--accent); }
+    .tree .note { color: var(--text-dim); }
+    .tree .arrowd { margin-right: 6px; }
+
+    /* -------- Timeline -------- */
+    .timeline { position: relative; margin: 22px 0 10px; padding-left: 28px; }
+    .timeline::before {
+      content: '';
+      position: absolute; left: 8px; top: 4px; bottom: 4px;
+      width: 2px; background: var(--border);
+    }
+    .timeline .item { position: relative; margin-bottom: 18px; }
+    .timeline .item::before {
+      content: '';
+      position: absolute; left: -25px; top: 6px;
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--accent);
+    }
+    .timeline .item h4 { font-size: 0.95rem; color: var(--text); }
+    .timeline .item p { font-size: 0.88rem; margin-bottom: 4px; }
+    .timeline .item .tag {
+      display: inline-block;
+      font-family: var(--font-mono); font-size: 11px;
+      color: var(--accent-3);
+      background: rgba(52, 211, 153, 0.1);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      padding: 2px 8px; border-radius: 6px;
+      margin-top: 4px;
+    }
+
+    /* -------- Table -------- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      font-size: 0.92rem;
+    }
+
+    th {
+      text-align: left;
+      font-family: var(--font-mono);
+      font-weight: 500;
+      font-size: 0.78rem;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 11px 14px;
+      color: var(--text-muted);
+      border-bottom: 1px solid rgba(35, 42, 59, 0.6);
+      vertical-align: top;
+    }
+
+    td strong { color: var(--text); }
+    td:first-child { font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent); }
+
+    /* -------- Footer -------- */
+    footer {
+      padding: 32px 0 40px;
+      border-top: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 0.85rem;
+    }
+
+    footer .grid { gap: 20px; }
+
+    footer h4 { color: var(--text); font-size: 0.9rem; margin-bottom: 8px; }
+
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* -------- Vision strip -------- */
+    .quote {
+      margin: 24px 0;
+      padding: 28px 30px;
+      background:
+        linear-gradient(120deg, rgba(56, 189, 248, 0.06), rgba(129, 140, 248, 0.06)),
+        var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--radius);
+      font-size: 1.08rem;
+      color: var(--text);
+      font-weight: 500;
+      font-style: italic;
+    }
+
+    .quote .source {
+      display: block;
+      margin-top: 10px;
+      font-size: 0.8rem;
+      font-style: normal;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 640px) {
+      .hero { padding: 60px 0 50px; }
+      section { padding: 48px 0; }
+      .flow.horiz { overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="container">
+      <span class="badge">v0.1.0 · FOUNDATION · Stage 1</span>
+      <h1>Your Harness <span class="grad">(yh)</span></h1>
+      <p class="subtitle">
+        Una plataforma de ingeniería open-source, modular y basada en especificaciones,
+        diseñada para gobernar el proceso de desarrollo de software con agentes de IA
+        bajo supervisión humana explícita.
+      </p>
+      <div class="meta-row">
+        <span class="chip">TypeScript</span>
+        <span class="chip">Node 20+</span>
+        <span class="chip">Commander.js</span>
+        <span class="chip">Zod</span>
+        <span class="chip">pino</span>
+        <span class="chip">CLI-first</span>
+        <span class="chip">MIT License</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= NAV ================= -->
+  <nav class="nav">
+    <div class="container">
+      <a href="#que-es">Qué es</a>
+      <a href="#objetivo">Objetivo</a>
+      <a href="#principios">Principios</a>
+      <a href="#arquitectura">Arquitectura</a>
+      <a href="#flujo">Flujo de trabajo</a>
+      <a href="#componentes">Componentes</a>
+      <a href="#vinculos">Cómo se vinculan</a>
+      <a href="#crecimiento">Crecimiento</a>
+      <a href="#estado">Estado actual</a>
+    </div>
+  </nav>
+
+  <!-- ================= QUÉ ES ================= -->
+  <section id="que-es">
+    <div class="container">
+      <span class="section-kicker">01 · Qué es</span>
+      <h2>Un harness de desarrollo con IA, gobernado por ingeniería</h2>
+
+      <div class="quote">
+        «Your Harness existe para mejorar la forma en que el software es ingenierizado.
+        La planificación, las especificaciones, la gobernanza y el juicio humano son ciudadanos
+        de primera clase. La IA acelera la ingeniería, pero permanece bajo supervisión humana explícita.»
+        <span class="source">— YH-VISION-001</span>
+      </div>
+
+      <p>
+        <strong>Your Harness</strong> es una herramienta CLI que orquesta agentes de IA, plugins, skills,
+        servidores MCP y flujos de trabajo para el desarrollo de software. A diferencia de las herramientas
+        convencionales de "code generation", <strong>no se enfoca en generar código</strong>: se enfoca en
+        <strong>gobernar el proceso de ingeniería</strong> — desde la intención original hasta el release.
+      </p>
+
+      <p>
+        Es agnóstico a proveedores de IA (Claude, OpenAI, Copilot, Ollama, custom),
+        extensible por diseño mediante plugins y skills, y estructura todo el trabajo
+        alrededor de un modelo de dominio explícito: <strong>Intent → Work Item → Specification →
+        Review → Approval → Implementation → Verification → Release</strong>.
+      </p>
+
+      <div class="grid grid-3" style="margin-top: 26px;">
+        <div class="card">
+          <span class="icon">🧩</span>
+          <h4>Modular y reemplazable</h4>
+          <p>Cada responsable del sistema —specs, runtimes, proveedores, plugins— se integra detrás de abstracciones estables.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🎯</span>
+          <h4>Spec-driven</h4>
+          <p>Nada se implementa sin una especificación aprobada que describa el comportamiento esperado.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🧭</span>
+          <h4>Human in the Middle</h4>
+          <p>La automatización asiste, pero la responsabilidad y la aprobación de decisiones críticas siempre pertenecen a personas.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= OBJETIVO ================= -->
+  <section id="objetivo">
+    <div class="container">
+      <span class="section-kicker">02 · Objetivo</span>
+      <h2>Mejorar la forma en que el software es ingenierizado</h2>
+
+      <p>
+        El objetivo central del proyecto es transformar el desarrollo de software en un proceso
+        <strong>estructurado, transparente y gobernado</strong>, donde la calidad emerge de prácticas
+        de ingeniería disciplinadas en lugar de la velocidad de generación de código.
+      </p>
+
+      <div class="grid grid-3">
+        <div class="card">
+          <span class="icon">📉</span>
+          <h4>Reducir la ambigüedad</h4>
+          <p>Especificaciones y un lenguaje de dominio común (YDL) eliminan interpretaciones vagas durante el desarrollo.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🔍</span>
+          <h4>Decisiones trazables</h4>
+          <p>Cada implementación rastreable hasta su intención, work item, especificación, revisión y aprobación.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🔄</span>
+          <h4>Componentes reemplazables</h4>
+          <p>Engines, runtimes y proveedores intercambiables sin rediseñar el modelo de ingeniería.</p>
+        </div>
+        <div class="card">
+          <span class="icon">👥</span>
+          <h4>Humano en control</h4>
+          <p>La gobernanza decide qué acciones requieren aprobación; el runtime nunca decide por sí mismo.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🧭</span>
+          <h4>Disciplinas múltiples</h4>
+          <p>Frontend, backend, testing, arquitectura, QA y documentación comparten un mismo flujo de ingeniería.</p>
+        </div>
+        <div class="card">
+          <span class="icon">📐</span>
+          <h4>Diseño antes de código</h4>
+          <p>La especificación es el contrato primario; la implementación es derivada y verificable contra ella.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PRINCIPIOS ================= -->
+  <section id="principios">
+    <div class="container">
+      <span class="section-kicker">03 · Principios</span>
+      <h2>Principios rectores de la plataforma</h2>
+
+      <p>
+        Definidos en el Engineering Charter y la Vision, estos principios son la guía normativa
+        para cada decisión arquitectónica y de gobernanza del proyecto.
+      </p>
+
+      <div class="grid grid-2">
+        <div class="card">
+          <span class="icon">🏗️</span>
+          <h4>Design before implementation</h4>
+          <p>La implementación comienza solo cuando el problema fue comprendido y el diseño definido.</p>
+        </div>
+        <div class="card">
+          <span class="icon">📋</span>
+          <h4>Specification before code</h4>
+          <p>Toda implementación se origina en una especificación aprobada que describe el comportamiento esperado.</p>
+        </div>
+        <div class="card">
+          <span class="icon">⚖️</span>
+          <h4>Governance before automation</h4>
+          <p>La automatización acelera el trabajo, pero nunca reemplaza la responsabilidad y la rendición de cuentas humanas.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🧑‍⚖️</span>
+          <h4>Human judgment over autonomy</h4>
+          <p>La aprobación humana es obligatoria siempre que la gobernanza lo exija (Human in the Middle).</p>
+        </div>
+        <div class="card">
+          <span class="icon">✨</span>
+          <h4>Simplicity over complexity</h4>
+          <p>Las soluciones permanecen tan simples como sea posible mientras satisfacen los requisitos definidos.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🌱</span>
+          <h4>Incremental evolution</h4>
+          <p>El trabajo evoluciona en incrementos pequeños y revisables; las decisiones son explícitas, nunca implícitas.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🧩</span>
+          <h4>Modularity</h4>
+          <p>Componentes con responsabilidades explícitas que se comunican mediante contratos estables.</p>
+        </div>
+        <div class="card">
+          <span class="icon">📚</span>
+          <h4>Documentation as code</h4>
+          <p>La documentación es un artifact de ingeniería de primera clase, versionado y revisable bajo YDS.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ARQUITECTURA ================= -->
+  <section id="arquitectura">
+    <div class="container">
+      <span class="section-kicker">04 · Arquitectura</span>
+      <h2>Dos dominios, un solo sistema</h2>
+
+      <p>
+        El repositorio convive con dos codebases con arquitecturas distintas y complementarias.
+        La separación entre <strong>Engineering Core</strong> (qué trabajo de ingeniería existe, por qué
+        existe y qué es aceptable) y el <strong>Agent Runtime</strong> (cómo se ejecuta el trabajo)
+        es la columna vertebral del diseño, formalizada en ADR-002.
+      </p>
+
+      <div class="cols">
+        <div class="panel">
+          <h4>🧠 Engineering Core — el estado autoritativo</h4>
+          <ul class="tight">
+            <li><strong>Intent</strong> — el resultado deseado por el usuario</li>
+            <li><strong>Work Item</strong> — la unidad de trabajo gobernada</li>
+            <li><strong>Specification + Requirement + Scenario</strong> — comportamiento esperado</li>
+            <li><strong>Review / Approval</strong> — evaluación y autorización</li>
+            <li><strong>Release</strong> — incremento estable publicado</li>
+            <li><strong>Governance</strong> — aprobaciones y trazabilidad</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>⚙️ Agent Runtime — el mecanismo de ejecución</h4>
+          <ul class="tight">
+            <li><strong>Agents</strong> — loop de razonamiento con herramientas</li>
+            <li><strong>Workflows</strong> — DAG de 8 tipos de steps</li>
+            <li><strong>AI Providers</strong> — Claude, OpenAI, Copilot, Ollama, custom</li>
+            <li><strong>MCP</strong> — clientes y servidores JSON-RPC</li>
+            <li><strong>Skills</strong> — templates y herramientas por categoría</li>
+            <li><strong>Plugins</strong> — extensión con hooks de ciclo de vida</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3 style="margin-top: 30px;">Frontera conceptual formalizada (ADR-002)</h3>
+
+      <div class="flow">
+        <div class="node hl">YOUR HARNESS</div>
+        <div class="arrow">⬇</div>
+        <div class="flow-horizontal" style="margin:0; padding:0; background:transparent; border:none;">
+          <div class="node alt">ENGINEERING CORE</div>
+          <div class="sep">·</div>
+          <div class="node">AGENT RUNTIME</div>
+        </div>
+        <div class="arrow">⬇</div>
+        <div class="node acc">RUNTIME BOUNDARY</div>
+        <div class="arrow">⬇</div>
+        <div class="flow-horizontal" style="margin:0; padding:0; background:transparent; border:none;">
+          <div class="node">Native YH</div>
+          <div class="node">Pi</div>
+          <div class="node">Otro Runtime</div>
+        </div>
+      </div>
+
+      <p style="margin-top: 12px;">
+        La regla arquitectónica central: <strong>el Engineering Core nunca depende de una implementación
+        concreta del runtime</strong>. El estado de ejecución (sessions, mensajes, tool calls) no se convierte
+        en estado de ingeniería sin una interpretación explícita.
+      </p>
+
+      <h3 style="margin-top: 30px;">Estructura del repositorio</h3>
+      <div class="code"><span class="cm"># src/  →  CLI harness (CLI-first, interfaces + implementaciones)</span>
+src/
+├── <span class="fn">cli/index.ts</span>      <span class="cm">← entrypoint `yh`, cablea todos los managers</span>
+├── <span class="kw">core/</span>              <span class="cm">← interfaces + infra: config, events, context, logger</span>
+│   ├── <span class="kw">ai/</span>              <span class="cm">← AIProvider · AIManager · AIRegistry</span>
+│   ├── <span class="kw">mcp/</span>             <span class="cm">← MCPConnector · MCPManager · MCPRegistry</span>
+│   └── <span class="kw">prompt/</span>          <span class="cm">← system prompt composable + registry</span>
+├── <span class="kw">connectors/</span>        <span class="cm">← claude · openai · copilot · local (Ollama) · custom</span>
+├── <span class="kw">agents/</span>            <span class="cm">← AgentRunner (reasoning loop) + agentes builtin</span>
+├── <span class="kw">plugins/</span>           <span class="cm">← loader/manager con lifecycle hooks</span>
+├── <span class="kw">skills/</span>            <span class="cm">← templates de prompts + tools, categorizados</span>
+├── <span class="kw">workflows/</span>         <span class="cm">← engine DAG (8 tipos de step)</span>
+├── <span class="kw">mcp/</span>               <span class="cm">← cliente/servidor (JSON-RPC, mocks)</span>
+├── <span class="kw">spec/</span>              <span class="cm">← parser / validator / generator (SDD)</span>
+└── <span class="kw">types/</span>             <span class="cm">← tipos compartidos</span>
+
+<span class="cm"># packages/  →  modelo de dominio DDD (hexagonal)</span>
+packages/
+├── <span class="kw">shared/</span>      <span class="cm">← value objects · Result · identifiers · errors · contracts</span>
+├── <span class="kw">domain/</span>      <span class="cm">← proyecto · intent · work-item · specification · review · release</span>
+└── <span class="kw">application/</span> <span class="cm">← use cases + ports (runtime boundary aquí)</span></div>
+    </div>
+  </section>
+
+  <!-- ================= FLUJO DE TRABAJO ================= -->
+  <section id="flujo">
+    <div class="container">
+      <span class="section-kicker">05 · Flujo de trabajo</span>
+      <h2>El flujo de ingeniería gobernado</h2>
+
+      <p>
+        Definido en RFC-001 y YGov, todo el trabajo de ingeniería avanza por etapas explícitas.
+        Ninguna etapa se omite cuando la gobernanza lo exige, y cada una produce artifacts versionados.
+      </p>
+
+      <table>
+        <tr>
+          <th>Etapa</th><th>Rol</th><th>Artifact que produce</th>
+        </tr>
+        <tr>
+          <td>Intent</td>
+          <td>Resultado deseado en lenguaje natural; captura <strong>qué</strong>, no <strong>cómo</strong>.</td>
+          <td>Intención registrada</td>
+        </tr>
+        <tr>
+          <td>Work Item</td>
+          <td>Unidad mínima de trabajo gobernada — feature, bug fix, refactoring, deuda técnica, doc, testing.</td>
+          <td>Work Item</td>
+        </tr>
+        <tr>
+          <td>Specification</td>
+          <td>Comportamiento esperado antes de implementar; con Requirements y Scenarios (ADR-003).</td>
+          <td>Spec + Requirement + Scenario</td>
+        </tr>
+        <tr>
+          <td>Review</td>
+          <td>Evaluación formal de corrección, claridad, consistencia y cumplimiento de estándares.</td>
+          <td>Review</td>
+        </tr>
+        <tr>
+          <td>Approval</td>
+          <td>Autorización explícita para avanzar a implementación, cuando la gobernanza lo requiere.</td>
+          <td>Approval</td>
+        </tr>
+        <tr>
+          <td>Implementation</td>
+          <td>Transforma la spec aprobada en artifacts ejecutables, consistente con la spec.</td>
+          <td>Código + tests</td>
+        </tr>
+        <tr>
+          <td>Verification</td>
+          <td>Confirma que la implementación satisface la spec: revisión manual, tests, criterios de aceptación.</td>
+          <td>Evidencia de verificación</td>
+        </tr>
+        <tr>
+          <td>Release</td>
+          <td>Publica los artifacts revisados y verificados como un incremento estable.</td>
+          <td>Release</td>
+        </tr>
+      </table>
+
+      <div class="grid grid-2">
+        <div class="card">
+          <span class="icon">🔗</span>
+          <h4>Trazabilidad de extremo a extremo</h4>
+          <p>Cada implementación es rastreable a su Intent → Work Item → Specification → Review → Approval, cumpliendo la cadena definida en ADR-003.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🛡️</span>
+          <h4>Gobernanza en el Core, no en el runtime</h4>
+          <p>El runtime puede ofrecer pause/confirmación, pero jamás decide qué acciones de ingeniería requieren aprobación. Eso es del Engineering Core.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= COMPONENTES ================= -->
+  <section id="componentes">
+    <div class="container">
+      <span class="section-kicker">06 · Componentes</span>
+      <h2>Los elementos constituyentes del sistema</h2>
+
+      <div class="grid grid-4">
+        <div class="card">
+          <span class="icon">🧑‍💻</span>
+          <h4>CLI (yh)</h4>
+          <p>Entrypoint que cablea managers y registra builtins: config, mode, provider, plugin, skill, agent, mcp, workflow, spec.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🤖</span>
+          <h4>Agents</h4>
+          <p>Definiciones (developer, reviewer) + AgentRunner con loop de razonamiento, tools y eventos.</p>
+        </div>
+        <div class="card">
+          <span class="icon">👷</span>
+          <h4>Workflows</h4>
+          <p>Engine DAG con 8 tipos de step: agent, skill, command, script, parallel, condition, wait, transform.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🔌</span>
+          <h4>Plugins</h4>
+          <p>Sistema de extensión con manifest, estados (enabled/disabled) y lifecycle hooks.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🧰</span>
+          <h4>Skills</h4>
+          <p>Templates de prompts + tools categorizados; el skill de code-review es builtin (YH has its own).</p>
+        </div>
+        <div class="card">
+          <span class="icon">🌐</span>
+          <h4>MCP</h4>
+          <p>Cliente y servidor JSON-RPC con tools registrables (get_project_info, echo); transporte aún mock/skeleton.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🧠</span>
+          <h4>AI Providers</h4>
+          <p>Connectors por factory: copilot, claude, openai, local (Ollama), custom — detrás de AIConnector/AIManager.</p>
+        </div>
+        <div class="card">
+          <span class="icon">📄</span>
+          <h4>Spec Engine</h4>
+          <p>Parser, validator y generator (typescript-types, openapi-spec, api-scaffold, data-models, test-templates, documentation, custom).</p>
+        </div>
+      </div>
+
+      <h3 style="margin-top: 34px;">Domain packages (hexagonal)</h3>
+      <div class="code"><span class="cm"># Catalogado por capas — dominio puro sin dependencias de infraestructura</span>
+<span class="kw">shared/</span>        <span class="cm">· identifiers · Result · domain errors · contracts · value objects</span>
+<span class="kw">domain/</span>        <span class="cm">· project · intent · work-item · specification · review · release</span>
+<span class="kw">application/</span>   <span class="cm">· use cases por agregado + runtime boundary (puerto de ejecución)</span>
+
+<span class="cm"># packages/application/src/runtime/  →  RuntimePort (ADR-004: ExecutionRequest → RuntimeResult)</span></div>
+    </div>
+  </section>
+
+  <!-- ================= VÍNCULOS ================= -->
+  <section id="vinculos">
+    <div class="container">
+      <span class="section-kicker">07 · Cómo se vinculan</span>
+      <h2>La red de conexiones del sistema</h2>
+
+      <h3>Frontera de ejecución (ADR-004)</h3>
+      <div class="flow">
+        <div class="node hl">Work Item</div>
+        <div class="arrow">⬇ execution request</div>
+        <div class="node">Application Use Case</div>
+        <div class="arrow">⬇</div>
+        <div class="node alt">Runtime Boundary / RuntimePort</div>
+        <div class="arrow">⬇</div>
+        <div class="flow-horizontal" style="margin:0; padding:0; background:transparent; border:none;">
+          <div class="node">Native Runtime adapter</div>
+          <div class="node">Pi adapter</div>
+        </div>
+        <div class="arrow">⬇</div>
+        <div class="node acc">RuntimeResult</div>
+      </div>
+
+      <p style="margin-top: 14px;">
+        El contrato mínimo que cruza la frontera es un <code class="code-inline">ExecutionRequest</code>
+        con <strong>objective · workspace · engineeringContext · executionConstraints</strong>, y devuelve un
+        <code class="code-inline">RuntimeResult</code> con <strong>status · summary · runtimeSessionId ·
+        timestamps · failure</strong>. Conceptos como <code class="code-inline">WorkItem</code> no cruzan
+        la frontera: la capa de aplicación los <em>contextualiza</em>.
+      </p>
+
+      <h3 style="margin-top: 30px;">Flujo de contexto (ADR-005)</h3>
+      <div class="flow">
+        <div class="node">Engineering Memory / Knowledge</div>
+        <div class="arrow">⬇ retrieval (RAG futuro)</div>
+        <div class="node">Context Selection Policy</div>
+        <div class="arrow">⬇</div>
+        <div class="node alt">EngineeringContext</div>
+        <div class="arrow">⬇</div>
+        <div class="node">ExecutionRequest</div>
+        <div class="arrow">⬇</div>
+        <div class="node acc">Runtime</div>
+      </div>
+
+      <div class="grid grid-2" style="margin-top: 28px;">
+        <div class="card">
+          <span class="icon">🏷️</span>
+          <h4>Una sola fuente de verdad</h4>
+          <p>La spec (con sus Requirements/Scenarios) es la fuente autoritativa; el EngineeringContext es una proyección read-only para una ejecución concreta.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🔒</span>
+          <h4>Estado separado</h4>
+          <p>Un runtime session no es un Work Item; un tool call no es una transición de estado de ingeniería; un resultado del runtime no es evidencia de ingeniería sin interpretación.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🔧</span>
+          <h4>Adapters como aislantes</h4>
+          <p>Las implementaciones concretas (Harness, WorkflowEngine, AgentRunner, AIManager, MCPManager, Pi AgentSession) viven detrás de adapters que no filtran conceptos al Core.</p>
+        </div>
+        <div class="card">
+          <span class="icon">📐</span>
+          <h4>Replaceability</h4>
+          <p><strong>Spec Engine</strong> y <strong>Runtime Boundary</strong> son fronteras independientes: cambiar de framework de especificación no toca el runtime, y viceversa.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CRECIMIENTO ================= -->
+  <section id="crecimiento">
+    <div class="container">
+      <span class="section-kicker">08 · Crecimiento</span>
+      <h2>Posibilidades de evolución de la plataforma</h2>
+
+      <p>
+        La fase Foundation estableció principios, estándares, lenguaje de dominio y las primeras abstracciones.
+        Las decisiones pendientes (muchas ya propuestas en ADRs) definen un roadmap natural de crecimiento.
+      </p>
+
+      <div class="timeline">
+        <div class="item">
+          <h4>Runtime Boundary real</h4>
+          <p>Concretar el RuntimePort, ExecutionRequest y RuntimeResult como tipos TypeScript, y los primeros adapters (native + Pi).</p>
+          <span class="tag">ADR-004 · futura decisión</span>
+        </div>
+        <div class="item">
+          <h4>EngineeringContext y selección de contexto</h4>
+          <p>Definir el contrato de EngineeringContext, políticas de selección y metadata de autoridad.</p>
+          <span class="tag">ADR-005</span>
+        </div>
+        <div class="item">
+          <h4>Modelo RAG + Engineering Memory</h4>
+          <p>Recuperación de conocimiento relevante (specs, decisiones previas, reglas de proyecto) sin acoplar la frontera a vector stores.</p>
+          <span class="tag">Memoria de ingeniería</span>
+        </div>
+        <div class="item">
+          <h4>Verificación y Evidence</h4>
+          <p>Modelo donde los resultados del runtime se convierten en evidencia de ingeniería mediante interpretación y verificación explícitas.</p>
+          <span class="tag">Futuro dominio</span>
+        </div>
+        <div class="item">
+          <h4>Guardrails distribuidos</h4>
+          <p>Restricciones de ingeniería y ejecución en los límites apropiados, sin formar parte del contrato del runtime.</p>
+          <span class="tag">Futuro</span>
+        </div>
+        <div class="item">
+          <h4>Arquitectura de Skills y Plugins</h4>
+          <p>Definir si skills son portables entre runtimes, quién es dueño de plugins y si YH mantiene un runtime nativo.</p>
+          <span class="tag">Preguntas abiertas ADR-002</span>
+        </div>
+        <div class="item">
+          <h4>Adapters de Spec Engines</h4>
+          <p>OpenSpec hoy; cualquier otro framework SDD detrás del Specification Engine manteniendo Requirement + Scenario.</p>
+          <span class="tag">ADR-001 / ADR-003</span>
+        </div>
+      </div>
+
+      <div class="grid grid-3" style="margin-top: 26px;">
+        <div class="card">
+          <span class="icon">🔮</span>
+          <h4>Múltiples runtimes</h4>
+          <p>Native, Pi u otros conviviendo detrás del mismo RuntimePort con negociación de capacidades.</p>
+        </div>
+        <div class="card">
+          <span class="icon">📦</span>
+          <h4>SDD nativo</h4>
+          <p>Posible implementación YH-native del Specification Engine, más allá de adapters de frameworks externos.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🧠</span>
+          <h4>Contexto por ejecución</h4>
+          <p>Más tarde: solo subconjuntos relevantes del conocimiento del proyecto viajan al agente (no todo el repo).</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ESTADO ACTUAL ================= -->
+  <section id="estado">
+    <div class="container">
+      <span class="section-kicker">09 · Estado actual</span>
+      <h2>Dónde está el proyecto hoy</h2>
+
+      <div class="quote">
+        «La calidad del software es consecuencia de una gran ingeniería.
+        Esta Foundation release existe para establecer esa base de ingeniería antes de que comience la implementación.»
+        <span class="source">— FOUNDATION.md</span>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="card">
+          <span class="icon">✅</span>
+          <h4>Consolidado</h4>
+          <ul class="tight">
+            <li><strong>Visión, Charter, Governance</strong> y estándares (YDL, YDS, YGov) aceptados</li>
+            <li><strong>ADR-000 y ADR-001</strong> aceptados; RFC-001 (workflow) aceptado</li>
+            <li><strong>ADR-002 a ADR-005</strong> propuestos (core/runtime boundary, spec model, execution contract, engineering context)</li>
+            <li><strong>Infraestructura CLI</strong> operativa con manager wiring manual</li>
+            <li><strong>Templates</strong> de WorkItem, Spec, ADR y RFC</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="icon">🚧</span>
+          <h4>Pendiente / prototipo</h4>
+          <ul class="tight">
+            <li><strong>ToolExecutor</strong> es un stub (logs + resultados mock)</li>
+            <li><strong>MCP client/server</strong>: JSON-RPC skeleton sin transporte real</li>
+            <li><strong>Workflow command/script</strong>: placeholders</li>
+            <li><strong>Sin tests</strong> ni config de vitest/eslint/prettier</li>
+            <li><strong>saveConfig</strong> escribe JSON en path .yml (bug conocido)</li>
+            <li><strong>Paquetes con workspace:*</strong> sin workspace config — resolución pendiente de verificar</li>
+            <li><strong>Sin CI/CD</strong></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="code"><span class="cm"># Fases releases según CHANGELOG / DECISION_LOG</span>
+<span class="kw">v0.1.0</span> Foundation   → principios, estándares y estructura inicial (actual)
+<span class="kw">v0.2.0</span> Architecture → concretar Runtime Boundary + contratos de ejecución
+<span class="kw">vX.Y.Z</span> Feature       → nuevas capacidades de la plataforma
+<span class="kw">vX.Y.Z</span> Improvement   → realce de funcionalidad existente</div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer>
+    <div class="container">
+      <div class="grid grid-3">
+        <div>
+          <h4>Documentos normativos</h4>
+          <p style="font-size:0.85rem;">
+            Vision · Engineering Charter · Governance · YDL · YDS · YGov · RFC-001<br/>
+            ADR-000 → ADR-005 · FOUNDATION.md · INDEX.md
+          </p>
+        </div>
+        <div>
+          <h4>Artefactos del repo</h4>
+          <p style="font-size:0.85rem;">
+            <code>src/</code> (CLI harness) · <code>packages/</code> (DDD hexagonal)<br/>
+            <code>templates/</code> · <code>docs/adr</code> · <code>docs/rfc</code>
+          </p>
+        </div>
+        <div>
+          <h4>Este informe</h4>
+          <p style="font-size:0.85rem;">
+            Documento generado a partir del estado del repositorio en la rama de trabajo.<br/>
+            Fuente: README · FOUNDATION · Vision · Charter · Governance · YDL/YDS/YGov · ADRs · RFC-001 · AGENTS.md
+          </p>
+        </div>
+      </div>
+      <p style="margin-top:20px; font-size:0.78rem; font-family:var(--font-mono);">
+        your-harness · v0.1.0 Foundation · MIT · informe de documentación
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
