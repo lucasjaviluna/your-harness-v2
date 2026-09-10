@@ -6,6 +6,9 @@
   "bin": {
     "yh": "./dist/cli/index.js"
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "tsx watch src/cli/index.ts",
     "build": "tsc",
