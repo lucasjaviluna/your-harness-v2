@@ -27,7 +27,7 @@
   },
 
   "dependencies": {
-    "@your-harness/shared": "workspace:*"
+    "@your-harness/shared": "file:../shared"
   },
 
   "devDependencies": {

@@ -23,7 +23,7 @@ export class Result<T> {
   }
 
   static failure<T>(error: DomainError): Result<T> {
-    return new Result(false, undefined, error);
+    return new Result(false, undefined as T, error);
   }
 
   get isSuccess(): boolean {
