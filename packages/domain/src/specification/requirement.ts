@@ -27,13 +27,24 @@ export class Requirement extends Entity<RequirementId> {
     id: RequirementId,
     name: RequirementName,
     normativeStatement: NormativeStatement,
-    scenarios: ReadonlyArray<Scenario> = []
+    scenarios: ReadonlyArray<Scenario>
   ) {
     super(id);
 
     this.#name = name;
     this.#normativeStatement = normativeStatement;
-    this.#scenarios = scenarios;
+
+    if (scenarios.length === 0) {
+      throw new Error("Requirement must contain at least one scenario.");
+    }
+
+    const scenarioIds = new Set(scenarios.map((scenario) => scenario.id.value));
+
+    if (scenarioIds.size !== scenarios.length) {
+      throw new Error("Requirement cannot contain duplicate scenarios.");
+    }
+
+    this.#scenarios = [...scenarios];
   }
 
   get name(): RequirementName {

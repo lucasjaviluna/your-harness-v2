@@ -27,7 +27,7 @@ export class NormativeStatement extends ValueObject<string> {
     }
 
     const lower = normalized.toLowerCase();
-    if (!lower.includes(" shall ") && !lower.includes(" must ")) {
+    if (!/\b(shall|must)\b/i.test(normalized)) {
       throw new Error(
         "Normative statement must contain 'SHALL' or 'MUST' to express a behavioral obligation."
       );
