@@ -1,4 +1,4 @@
-import pino from 'pino';
+import { pino } from 'pino';
 import type { LogLevel } from '../types/index.js';
 
 export const createLogger = (level: LogLevel = 'info') => {

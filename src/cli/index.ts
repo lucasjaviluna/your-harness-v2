@@ -26,6 +26,24 @@ import type { ToolResult } from "../core/ai/types.js";
 import type { WorkflowDefinition } from "../workflows/types.js";
 import type { SpecGenerationTarget } from "../spec/types.js";
 import type { ProviderType } from "../types/index.js";
+import {
+  IntentId,
+  NormativeStatement,
+  Requirement,
+  RequirementId,
+  RequirementName,
+  Scenario,
+  ScenarioCondition,
+  ScenarioExpectedBehavior,
+  ScenarioId,
+  Specification,
+  SpecificationId,
+  SpecificationTitle,
+  WorkItem,
+  WorkItemId,
+  WorkItemTitle,
+} from "../../packages/domain/src/index.js";
+import { ExecuteWorkItemUseCase } from "../../packages/application/src/runtime/index.js";
 
 const config = loadConfig();
 const logger = createLogger(config.logLevel);
@@ -50,6 +68,29 @@ const builtInAgents: Record<string, AgentDefinition> = {
 
 const builtInWorkflows: Record<string, WorkflowDefinition> = {
   "code-review": codeReviewPipeline,
+};
+
+// Specification mínima para ejecutar la primera vertical desde la CLI.
+const createDemoSpecification = (): Specification => {
+  const scenario = new Scenario(
+    new ScenarioId("demo-scenario"),
+    new ScenarioCondition("the requested work is ready to be executed"),
+    new ScenarioExpectedBehavior("the runtime reports the execution result")
+  );
+  const requirement = new Requirement(
+    new RequirementId("demo-requirement"),
+    new RequirementName("Work item execution"),
+    new NormativeStatement("The system SHALL report the runtime execution result."),
+    [scenario]
+  );
+
+  return new Specification(
+    new SpecificationId("demo-specification"),
+    new SpecificationTitle("CLI execution")
+  )
+    .addRequirement(requirement)
+    .submitForReview()
+    .approve();
 };
 
 const program = new Command();
@@ -978,6 +1019,52 @@ specCommand
       console.log(`  ${chalk.bold(target.name)}`);
       console.log(chalk.gray(`    ${target.description}`));
       console.log();
+    }
+  });
+
+// Comando: work-item
+const workItemCommand = program
+  .command("work-item")
+  .description("Execute engineering work items");
+
+workItemCommand
+  .command("execute <objective>")
+  .description("Execute a work item through the Pi runtime")
+  .option("-w, --workspace <path>", "Workspace for the execution", process.cwd())
+  .option("-c, --constraint <text>", "Execution constraint")
+  .action(async (objective: string, options: { workspace: string; constraint?: string }) => {
+    console.log(chalk.cyan("Executing work item through Pi..."));
+    console.log(chalk.gray(`Objective: ${objective}`));
+    console.log(chalk.gray(`Workspace: ${options.workspace}`));
+
+    try {
+      const { PiRuntimeAdapter } = await import("../runtime/pi/index.js");
+      const workItem = new WorkItem(
+        new WorkItemId(`cli-${Date.now()}`),
+        new IntentId("cli-intent"),
+        new WorkItemTitle(objective)
+      );
+      const useCase = new ExecuteWorkItemUseCase(new PiRuntimeAdapter());
+      const result = await useCase.execute({
+        workItem,
+        specification: createDemoSpecification(),
+        workspace: options.workspace,
+        executionConstraints: options.constraint ? [options.constraint] : [],
+      });
+
+      if (result.status === "completed") {
+        console.log(chalk.green("✓ Work item completed"));
+        console.log(chalk.gray(`Runtime session: ${result.runtimeSessionId ?? "N/A"}`));
+        console.log(chalk.white(result.summary));
+      } else {
+        console.log(chalk.red(`✗ Work item ${result.status}`));
+        console.log(chalk.red(result.failure?.message ?? result.summary));
+        process.exitCode = 1;
+      }
+    } catch (error) {
+      console.log(chalk.red("✗ Work item execution failed:"));
+      console.log(chalk.red((error as Error).message));
+      process.exitCode = 1;
     }
   });
 

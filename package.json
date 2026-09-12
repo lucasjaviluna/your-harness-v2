@@ -2,6 +2,7 @@
   "name": "your-harness",
   "version": "0.1.0",
   "description": "AI-powered development harness - CLI first, extensible, multi-provider",
+  "type": "module",
   "main": "dist/src/cli/index.js",
   "bin": {
     "yh": "./dist/src/cli/index.js"
