@@ -11,6 +11,8 @@ This document serves as the entry point for all official project documentation.
 
 It provides a structured index of normative documents, engineering artifacts and project resources.
 
+For the living technical documentation and implementation status, start with [docs/INDEX.md](docs/INDEX.md).
+
 ---
 
 # Reading Order

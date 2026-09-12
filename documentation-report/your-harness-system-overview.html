@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your Harness — System Overview</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b1020; --panel:#141c33; --line:#2a385c; --text:#e8edf9; --muted:#aebbd7; --accent:#76a7ff; --green:#7be0b3; --amber:#f6c76f; --red:#ff9191; }
+    * { box-sizing:border-box; } body { margin:0; font:16px/1.55 system-ui,sans-serif; color:var(--text); background:radial-gradient(circle at 85% 0,#20386d 0,transparent 38%),var(--bg); }
+    main { max-width:1120px; margin:auto; padding:48px 24px 80px; } h1 { font-size:clamp(2.3rem,7vw,4.8rem); line-height:1; margin:0; } h2 { margin:52px 0 16px; } h3 { margin:0 0 8px; } p { color:var(--muted); max-width:78ch; } .eyebrow { color:var(--accent); font-weight:700; letter-spacing:.08em; text-transform:uppercase; } .lead { font-size:1.22rem; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; } .card { border:1px solid var(--line); background:linear-gradient(145deg,#18233f,#11182c); border-radius:16px; padding:20px; } .card p { margin:0; font-size:.92rem; }
+    .flow { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; align-items:stretch; margin:22px 0; } .node { border:1px solid var(--line); border-radius:12px; padding:14px 10px; text-align:center; background:var(--panel); font-weight:650; } .node small { display:block; color:var(--muted); font-weight:400; margin-top:5px; } .arrow { align-self:center; color:var(--accent); text-align:center; font-size:1.5rem; }
+    table { width:100%; border-collapse:collapse; } th,td { text-align:left; padding:12px; border-bottom:1px solid var(--line); } th { color:var(--muted); } .ok{color:var(--green)} .partial{color:var(--amber)} .stub{color:var(--red)} code { color:#c7d8ff; } footer { margin-top:56px; border-top:1px solid var(--line); padding-top:18px; color:var(--muted); }
+    @media(max-width:760px){ .flow{grid-template-columns:1fr;}.arrow{transform:rotate(90deg);height:18px;} }
+  </style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">Living architecture snapshot · v0.1.0 foundation</div>
+  <h1>Your Harness <span style="color:var(--accent)">(yh)</span></h1>
+  <p class="lead">A CLI-first engineering harness that separates governed engineering knowledge from the runtime that performs AI-assisted work.</p>
+
+  <h2>System at a glance</h2>
+  <div class="grid">
+    <section class="card"><h3>Engineering core</h3><p><code>packages/domain</code> holds aggregates and rules; <code>packages/application</code> owns use cases, projections and ports.</p></section>
+    <section class="card"><h3>Runtime harness</h3><p><code>src/</code> composes the CLI, core infrastructure, connectors, agents, MCP, workflows and the Pi adapter.</p></section>
+    <section class="card"><h3>Documentation</h3><p>Markdown under <code>docs/</code> is the source of truth. This report is a visual orientation layer.</p></section>
+  </div>
+
+  <h2>Implemented execution vertical</h2>
+  <div class="flow">
+    <div class="node">yh CLI<small>user command</small></div><div class="arrow">→</div>
+    <div class="node">WorkItem<small>objective</small></div><div class="arrow">→</div>
+    <div class="node">EngineeringContext<small>approved specification</small></div><div class="arrow">→</div>
+  </div>
+  <div class="flow" style="grid-template-columns:repeat(5,1fr)">
+    <div class="node">ExecutionRequest<small>application boundary</small></div><div class="arrow">→</div>
+    <div class="node">PiRuntimeAdapter<small>prompt projection</small></div><div class="arrow">→</div>
+    <div class="node">RuntimeResult<small>runtime outcome</small></div>
+  </div>
+  <p>The CLI command <code>yh work-item execute &lt;objective&gt;</code> currently creates a temporary approved demonstration Specification. It does not persist or transition the WorkItem.</p>
+
+  <h2>Responsibility boundaries</h2>
+  <div class="grid">
+    <section class="card"><h3>Domain</h3><p>Specifications, Requirements, Scenarios, WorkItems and lifecycle invariants. No prompts or provider SDKs.</p></section>
+    <section class="card"><h3>Application</h3><p><code>ContextAssembler</code>, <code>ExecuteWorkItemUseCase</code>, <code>ExecutionRequest</code> and <code>RuntimePort</code>.</p></section>
+    <section class="card"><h3>Runtime</h3><p>Consumes execution-safe context, builds a provider prompt and returns a runtime outcome. It does not own domain authority.</p></section>
+  </div>
+
+  <h2>Capability map</h2>
+  <table><thead><tr><th>Capability</th><th>Status</th><th>Current reality</th></tr></thead><tbody>
+    <tr><td>Domain Specification model</td><td class="ok">Implemented</td><td>Requirements and WHEN/THEN scenarios.</td></tr>
+    <tr><td>EngineeringContext and runtime boundary</td><td class="ok">Implemented</td><td>Projected context, typed request/result and Pi adapter.</td></tr>
+    <tr><td>CLI work-item vertical</td><td class="ok">Implemented</td><td>Uses temporary demonstration data.</td></tr>
+    <tr><td>Pi workspace tools</td><td class="partial">Disabled</td><td><code>noTools: "all"</code> is intentional pending safety policy.</td></tr>
+    <tr><td>MCP transport and agent tools</td><td class="stub">Stub</td><td>Interfaces and skeletons exist; real transport/tool execution is pending.</td></tr>
+  </tbody></table>
+
+  <h2>Next development sequence</h2>
+  <div class="grid">
+    <section class="card"><h3>1. Persistence</h3><p>Load WorkItems and approved Specifications through repositories instead of creating demo data.</p></section>
+    <section class="card"><h3>2. Context selection</h3><p>Select relevant requirements rather than forwarding every requirement from a Specification.</p></section>
+    <section class="card"><h3>3. Safe execution</h3><p>Introduce a workspace boundary and explicit permission policy before enabling Pi tools.</p></section>
+  </div>
+  <footer>For technical details and maintenance rules, read <code>docs/INDEX.md</code>. Update both the relevant Markdown document and capability map whenever a feature changes maturity.</footer>
+</main>
+</body>
+</html>
