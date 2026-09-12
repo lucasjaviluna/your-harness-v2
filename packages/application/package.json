@@ -1,0 +1,14 @@
+{
+  "name": "@your-harness/application",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "../../dist/packages/application/src/index.js",
+  "types": "../../dist/packages/application/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "../../dist/packages/application/src/index.d.ts",
+      "default": "../../dist/packages/application/src/index.js"
+    }
+  }
+}

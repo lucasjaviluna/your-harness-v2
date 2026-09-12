@@ -9,32 +9,33 @@ export interface EventBus {
 }
 
 export const createEventBus = (): EventBus => {
-  const handlers = new Map<string, Set<EventHandler>>();
+  const handlers = new Map<string, Set<EventHandler<unknown>>>();
 
   return {
     on(event, handler) {
       if (!handlers.has(event)) {
         handlers.set(event, new Set());
       }
-      handlers.get(event)!.add(handler);
+      handlers.get(event)!.add(handler as EventHandler<unknown>);
     },
 
     off(event, handler) {
-      handlers.get(event)?.delete(handler);
+      handlers.get(event)?.delete(handler as EventHandler<unknown>);
     },
 
-    async emit(event, payload) {
-      const eventHandlers = handlers.get(event);
+    async emit<T>(event: string, payload: T) {
+      const eventHandlers = handlers.get(event) as
+        Set<EventHandler<T>> | undefined;
       if (!eventHandlers) return;
-      
-      const promises = Array.from(eventHandlers).map(handler => 
-        Promise.resolve(handler(payload))
+
+      const promises = Array.from(eventHandlers).map((handler) =>
+        Promise.resolve(handler(payload)),
       );
       await Promise.all(promises);
     },
 
-    once(event, handler) {
-      const wrapper: EventHandler = (payload) => {
+    once<T>(event: string, handler: EventHandler<T>) {
+      const wrapper: EventHandler<T> = (payload) => {
         this.off(event, wrapper);
         return handler(payload);
       };

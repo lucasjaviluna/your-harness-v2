@@ -1,6 +1,6 @@
 // Tipos agnósticos para interacciones con IA
 
-export type MessageRole = 'system' | 'user' | 'assistant' | 'tool';
+export type MessageRole = "system" | "user" | "assistant" | "tool";
 
 export interface Message {
   role: MessageRole;
@@ -12,7 +12,7 @@ export interface Message {
 
 export interface ToolCall {
   id: string;
-  type: 'function';
+  type: "function";
   function: {
     name: string;
     arguments: string; // JSON string
@@ -44,7 +44,7 @@ export interface CompletionRequest {
 export interface CompletionResponse {
   id: string;
   message: Message;
-  finishReason: 'stop' | 'tool_calls' | 'length' | 'error';
+  finishReason: "stop" | "tool_calls" | "length" | "error";
   usage?: {
     promptTokens: number;
     completionTokens: number;
@@ -59,10 +59,15 @@ export interface StreamChunk {
   finishReason?: string;
 }
 
-export type CompletionHandler = (request: CompletionRequest) => Promise<CompletionResponse>;
-export type StreamHandler = (request: CompletionRequest) => AsyncIterable<StreamChunk>;
+export type CompletionHandler = (
+  request: CompletionRequest,
+) => Promise<CompletionResponse>;
+export type StreamHandler = (
+  request: CompletionRequest,
+) => AsyncIterable<StreamChunk>;
 
-export interface AIProvider extends CompletionHandler {
+export interface AIProvider {
+  complete: CompletionHandler;
   stream?: StreamHandler;
   listModels?: () => Promise<string[]>;
 }
