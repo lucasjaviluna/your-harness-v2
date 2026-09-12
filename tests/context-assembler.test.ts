@@ -16,6 +16,8 @@ import {
 import { IntentId, WorkItem, WorkItemId, WorkItemTitle } from "../packages/domain/src/index.js";
 import { createContextAssembler } from "../packages/application/src/context/index.js";
 import { ExecuteWorkItemUseCase } from "../packages/application/src/runtime/index.js";
+import { ExecuteStoredWorkItemUseCase } from "../packages/application/src/runtime/index.js";
+import { InMemoryRepository } from "../packages/application/src/shared/index.js";
 
 const createSpecification = (approved = true): Specification => {
   const scenario = new Scenario(
@@ -103,5 +105,37 @@ describe("ContextAssembler", () => {
       executionConstraints: ["Run tests"],
     });
     expect(workItem.status).toBe("todo");
+  });
+
+  it("loads a WorkItem and Specification from repositories before execution", async () => {
+    const workItems = new InMemoryRepository<WorkItem, WorkItemId>();
+    const specifications = new InMemoryRepository<Specification, SpecificationId>();
+    const workItem = new WorkItem(
+      new WorkItemId("stored-work-item"),
+      new IntentId("intent-1"),
+      new WorkItemTitle("Execute stored work item")
+    );
+    const specification = createSpecification();
+    await workItems.save(workItem);
+    await specifications.save(specification);
+
+    const runtime = {
+      execute: async () => ({
+        status: "completed" as const,
+        summary: "stored execution",
+        timestamps: { startedAt: "now" },
+      }),
+    };
+    const result = await new ExecuteStoredWorkItemUseCase(
+      workItems,
+      specifications,
+      runtime
+    ).execute({
+      workItemId: workItem.id,
+      specificationId: specification.id,
+      workspace: "/workspace/project",
+    });
+
+    expect(result.summary).toBe("stored execution");
   });
 });

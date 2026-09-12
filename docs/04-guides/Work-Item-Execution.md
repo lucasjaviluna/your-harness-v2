@@ -8,4 +8,4 @@ yh work-item execute "Implement request validation" \
 
 The command creates a temporary WorkItem and approved demonstration Specification, then executes the application-to-runtime vertical slice. A Pi-compatible runtime configuration is required for a real execution.
 
-This is an integration entrypoint, not persistence: it does not save the WorkItem, load a user Specification, or transition WorkItem status.
+The application layer now provides repository-backed loading through `ExecuteStoredWorkItemUseCase` and reusable in-memory repositories. The CLI command still uses temporary demonstration data until persistent repositories and user-facing identifiers are connected. It does not transition WorkItem status automatically.

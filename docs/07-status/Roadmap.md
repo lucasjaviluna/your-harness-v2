@@ -2,7 +2,7 @@
 
 ## Next
 
-1. Replace the demonstration data in `yh work-item execute` with repository-backed WorkItem and Specification loading.
+1. Connect `yh work-item execute` to persistent WorkItem and Specification repositories.
 2. Add contextual requirement selection rather than projecting all requirements.
 3. Define and implement a safe Pi tool policy.
 

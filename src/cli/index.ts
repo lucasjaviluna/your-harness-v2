@@ -43,7 +43,8 @@ import {
   WorkItemId,
   WorkItemTitle,
 } from "../../packages/domain/src/index.js";
-import { ExecuteWorkItemUseCase } from "../../packages/application/src/runtime/index.js";
+import { ExecuteStoredWorkItemUseCase } from "../../packages/application/src/runtime/index.js";
+import { InMemoryRepository } from "../../packages/application/src/shared/index.js";
 
 const config = loadConfig();
 const logger = createLogger(config.logLevel);
@@ -1044,10 +1045,20 @@ workItemCommand
         new IntentId("cli-intent"),
         new WorkItemTitle(objective)
       );
-      const useCase = new ExecuteWorkItemUseCase(new PiRuntimeAdapter());
+      const specification = createDemoSpecification();
+      const workItems = new InMemoryRepository<WorkItem, WorkItemId>();
+      const specifications = new InMemoryRepository<Specification, SpecificationId>();
+      await workItems.save(workItem);
+      await specifications.save(specification);
+
+      const useCase = new ExecuteStoredWorkItemUseCase(
+        workItems,
+        specifications,
+        new PiRuntimeAdapter(),
+      );
       const result = await useCase.execute({
-        workItem,
-        specification: createDemoSpecification(),
+        workItemId: workItem.id,
+        specificationId: specification.id,
         workspace: options.workspace,
         executionConstraints: options.constraint ? [options.constraint] : [],
       });
