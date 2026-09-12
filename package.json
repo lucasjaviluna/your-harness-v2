@@ -2,9 +2,9 @@
   "name": "your-harness",
   "version": "0.1.0",
   "description": "AI-powered development harness - CLI first, extensible, multi-provider",
-  "main": "dist/index.js",
+  "main": "dist/src/cli/index.js",
   "bin": {
-    "yh": "./dist/cli/index.js"
+    "yh": "./dist/src/cli/index.js"
   },
   "workspaces": [
     "packages/*"
@@ -12,7 +12,7 @@
   "scripts": {
     "dev": "tsx watch src/cli/index.ts",
     "build": "tsc",
-    "start": "node dist/cli/index.js",
+    "start": "node dist/src/cli/index.js",
     "test": "vitest",
     "test:watch": "vitest watch",
     "lint": "eslint src/",
