@@ -4,7 +4,7 @@
 
 ## Estado
 
-Prototipo temprano — Stage 1. El Engineering Core, el contrato de ejecución y el adaptador inicial de Pi están implementados; persistencia, selección de runtimes, SDD providers, guardrails y evidence continúan en evolución.
+Prototipo temprano — Stage 1. El Engineering Core, el contrato de ejecución, el adapter inicial de Pi y el spike read-only de OpenSpec están implementados; persistencia, selección de proveedores por proyecto, guardrails y evidence continúan en evolución.
 
 ## Arquitectura actual
 
@@ -25,6 +25,7 @@ src/cli
 - `src/runtime/pi` adapta Pi al `RuntimePort` sin exponer tipos de Pi al Core.
 - `src/cli` compone temporalmente el flujo de ejecución.
 - `src/runtime/execution-environment.ts` define la envolvente mínima de workspace, capabilities, red, secretos y confirmaciones; todavía no habilita tools.
+- `src/sdd/openspec` adapta material local de OpenSpec al port neutral `SddProvider`, sólo mediante lectura.
 
 ## Instalación y verificación
 

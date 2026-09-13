@@ -44,6 +44,7 @@ src/
 ├── skills/              ← Prompt templates + tools, categorized
 ├── workflows/           ← DAG-based workflow engine (8 step types)
 ├── mcp/                 ← MCP client/server (skeleton JSON-RPC, mocks only)
+├── sdd/                 ← Read-only SDD provider adapters (OpenSpec spike)
 ├── spec/                ← Spec-driven dev: parse/validate/generate from markdown/YAML/JSON
 └── types/               ← Shared type definitions
 ```
@@ -79,11 +80,12 @@ Shared, Domain and Application are composite TypeScript projects connected with 
 - **Workflow `command`/`script` steps** are placeholders.
 - **`saveConfig`** writes JSON to a `.yml` path (extension bug in `src/core/config.ts:120`).
 - **No explicit eslint/prettier config files** — lint/format behavior still needs consolidation.
-- **Tests are focused, not broad** — nine tests cover context, the Core smoke flows, runtime composition, the Runtime Boundary and Pi adapter integration.
+- **Tests are focused, not broad** — seventeen tests cover context, Core smoke flows, runtime composition/boundary, execution environment, read-only OpenSpec projection and Pi adapter integration.
 - **No CI/CD** — no `.github/workflows/`.
 - **Runtime selection is explicit and configurable at composition time** — `RuntimeRegistry` registers available adapters, `fake` is the safe default, and Pi is registered only when selected; project-level configuration and capability negotiation are pending.
 - **Execution environment contract is defined but not enforced by tools** — `ExecutionEnvironment` models workspace, capabilities, network, secrets and confirmations with deny-by-default values; Pi remains `noTools: "all"`.
 - **Operational persistence is pending** — the CLI uses demonstration aggregates and in-memory repositories.
+- **OpenSpec is read-only only** — `OpenSpecSddProvider` projects local artifacts through `SddProvider`; provider selection, writes, task synchronization and Change lifecycle are pending.
 - **Application public exports are complete for the current modules** — specification, work-item, review, release, runtime and context APIs are re-exported from the package root.
 - **Workspace installation is reproducible with npm** — `package-lock.json` is committed, local package links use `file:`, and `rimraf@^6` is declared at the root and packages; verify with `npm ci` followed by `npm ls`.
 

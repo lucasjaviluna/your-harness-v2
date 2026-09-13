@@ -7,6 +7,7 @@ This is the living technical documentation for `your-harness` (`yh`). It describ
 | Goal | Start here |
 | --- | --- |
 | Understand the platform | [System overview](02-architecture/System-Overview.md) |
+| Understand SDD integrations | [SDD providers](02-architecture/Sdd-Providers.md) |
 | Follow an execution | [Execution flow](02-architecture/Execution-Flow.md) |
 | Run the CLI | [Getting started](04-guides/Getting-Started.md) and [work item execution](04-guides/Work-Item-Execution.md) |
 | Change the codebase | [Boundaries](02-architecture/Boundaries.md) and [Testing](06-development/Testing.md) |

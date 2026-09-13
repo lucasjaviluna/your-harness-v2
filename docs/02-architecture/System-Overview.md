@@ -9,6 +9,7 @@ flowchart LR
   CLI["src/cli\nyh commands"] --> APP["packages/application\nuse cases and contracts"]
   APP --> DOMAIN["packages/domain\nengineering model"]
   RUNTIME["src/runtime\nPi adapter"] -->|implements RuntimePort| APP
+  SDD["src/sdd\nOpenSpec read-only adapter"] -->|implements SddProvider| APP
   CLI --> RUNTIME
   CLI --> CORE["src/core\nconfiguration, AI, MCP"]
   CORE --> CONNECTORS["src/connectors\nAI providers"]
@@ -21,6 +22,8 @@ Each package is an independent composite TypeScript project. The root `tsconfig.
 ## Current vertical slice
 
 The implemented execution path is `WorkItem + approved Specification → ContextAssembler → EngineeringContext → ExecutionRequest → RuntimePort → RuntimeResult`. It is verified independently with a `FakeRuntimePort`; the CLI currently composes the same Application flow with `PiRuntimeAdapter` and demonstration data.
+
+The first SDD integration is independent from this execution path: `OpenSpecSddProvider` reads current specification material and proposed change descriptors through the Application `SddProvider` port. It does not mutate OpenSpec files or pass provider artifacts to the Runtime.
 
 ## Source documents
 
