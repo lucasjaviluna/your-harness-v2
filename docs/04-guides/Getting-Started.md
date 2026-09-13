@@ -27,4 +27,6 @@ The root build uses TypeScript project references to compile Shared, Domain, App
 
 Configuration is read from `~/.your-harness/config.yml` and `.your-harness/config.yml`, then merged with environment variables such as `OPENAI_API_KEY`, `CLAUDE_API_KEY` and `COPILOT_API_KEY`.
 
+The local YAML config can select the default runtime, the read-only SDD provider, SDD traceability and the execution-environment policy. See [project configuration](../05-reference/Project-Configuration.md). These policy declarations do not enable Pi tools yet.
+
 See [CLI reference](../05-reference/CLI.md) for available commands.

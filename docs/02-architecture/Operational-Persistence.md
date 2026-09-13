@@ -24,4 +24,4 @@ Esta base no persiste copias de Specifications ni artefactos de OpenSpec. Las Sp
 - La CLI todavía compone repositorios demo en memoria.
 - No hay locking multiproceso, índices secundarios ni migraciones entre versiones.
 - No hay persistencia local de Specifications, Evidence o VerificationReport.
-- La configuración por proyecto de runtime, proveedor SDD y policies sigue pendiente.
+- La configuración por proyecto de runtime, proveedor SDD y policies está disponible; conectar esa composición con repositorios persistentes de la CLI sigue pendiente.

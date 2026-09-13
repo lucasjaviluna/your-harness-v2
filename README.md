@@ -4,7 +4,7 @@
 
 ## Estado
 
-Prototipo temprano — Stage 1. El Engineering Core, el contrato de ejecución, el adapter inicial de Pi y el spike read-only de OpenSpec están implementados; persistencia, selección de proveedores por proyecto y la implementación de verification/evidence continúan en evolución.
+Prototipo temprano — Stage 1. El Engineering Core, el contrato de ejecución, el adapter inicial de Pi, el spike read-only de OpenSpec y la composición configurable por proyecto están implementados; la integración persistente de la CLI y verification/evidence continúan en evolución.
 
 ## Arquitectura actual
 
@@ -24,7 +24,7 @@ src/cli
 - `packages/application` contiene casos de uso, proyecciones, ports y trazas operacionales de ejecución.
 - `src/runtime/pi` adapta Pi al `RuntimePort` sin exponer tipos de Pi al Core.
 - `src/cli` compone temporalmente el flujo de ejecución.
-- `src/runtime/execution-environment.ts` define la envolvente mínima de workspace, capabilities, red, secretos y confirmaciones; todavía no habilita tools.
+- `src/runtime/project-runtime-environment.ts` resuelve desde `config.yml` el runtime por defecto, proveedor SDD, trazabilidad requerida y política de entorno; todavía no habilita tools.
 - `src/sdd/openspec` adapta material local de OpenSpec al port neutral `SddProvider`, sólo mediante lectura.
 - `packages/application` aplica `ExecutionEligibilityPolicy` antes de ejecutar: Specification aprobada y, opcionalmente, trazabilidad SDD.
 - `src/persistence/local` persiste WorkItems y ExecutionTraces bajo `.your-harness/state/`, sin duplicar Specifications u OpenSpec.
@@ -53,7 +53,7 @@ npm start -- --help
 npm start -- work execute demo-work-item --objective "Implementar validación" --runtime fake --workspace .
 ```
 
-El comando `work-item execute` (alias `work execute`) usa actualmente un WorkItem y una Specification de demostración en memoria. Si no se indica `--runtime`, usa `fake` como runtime por defecto. También permite seleccionar `--runtime pi`; Pi sólo se registra cuando se solicita y ejecuta con todas las herramientas deshabilitadas (`noTools: "all"`).
+El comando `work-item execute` (alias `work execute`) usa actualmente un WorkItem y una Specification de demostración en memoria. Si no se indica `--runtime`, usa `runtime.defaultRuntime` de la configuración del proyecto (por defecto, `fake`). También permite seleccionar `--runtime pi`; Pi se registra cuando se selecciona por configuración o flag y ejecuta con todas las herramientas deshabilitadas (`noTools: "all"`).
 
 El boundary se valida con dos adaptadores: `FakeRuntimeAdapter` en `tests/runtime/` y `PiRuntimeAdapter` en `src/runtime/pi/`.
 
@@ -62,5 +62,6 @@ El boundary se valida con dos adaptadores: `FakeRuntimeAdapter` en `tests/runtim
 - [Índice técnico](docs/INDEX.md)
 - [Arquitectura](docs/02-architecture/System-Overview.md)
 - [Flujo de ejecución](docs/02-architecture/Execution-Flow.md)
+- [Configuración por proyecto](docs/05-reference/Project-Configuration.md)
 - [Estado de capacidades](docs/07-status/Capability-Map.md)
 - [Roadmap](docs/07-status/Roadmap.md)

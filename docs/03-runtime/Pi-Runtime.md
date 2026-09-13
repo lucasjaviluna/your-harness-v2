@@ -2,7 +2,7 @@
 
 `PiRuntimeAdapter` implements `RuntimePort`. It turns an `ExecutionRequest` into a structured prompt containing objective, knowledge, requirements with scenarios, engineering constraints and execution constraints.
 
-The `RuntimeEnvironment` composition root owns a `RuntimeRegistry` and an `ExecutionEnvironment` contract. `fake` is the default when the CLI omits `--runtime`; `PiRuntimeAdapter` is registered lazily only for `--runtime pi`. The environment contract now models the allowed workspace, capabilities, network, secrets and confirmations with deny-by-default values.
+The `RuntimeEnvironment` composition root owns a `RuntimeRegistry` and an `ExecutionEnvironment` contract. `createProjectRuntimeEnvironment` supplies them from `.your-harness/config.yml`: `fake` is the built-in default, while `runtime.defaultRuntime` applies when the CLI omits `--runtime`. Pi is registered lazily only when the resolved runtime is `pi`. The environment contract now models the allowed workspace, capabilities, network, secrets and confirmations with deny-by-default values.
 
 ## Safety status
 

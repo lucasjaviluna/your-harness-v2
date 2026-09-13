@@ -2,7 +2,7 @@ import { z } from "zod";
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { homedir } from "node:os";
-import { parse } from "yaml";
+import { parse, stringify } from "yaml";
 import dotenv from "dotenv";
 import type {
   HarnessConfig,
@@ -20,6 +20,52 @@ const providerConfigSchema = z.object({
   model: z.string().optional(),
   endpoint: z.string().optional(),
   options: z.record(z.unknown()).optional(),
+});
+
+const executionEnvironmentConfigSchema = z.object({
+  workspace: z
+    .object({
+      allowedPaths: z.array(z.string()).optional(),
+      mode: z.enum(["read-only", "read-write"]).optional(),
+    })
+    .default({}),
+  capabilities: z
+    .array(
+      z.enum([
+        "workspace.read",
+        "workspace.write",
+        "process.execute",
+        "network.access",
+        "secrets.read",
+        "human.confirmation",
+      ]),
+    )
+    .default([]),
+  network: z
+    .object({
+      mode: z.enum(["disabled", "allowlist"]).optional(),
+      allowedHosts: z.array(z.string()).optional(),
+    })
+    .default({}),
+  secrets: z
+    .object({
+      mode: z.enum(["none", "allowlist"]).optional(),
+      allowedNames: z.array(z.string()).optional(),
+    })
+    .default({}),
+  confirmations: z
+    .object({
+      mode: z.enum(["never", "on-risk", "always"]).optional(),
+      riskClasses: z.array(z.string()).optional(),
+    })
+    .default({}),
+});
+
+const runtimeConfigSchema = z.object({
+  defaultRuntime: z.string().trim().min(1).default("fake"),
+  sddProvider: z.enum(["openspec"]).default("openspec"),
+  requireSddChangeTraceability: z.boolean().default(false),
+  executionEnvironment: executionEnvironmentConfigSchema.default({}),
 });
 
 const harnessConfigSchema = z.object({
@@ -60,6 +106,7 @@ const harnessConfigSchema = z.object({
       }),
     )
     .optional(),
+  runtime: runtimeConfigSchema.default({}),
 });
 
 export type ValidatedConfig = z.infer<typeof harnessConfigSchema>;
@@ -75,6 +122,18 @@ const DEFAULT_CONFIG: ValidatedConfig = {
     openai: { enabled: false },
     local: { enabled: false },
     custom: { enabled: false },
+  },
+  runtime: {
+    defaultRuntime: "fake",
+    sddProvider: "openspec",
+    requireSddChangeTraceability: false,
+    executionEnvironment: {
+      workspace: {},
+      capabilities: [],
+      network: {},
+      secrets: {},
+      confirmations: {},
+    },
   },
 };
 
@@ -92,6 +151,11 @@ const loadConfigFile = (path: string): Partial<ValidatedConfig> => {
   const content = readFileSync(path, "utf-8");
   return parse(content) || {};
 };
+
+export interface ConfigLoadOptions {
+  readonly globalConfigPath?: string;
+  readonly localConfigPath?: string;
+}
 
 const mergeConfigs = (
   ...configs: Partial<ValidatedConfig>[]
@@ -114,7 +178,7 @@ const mergeConfigs = (
   }, DEFAULT_CONFIG);
 };
 
-export const loadConfig = (): ValidatedConfig => {
+export const loadConfig = (options: ConfigLoadOptions = {}): ValidatedConfig => {
   const { globalDir, globalConfig, localConfig } = getConfigPaths();
 
   // Crear directorio global si no existe
@@ -123,8 +187,8 @@ export const loadConfig = (): ValidatedConfig => {
   }
 
   const defaultConf = DEFAULT_CONFIG;
-  const globalConf = loadConfigFile(globalConfig);
-  const localConf = loadConfigFile(localConfig);
+  const globalConf = loadConfigFile(options.globalConfigPath ?? globalConfig);
+  const localConf = loadConfigFile(options.localConfigPath ?? localConfig);
 
   const merged = mergeConfigs(defaultConf, globalConf, localConf);
 
@@ -151,8 +215,7 @@ export const saveConfig = (
     mkdirSync(dir, { recursive: true });
   }
 
-  // TODO: Convertir a YAML
-  writeFileSync(path, JSON.stringify(config, null, 2), "utf-8");
+  writeFileSync(path, stringify(config), "utf-8");
 };
 
 export const getConfig = (): ValidatedConfig => {

@@ -30,6 +30,10 @@ openspec/
 
 El adapter usa sólo operaciones de lectura del filesystem. No invoca el CLI de OpenSpec, no escribe archivos, no sincroniza checklists y no crea WorkItems. Si no existe `openspec/`, falla de forma explícita.
 
+## Selección por proyecto
+
+La configuración local puede declarar `runtime.sddProvider: openspec`. `createProjectRuntimeEnvironment` compone ese adapter como `SddProvider` sin hacer que sus tipos crucen a Domain ni a Runtime. Es la única opción disponible; un valor desconocido se rechaza durante validación de configuración.
+
 ## Límites actuales
 
-El spike todavía no añade selección/configuración de proveedores por proyecto, persistencia operacional, planificación desde tareas, escritura de artefactos ni lifecycle de Change. Ningún tipo de OpenSpec cruza al Domain ni al Runtime.
+El spike todavía no añade planificación desde tareas, escritura de artefactos ni lifecycle de Change. La CLI de demostración tampoco lee todavía el proveedor configurado para construir sus aggregates. Ningún tipo de OpenSpec cruza al Domain ni al Runtime.

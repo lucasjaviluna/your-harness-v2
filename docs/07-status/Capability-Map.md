@@ -11,12 +11,13 @@
 | TypeScript workspace build | Implemented | Composite projects and project references build Shared → Domain → Application → CLI/runtime. |
 | Core-independent verification | Implemented | Smoke flow uses public package APIs and a `FakeRuntimePort`; Pi is tested separately. |
 | First executable engineering slice | Implemented | Direct `ExecuteWorkItemUseCase` validation with `FakeRuntimeAdapter` and the real `PiRuntimeAdapter` test double. |
-| Runtime composition and selection | Implemented (composition-level) | `RuntimeRegistry` resolves explicitly registered adapters; `fake` is the default and Pi is registered lazily when selected. Project-level configuration and persistence are pending. |
+| Runtime composition and selection | Implemented (project-configured) | `RuntimeRegistry` resolves explicitly registered adapters; `runtime.defaultRuntime` comes from `.your-harness/config.yml` and Pi is registered lazily when the resolved selection is `pi`. |
 | Execution environment contract | Implemented (policy model) | `ExecutionEnvironment` validates workspace boundaries, capabilities, network, secrets and confirmations with safe defaults; runtime tool enforcement is still disabled. |
-| SDD provider contract and OpenSpec spike | Implemented (read-only) | `SddProvider` exposes neutral specification/change projections; `OpenSpecSddProvider` reads local artifacts without invoking a provider CLI or mutating files. |
+| SDD provider contract and OpenSpec spike | Implemented (read-only) | `SddProvider` exposes neutral specification/change projections; project config selects the current `openspec` adapter, which reads local artifacts without invoking a provider CLI or mutating files. |
 | Operational execution trace | Implemented (local JSON) | `ExecutionTrace` links Change/task provenance, Specification, WorkItem and RuntimeResult outside Domain and Runtime; CLI composition and indexes are pending. |
 | Operational local persistence | Implemented (foundation) | `createLocalOperationalStore` persists WorkItems and ExecutionTraces under `.your-harness/state`; it intentionally does not copy Specifications/OpenSpec artifacts. |
-| Execution eligibility policy | Implemented | Requires an approved Specification and can require normalized Change provenance when SDD traceability is configured; denies before `RuntimePort`. |
+| Execution eligibility policy | Implemented | Requires an approved Specification and can require normalized Change provenance through `runtime.requireSddChangeTraceability`; denies before `RuntimePort`. |
+| Project runtime configuration | Implemented (composition-level) | `.your-harness/config.yml` configures default runtime, SDD provider, SDD traceability and execution environment policy; the demo CLI does not yet compose persistent repositories or SDD artifacts. |
 | Verification and evidence | Designed (not implemented) | ADR-009 defines evidence, verification reports and explicit completion authorization; RuntimeResult remains an observation. |
 | Pi workspace tools | Disabled | `noTools: "all"`. |
 | MCP transport | Stub | Client/server interfaces and JSON-RPC skeleton exist; real stdio/HTTP transport is pending. |

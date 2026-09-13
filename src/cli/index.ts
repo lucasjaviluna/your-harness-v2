@@ -26,7 +26,7 @@ import type { ToolResult } from "../core/ai/types.js";
 import type { WorkflowDefinition } from "../workflows/types.js";
 import type { SpecGenerationTarget } from "../spec/types.js";
 import type { ProviderType } from "../types/index.js";
-import { createRuntimeEnvironment } from "../runtime/index.js";
+import { createProjectRuntimeEnvironment } from "../runtime/index.js";
 import {
   IntentId,
   NormativeStatement,
@@ -1040,10 +1040,12 @@ workItemCommand
   .option("-r, --runtime <name>", "Runtime to use (fake by default; pi when selected)")
   .option("-o, --objective <text>", "Temporary objective for the in-memory demo")
   .action(async (workItemId: string, options: { workspace: string; constraint?: string; runtime?: string; objective?: string }) => {
-    const runtimeEnvironment = createRuntimeEnvironment({
-      includePi: options.runtime === "pi",
+    const projectEnvironment = createProjectRuntimeEnvironment({
+      config,
       workspace: options.workspace,
+      runtime: options.runtime,
     });
+    const { runtimeEnvironment } = projectEnvironment;
     const selectedRuntime = runtimeEnvironment.resolveName(options.runtime);
     console.log(chalk.cyan(`Executing work item through ${selectedRuntime}...`));
     console.log(chalk.gray(`Work item: ${workItemId}`));
@@ -1066,6 +1068,9 @@ workItemCommand
         workItems,
         specifications,
         runtime,
+        undefined,
+        undefined,
+        projectEnvironment.executionEligibilityPolicy,
       );
       const result = await useCase.execute({
         workItemId: workItem.id,

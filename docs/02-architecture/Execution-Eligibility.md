@@ -18,4 +18,4 @@ La política devuelve una decisión con `eligible` y razones normalizadas:
 
 Una denegación impide la llamada al `RuntimePort`. No modifica WorkItems, no aprueba Specifications y no interpreta `RuntimeResult`.
 
-La exigencia de trazabilidad SDD es configurable al crear la política y permanece desactivada por defecto mientras no haya configuración por proyecto.
+La exigencia de trazabilidad SDD es configurable al crear la política y se resuelve desde `runtime.requireSddChangeTraceability` en `.your-harness/config.yml`. Permanece desactivada por defecto.
