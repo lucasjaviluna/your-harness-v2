@@ -6,11 +6,14 @@
 sequenceDiagram
   participant U as User
   participant C as yh CLI
-  participant A as ExecuteWorkItemUseCase
+  participant A as ExecuteStoredWorkItemUseCase
+  participant R as Repositories
   participant X as ContextAssembler
   participant P as PiRuntimeAdapter
   U->>C: work-item execute <objective>
-  C->>A: WorkItem + approved demo Specification
+  C->>R: store demo WorkItem + approved Specification
+  C->>A: WorkItemId + SpecificationId
+  A->>R: load WorkItem + Specification
   A->>X: assemble Specification
   X-->>A: EngineeringContext
   A->>P: ExecutionRequest
@@ -19,8 +22,8 @@ sequenceDiagram
   C-->>U: status and summary
 ```
 
-`ContextAssembler` only projects approved domain Specifications into execution-safe data. `ExecuteWorkItemUseCase` does not change the WorkItem state after a runtime result; completion remains an explicit engineering decision.
+`ContextAssembler` only projects approved domain Specifications into execution-safe data. `ExecuteStoredWorkItemUseCase` loads the aggregates through repository ports and delegates to `ExecuteWorkItemUseCase`. Neither use case changes WorkItem state after a runtime result; completion remains an explicit engineering decision.
 
 ## Current limitation
 
-The CLI creates an in-memory demonstration Specification and WorkItem. Repository-backed loading and contextual selection by identifiers are not implemented yet.
+Repository-backed loading is implemented in Application and verified with an in-memory repository plus `FakeRuntimePort`. The CLI still creates demonstration aggregates and stores them in memory; persistent repositories, user-facing identifiers and contextual requirement selection are not implemented yet. The CLI also composes Pi directly until runtime selection is available.

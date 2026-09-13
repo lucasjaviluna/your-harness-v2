@@ -8,7 +8,7 @@ Early prototype (Stage 1). Core interfaces exist; many critical paths return moc
 ## Setup
 
 ```bash
-npm install          # required — no lockfile or node_modules exist yet
+npm install          # install root dependencies and local workspace packages
 cp .env.example .env # API keys for providers (COPILOT_API_KEY, CLAUDE_API_KEY, OPENAI_API_KEY, OLLAMA_HOST)
 ```
 
@@ -16,16 +16,19 @@ cp .env.example .env # API keys for providers (COPILOT_API_KEY, CLAUDE_API_KEY, 
 
 ```bash
 npm run dev          # tsx watch src/cli/index.ts
-npm run build        # tsc → dist/
-npm run start        # node dist/cli/index.js
-npm run test         # vitest — see Known Gaps
+npm run build        # tsc -b project graph → package dist/ folders + root dist/
+npm run build:core   # build shared → domain → application without root runtime
+npm run start        # node dist/src/cli/index.js
+npm run test         # vitest
+npm run verify:core  # build/test Engineering Core and Application without Pi
+npm run verify:pi    # build full graph and test Pi adapter separately
 npm run lint         # eslint src/ — see Known Gaps
 npm run format       # prettier --write src/ — see Known Gaps
 ```
 
 ## Architecture
 
-Two separate codebases coexist:
+Two architectural areas coexist and are connected through package contracts:
 
 ### `src/` — The CLI harness tool
 ```
@@ -49,7 +52,7 @@ src/
 
 `src/core/harness.ts` is a higher-level facade (initialize → createSession → complete → stream) but is **not wired into the CLI** yet.
 
-### `packages/` — DDD domain model (separate concern)
+### `packages/` — Engineering Core and Application
 ```
 packages/
 ├── shared/              ← Value objects, Result type, identifiers, domain errors, contracts
@@ -57,16 +60,17 @@ packages/
 └── application/         ← Use cases + ports (hexagonal architecture)
 ```
 
-These packages use relative `.js` extension imports internally. `packages/application` imports from `@your-harness/domain` — verify this resolves before assuming packages work together.
+Shared, Domain and Application are composite TypeScript projects connected with project references. Package-internal imports use relative `.js` extensions; cross-package consumers use `@your-harness/domain` and `@your-harness/application`, never physical `packages/*/src` paths. The root build includes only `src/**` and orchestrates the package graph with `tsc -b`.
 
 ## Conventions
 
-- **All imports use relative paths with `.js` extensions**: `from '../core/config.js'`. Required by `moduleResolution: "NodeNext"`.
+- **Package-internal imports use relative paths with `.js` extensions**: `from '../core/config.js'`. Cross-package imports use the package name. Required by `moduleResolution: "NodeNext"`.
 - **Path aliases in tsconfig** (`@/*`, `@core/*`, etc.) are declared but **never used**. Do not introduce them.
-- **Factory functions over classes**: every module exports `createX()` factories with closure state.
+- **Factory functions in `src/` infrastructure; domain entities and application use cases may be classes**.
 - **`import type` for type-only imports**: use `import type { X }` when importing only types.
 - **Spanish**: all comments, CLI descriptions, system prompts, and docs are in Spanish.
 - **Config paths**: global `~/.your-harness/config.yml`, local `.your-harness/config.yml`. Merged with env vars via dotenv.
+- **Documentation is part of done**: update README, AGENTS and affected `docs/` files whenever code, architecture, commands, tests, capabilities or roadmap state changes.
 
 ## Known Gaps
 
@@ -74,16 +78,20 @@ These packages use relative `.js` extension imports internally. `packages/applic
 - **MCP client/server** are skeleton JSON-RPC with no real transport.
 - **Workflow `command`/`script` steps** are placeholders.
 - **`saveConfig`** writes JSON to a `.yml` path (extension bug in `src/core/config.ts:120`).
-- **No vitest/eslint/prettier config files** — `npm run test`, `lint`, `format` will fail or use defaults.
-- **No test files** exist anywhere in the repo.
+- **No explicit eslint/prettier config files** — lint/format behavior still needs consolidation.
+- **Tests are focused, not broad** — six tests cover context, the Core smoke flow and Pi adapter integration.
 - **No CI/CD** — no `.github/workflows/`.
-- **`packages/application`** depends on `@your-harness/domain` — confirm resolution before modifying.
-- **Packages use `workspace:*`** but no workspace config (`pnpm-workspace.yaml`, etc.) exists — inter-package resolution may not work.
+- **Runtime selection is pending** — the CLI still composes Pi directly; no runtime registry exists.
+- **Execution environment policy is pending** — `workspace` maps directly to `cwd`; tools remain disabled with `noTools: "all"`.
+- **Operational persistence is pending** — the CLI uses demonstration aggregates and in-memory repositories.
+- **Application public exports are incomplete** — specification, work-item, review and release modules are not all re-exported from the package root.
+- **Dependency-install hygiene needs consolidation** — local packages use `file:` dependencies for npm compatibility; verify with `npm ls` after installation.
 
 ## Working in this repo
 
-- New features should follow the factory-function pattern (`createX()`).
-- Keep imports as relative `.js` extension paths — never add path aliases.
+- New infrastructure features in `src/` should follow the factory-function pattern (`createX()`); preserve the existing DDD class model in `packages/`.
+- Keep internal imports as relative `.js` paths and cross-package imports as package names; never add source-path coupling or new aliases.
 - `src/core/` defines interfaces; `src/connectors/`, `src/agents/`, etc. provide implementations. Respect this separation.
 - Comments and user-facing strings should be in Spanish.
 - When touching `packages/`, remember they are a separate concern from `src/` — different architecture (DDD/hexagonal vs. CLI harness).
+- Before closing a change, run the relevant build/tests and update every affected document in the same lot.

@@ -8,16 +8,19 @@
 flowchart LR
   CLI["src/cli\nyh commands"] --> APP["packages/application\nuse cases and contracts"]
   APP --> DOMAIN["packages/domain\nengineering model"]
-  APP --> RUNTIME["src/runtime\nPi adapter"]
+  RUNTIME["src/runtime\nPi adapter"] -->|implements RuntimePort| APP
+  CLI --> RUNTIME
   CLI --> CORE["src/core\nconfiguration, AI, MCP"]
   CORE --> CONNECTORS["src/connectors\nAI providers"]
 ```
 
 `src/` is the executable harness: CLI composition, provider connectors, MCP skeletons, agents, plugins, skills and workflows. `packages/` is the engineering model: shared primitives, domain aggregates and application use cases.
 
+Each package is an independent composite TypeScript project. The root `tsconfig.json` references Shared, Domain and Application and includes only `src/**`. Cross-project consumers use `@your-harness/domain` and `@your-harness/application`; they do not import package source paths.
+
 ## Current vertical slice
 
-The implemented execution path is `WorkItem → EngineeringContext → ExecutionRequest → RuntimePort → PiRuntimeAdapter → RuntimeResult`. It is callable through `yh work-item execute` and currently uses an approved demonstration Specification created by the CLI.
+The implemented execution path is `WorkItem + approved Specification → ContextAssembler → EngineeringContext → ExecutionRequest → RuntimePort → RuntimeResult`. It is verified independently with a `FakeRuntimePort`; the CLI currently composes the same Application flow with `PiRuntimeAdapter` and demonstration data.
 
 ## Source documents
 

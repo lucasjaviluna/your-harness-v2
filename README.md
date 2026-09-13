@@ -1,25 +1,58 @@
 # your-harness
 
-AI-powered development harness - CLI first, extensible, multi-provider.
+`your-harness` (`yh`) es un harness CLI para trabajo de ingeniería asistido por IA. Separa el estado y conocimiento de ingeniería del runtime concreto que ejecuta una tarea.
 
-## Status
-🚧 Early Development - Stage 1: Foundation
+## Estado
 
-## Vision
-A centralized CLI tool that orchestrates AI agents, plugins, skills, and MCP servers for software development workflows. Agnostic to AI providers and extensible by design.
+Prototipo temprano — Stage 1. El Engineering Core, el contrato de ejecución y el adaptador inicial de Pi están implementados; persistencia, selección de runtimes, SDD providers, guardrails y evidence continúan en evolución.
 
-## Documentation
+## Arquitectura actual
 
-- [Technical documentation](docs/INDEX.md)
-- [Visual system overview](documentation-report/your-harness-system-overview.html)
+```text
+packages/shared
+      ↓
+packages/domain
+      ↓
+packages/application
+      ↑ RuntimePort
+src/runtime/pi
+      ↑ composición
+src/cli
+```
 
-## Quick Start
+- `packages/domain` contiene aggregates y reglas del Engineering Core.
+- `packages/application` contiene casos de uso, proyecciones y ports.
+- `src/runtime/pi` adapta Pi al `RuntimePort` sin exponer tipos de Pi al Core.
+- `src/cli` compone temporalmente el flujo de ejecución.
+
+## Instalación y verificación
 
 ```bash
-# Install
-npm install -g your-harness
+npm install
+npm run build
+npm test -- --run
+```
 
-# Use
-yh --version
-yh mode frontend
-yh config
+Verificación independiente del Core y del runtime Pi:
+
+```bash
+npm run verify:core
+npm run verify:pi
+```
+
+## Uso
+
+```bash
+npm start -- --help
+npm start -- work-item execute "Implementar validación" --workspace .
+```
+
+El comando `work-item execute` usa actualmente un WorkItem y una Specification de demostración en memoria. Pi ejecuta con todas las herramientas deshabilitadas (`noTools: "all"`).
+
+## Documentación
+
+- [Índice técnico](docs/INDEX.md)
+- [Arquitectura](docs/02-architecture/System-Overview.md)
+- [Flujo de ejecución](docs/02-architecture/Execution-Flow.md)
+- [Estado de capacidades](docs/07-status/Capability-Map.md)
+- [Roadmap](docs/07-status/Roadmap.md)

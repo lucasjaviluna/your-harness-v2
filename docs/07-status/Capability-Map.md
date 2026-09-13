@@ -8,9 +8,13 @@
 | Runtime boundary | Implemented | `ExecutionRequest`, `RuntimePort`, `RuntimeResult` and Pi adapter. |
 | CLI work-item vertical | Implemented | Uses temporary demonstration data; no persistence. |
 | Application repository ports | Implemented | WorkItem/Specification ports plus generic in-memory repository. |
+| TypeScript workspace build | Implemented | Composite projects and project references build Shared → Domain → Application → CLI/runtime. |
+| Core-independent verification | Implemented | Smoke flow uses public package APIs and a `FakeRuntimePort`; Pi is tested separately. |
+| Runtime selection | Pending | CLI currently composes Pi directly; no runtime registry or project/execution selection exists. |
+| Execution environment policy | Pending | Workspace is a string mapped to `cwd`; sandbox, tool, network, secret and confirmation policies are not modeled yet. |
 | Pi workspace tools | Disabled | `noTools: "all"`. |
 | MCP transport | Stub | Client/server interfaces and JSON-RPC skeleton exist; real stdio/HTTP transport is pending. |
 | Agent tools | Stub | CLI ToolExecutor currently reports simulated success. |
 | Workflow command/script steps | Stub | Placeholder execution only. |
 | Configuration persistence | Partial | YAML is read; save path behavior requires consolidation. |
-| Test suite | Early | Focused unit/integration coverage exists; broad coverage is pending. |
+| Test suite | Early | Six focused tests cover context projection, the Core smoke flow and the Pi adapter; broad coverage is pending. |
