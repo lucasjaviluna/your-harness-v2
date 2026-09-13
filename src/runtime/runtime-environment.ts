@@ -2,6 +2,10 @@ import type { RuntimePort } from "@your-harness/application";
 
 import { FakeRuntimeAdapter } from "./fake-runtime-adapter.js";
 import { PiRuntimeAdapter } from "./pi/pi-runtime-adapter.js";
+import {
+  createExecutionEnvironment,
+  type ExecutionEnvironment,
+} from "./execution-environment.js";
 
 export type RuntimeName = string;
 
@@ -46,6 +50,7 @@ export const createRuntimeRegistry = (
 export interface RuntimeEnvironment {
   readonly defaultRuntime: RuntimeName;
   readonly registry: RuntimeRegistry;
+  readonly executionEnvironment: ExecutionEnvironment;
   listRuntimes(): ReadonlyArray<RuntimeName>;
   resolveName(name?: RuntimeName): RuntimeName;
   resolve(name?: RuntimeName): RuntimePort;
@@ -56,6 +61,8 @@ export interface RuntimeEnvironmentOptions {
   readonly runtimes?: Readonly<Record<RuntimeName, RuntimePort>>;
   /** Registra Pi sólo cuando la composición lo solicita explícitamente. */
   readonly includePi?: boolean;
+  readonly workspace?: string;
+  readonly executionEnvironment?: ExecutionEnvironment;
 }
 
 /** Composition root configurable para seleccionar un RuntimePort disponible. */
@@ -83,6 +90,9 @@ export const createRuntimeEnvironment = (
   return {
     defaultRuntime,
     registry,
+    executionEnvironment:
+      options.executionEnvironment ??
+      createExecutionEnvironment({ workspace: { root: options.workspace ?? process.cwd() } }),
     listRuntimes: () => registry.list(),
     resolveName: (name = defaultRuntime) => {
       registry.resolve(name);

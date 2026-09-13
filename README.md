@@ -24,6 +24,7 @@ src/cli
 - `packages/application` contiene casos de uso, proyecciones y ports.
 - `src/runtime/pi` adapta Pi al `RuntimePort` sin exponer tipos de Pi al Core.
 - `src/cli` compone temporalmente el flujo de ejecución.
+- `src/runtime/execution-environment.ts` define la envolvente mínima de workspace, capabilities, red, secretos y confirmaciones; todavía no habilita tools.
 
 ## Instalación y verificación
 

@@ -1042,6 +1042,7 @@ workItemCommand
   .action(async (workItemId: string, options: { workspace: string; constraint?: string; runtime?: string; objective?: string }) => {
     const runtimeEnvironment = createRuntimeEnvironment({
       includePi: options.runtime === "pi",
+      workspace: options.workspace,
     });
     const selectedRuntime = runtimeEnvironment.resolveName(options.runtime);
     console.log(chalk.cyan(`Executing work item through ${selectedRuntime}...`));

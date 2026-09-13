@@ -12,7 +12,8 @@
 | Core-independent verification | Implemented | Smoke flow uses public package APIs and a `FakeRuntimePort`; Pi is tested separately. |
 | First executable engineering slice | Implemented | Direct `ExecuteWorkItemUseCase` validation with `FakeRuntimeAdapter` and the real `PiRuntimeAdapter` test double. |
 | Runtime composition and selection | Implemented (composition-level) | `RuntimeRegistry` resolves explicitly registered adapters; `fake` is the default and Pi is registered lazily when selected. Project-level configuration and persistence are pending. |
-| Execution environment policy | Pending | Workspace is a string mapped to `cwd`; sandbox, tool, network, secret and confirmation policies are not modeled yet. |
+| Execution environment contract | Implemented (policy model) | `ExecutionEnvironment` validates workspace boundaries, capabilities, network, secrets and confirmations with safe defaults; runtime tool enforcement is still disabled. |
+| Execution environment policy | Contract implemented | `ExecutionEnvironment` models and validates workspace boundaries, capabilities, network, secret and confirmation policies; sandbox/tool enforcement is still pending. |
 | Pi workspace tools | Disabled | `noTools: "all"`. |
 | MCP transport | Stub | Client/server interfaces and JSON-RPC skeleton exist; real stdio/HTTP transport is pending. |
 | Agent tools | Stub | CLI ToolExecutor currently reports simulated success. |
