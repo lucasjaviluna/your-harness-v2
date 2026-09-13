@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import {
   createVerificationPlan,
+  evaluateVerificationPlan,
   InMemoryEvidenceRepository,
   RecordEvidenceUseCase,
 } from "@your-harness/application";
@@ -81,5 +82,89 @@ describe("Evidence and Verification contracts", () => {
     expect(() => createVerificationPlan({ ...plan, criteria: [] })).toThrow(
       "requires at least one criterion",
     );
+  });
+
+  it("evaluates criteria conservatively and returns a durable report shape", () => {
+    const plan = createVerificationPlan({
+      id: "plan-evaluation",
+      specificationId: "spec-1",
+      createdAt: "2026-09-13T00:00:00.000Z",
+      criteria: [
+        {
+          id: "criterion-passed",
+          subject: { kind: "scenario", scenarioId: "login" },
+          expectedEvidenceKinds: ["test-result"],
+        },
+        {
+          id: "criterion-human",
+          subject: { kind: "requirement", requirementId: "authentication" },
+          expectedEvidenceKinds: ["attestation"],
+        },
+      ],
+    });
+
+    const report = evaluateVerificationPlan({
+      plan,
+      reportId: "report-evaluation",
+      createdAt: "2026-09-13T00:01:00.000Z",
+      evidence: [
+        {
+          id: "evidence-passed",
+          executionTraceId: "trace-1",
+          subject: { kind: "scenario", scenarioId: "login" },
+          kind: "test-result",
+          outcome: "passed",
+          summary: "The test passed.",
+          capturedAt: "2026-09-13T00:00:30.000Z",
+        },
+        {
+          id: "evidence-attestation",
+          executionTraceId: "trace-1",
+          subject: { kind: "requirement", requirementId: "authentication" },
+          kind: "attestation",
+          outcome: "passed",
+          summary: "A reviewer attested the result.",
+          capturedAt: "2026-09-13T00:00:40.000Z",
+        },
+      ],
+    });
+
+    expect(report.outcome).toBe("requires-human-review");
+    expect(report.criteria).toEqual([
+      expect.objectContaining({ criterionId: "criterion-passed", outcome: "verified" }),
+      expect.objectContaining({ criterionId: "criterion-human", outcome: "requires-human-review" }),
+    ]);
+  });
+
+  it("makes failed evidence dominate and missing evidence inconclusive", () => {
+    const plan = createVerificationPlan({
+      id: "plan-outcomes",
+      specificationId: "spec-1",
+      createdAt: "2026-09-13T00:00:00.000Z",
+      criteria: [
+        { id: "failed", subject: { kind: "scenario", scenarioId: "failed" }, expectedEvidenceKinds: ["test-result"] },
+        { id: "missing", subject: { kind: "scenario", scenarioId: "missing" }, expectedEvidenceKinds: ["test-result"] },
+      ],
+    });
+    const report = evaluateVerificationPlan({
+      plan,
+      reportId: "report-outcomes",
+      createdAt: "2026-09-13T00:01:00.000Z",
+      evidence: [{
+        id: "evidence-failed",
+        executionTraceId: "trace-1",
+        subject: { kind: "scenario", scenarioId: "failed" },
+        kind: "test-result",
+        outcome: "failed",
+        summary: "The test failed.",
+        capturedAt: "2026-09-13T00:00:30.000Z",
+      }],
+    });
+
+    expect(report.outcome).toBe("failed");
+    expect(report.criteria).toEqual([
+      expect.objectContaining({ criterionId: "failed", outcome: "failed" }),
+      expect.objectContaining({ criterionId: "missing", outcome: "inconclusive" }),
+    ]);
   });
 });

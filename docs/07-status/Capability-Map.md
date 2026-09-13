@@ -18,10 +18,10 @@
 | Operational local persistence | Implemented | `createLocalOperationalStore` persists WorkItems, bindings, ExecutionTraces, Evidence and VerificationPlan/Report under `.your-harness/state`; it does not copy provider-owned Specifications/OpenSpec artifacts. |
 | Execution eligibility policy | Implemented | Requires an approved Specification and can require normalized Change provenance through `runtime.requireSddChangeTraceability`; denies before `RuntimePort`. |
 | Project runtime configuration | Implemented (composition-level) | `.your-harness/config.yml` configures default runtime, SDD provider, SDD traceability and execution environment policy; the CLI composes it for real operational execution. |
-| Verification and evidence | Implemented (durable contracts) | ADR-009 contracts define immutable Evidence tied to an existing ExecutionTrace, durable VerificationPlan/Report repositories and repository ports. Evaluation and completion authorization remain pending. |
+| Verification and evidence | Implemented (durable contracts + evaluator) | ADR-009 contracts define immutable Evidence tied to an existing ExecutionTrace, durable VerificationPlan/Report repositories and conservative deterministic evaluation. Completion authorization remains pending. |
 | Pi workspace tools | Disabled | `noTools: "all"`. |
 | MCP transport | Stub | Client/server interfaces and JSON-RPC skeleton exist; real stdio/HTTP transport is pending. |
 | Agent tools | Stub | CLI ToolExecutor currently reports simulated success. |
 | Workflow command/script steps | Stub | Placeholder execution only. |
 | Configuration persistence | Partial | YAML is read; save path behavior requires consolidation. |
-| Test suite | Early | Thirty-four focused tests cover configuration, context projection, Core smoke flows, Runtime composition/boundary, execution environment, OpenSpec read-only projection, operational persistence/bindings, real CLI execution, Evidence/Verification contracts, eligibility and Pi adapter; broad coverage is pending. |
+| Test suite | Early | Thirty-six focused tests cover configuration, context projection, Core smoke flows, Runtime composition/boundary, execution environment, OpenSpec read-only projection, operational persistence/bindings, real CLI execution, Evidence/Verification contracts/evaluator, eligibility and Pi adapter; broad coverage is pending. |

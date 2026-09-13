@@ -24,3 +24,15 @@ record; this permits a local durable trace store to anchor evidence across proce
 `VerificationReport` and their repositories are now durable local contracts under
 `.your-harness/state`. They do not yet evaluate evidence automatically, authorize
 completion, or transition a WorkItem. The design remains specified in [ADR-009](../adr/ADR-009.md).
+
+Application now includes a conservative deterministic evaluator. For each criterion:
+
+- failed matching evidence produces `failed`;
+- missing expected evidence kinds produce `inconclusive`;
+- inconclusive matching evidence produces `inconclusive`;
+- passed `review-note` or `attestation` evidence produces `requires-human-review`;
+- otherwise the criterion is `verified`.
+
+Report-level precedence is `failed`, then `requires-human-review`, then
+`inconclusive`, then `verified`. This evaluator creates a report only; it does not
+authorize completion.
