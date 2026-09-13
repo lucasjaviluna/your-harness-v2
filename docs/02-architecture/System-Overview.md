@@ -25,3 +25,4 @@ The implemented execution path is `WorkItem → EngineeringContext → Execution
 - [ADR-003](../adr/ADR-003.md): Specification model.
 - [ADR-004](../adr/ADR-004.md): runtime boundary.
 - [ADR-005](../adr/ADR-005.md): Engineering Context.
+- [ADR-006](../adr/ADR-006.md): SDD change boundary and provider contract.
