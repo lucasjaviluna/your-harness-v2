@@ -4,6 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import { afterEach, describe, expect, it } from "vitest";
+import { WorkItemId, WorkItemStatus } from "@your-harness/domain";
+import { createLocalOperationalStore } from "../../src/persistence/index.js";
 
 const executeFile = promisify(execFile);
 const workspaces: string[] = [];
@@ -89,5 +91,36 @@ describe("yh work execute", () => {
     });
     expect(trace.specificationSnapshot.contentDigest).toMatch(/^[a-f0-9]{64}$/);
     expect(trace.taskReferences).toHaveLength(1);
-  }, 30_000);
+
+    const store = createLocalOperationalStore({ workspace });
+    await store.verificationReports.save({
+      id: "report-cli",
+      planId: "plan-cli",
+      executionTraceId: trace.id,
+      specificationId: trace.specificationId,
+      specificationSnapshotDigest: trace.specificationSnapshot.contentDigest,
+      outcome: "verified",
+      criteria: [],
+      createdAt: "2026-09-13T00:02:00.000Z",
+    });
+    await runYh(workspace, "work", "start", "login-work");
+    const authorizationOutput = await runYh(
+      workspace,
+      "work",
+      "authorize",
+      "login-work",
+      "--report",
+      "report-cli",
+      "--decision",
+      "authorize-completion",
+      "--by",
+      "human-reviewer",
+      "--reason",
+      "Verification reviewed",
+    );
+    expect(authorizationOutput).toContain("Decision 'authorize-completion' recorded");
+    await expect(store.workItems.findById(new WorkItemId("login-work"))).resolves.toMatchObject({
+      status: WorkItemStatus.Done,
+    });
+  }, 60_000);
 });

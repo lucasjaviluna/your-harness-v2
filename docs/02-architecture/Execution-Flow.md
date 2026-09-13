@@ -31,10 +31,10 @@ sequenceDiagram
 
 ## Current limitation
 
-Repository-backed loading is implemented in Application and verified with an in-memory repository plus `FakeRuntimePort`. The CLI still creates demonstration aggregates and stores them in memory; persistent repositories, user-facing identifiers and contextual requirement selection are not implemented yet. Runtime selection is handled by the composition-level `RuntimeRegistry`.
+Repository-backed loading is implemented in Application and the CLI. `work execute` loads persistent WorkItems/bindings, reads the configured SDD provider and stores a durable ExecutionTrace; `work start` and `work authorize` apply the explicit Domain completion lifecycle. Runtime selection is handled by the composition-level `RuntimeRegistry`.
 
 The Runtime Boundary is also validated directly without repositories through `ExecuteWorkItemUseCase` and `FakeRuntimeAdapter` in `tests/runtime/execute-work-item.test.ts`. The CLI composition root resolves a `RuntimeRegistry` behind the same `RuntimePort`; `fake` is the default and Pi is registered only when explicitly selected, without changing Application.
 
 When a caller supplies neutral Change/task provenance and an `ExecutionTraceRepository`, `ExecuteStoredWorkItemUseCase` records an `ExecutionTrace` after receiving `RuntimeResult`. That record is operational observability, not a Domain relationship, WorkItem transition, approval or evidence decision.
 
-ADR-009 proposes the next post-execution stage: a completed RuntimeResult becomes pending verification, evidence is evaluated against approved Requirements/Scenarios, and only explicit authorization may complete a WorkItem. That stage is not implemented yet.
+ADR-009 defines the post-execution stage: a completed RuntimeResult becomes pending verification, evidence is evaluated against approved Requirements/Scenarios, and only explicit authorization may complete a WorkItem. The scoped implementation is now available through durable local contracts, deterministic evaluation and `work authorize`; richer evidence collection and verification UX remain future work.

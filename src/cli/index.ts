@@ -38,6 +38,7 @@ import {
   WorkItemTitle,
 } from "@your-harness/domain";
 import {
+  CompleteWorkItemUseCase,
   ExecuteStoredWorkItemUseCase,
   InMemoryRepository,
 } from "@your-harness/application";
@@ -1058,6 +1059,68 @@ workItemCommand
       console.log(chalk.green(`✓ Work item '${workItemId}' bound to SDD specification '${options.specification}'`));
     } catch (error) {
       console.log(chalk.red("✗ Work item binding failed:"));
+      console.log(chalk.red((error as Error).message));
+      process.exitCode = 1;
+    }
+  });
+
+workItemCommand
+  .command("start <workItemId>")
+  .description("Start a persisted WorkItem")
+  .option("-w, --workspace <path>", "Workspace state location", process.cwd())
+  .action(async (workItemId: string, options: { workspace: string }) => {
+    try {
+      const store = createLocalOperationalStore({ workspace: options.workspace });
+      const id = new WorkItemId(workItemId);
+      const workItem = await store.workItems.findById(id);
+      if (!workItem) throw new Error(`Work item '${workItemId}' not found.`);
+      await store.workItems.save(workItem.start());
+      console.log(chalk.green(`✓ Work item '${workItemId}' started`));
+    } catch (error) {
+      console.log(chalk.red("✗ Work item start failed:"));
+      console.log(chalk.red((error as Error).message));
+      process.exitCode = 1;
+    }
+  });
+
+workItemCommand
+  .command("authorize <workItemId>")
+  .description("Apply an explicit verification decision to a persisted WorkItem")
+  .requiredOption("-r, --report <id>", "VerificationReport identifier")
+  .requiredOption("-d, --decision <decision>", "authorize-completion, request-rework or require-further-review")
+  .requiredOption("-b, --by <actor>", "Authorizing actor")
+  .requiredOption("--reason <text>", "Reason for the decision")
+  .option("-w, --workspace <path>", "Workspace state location", process.cwd())
+  .action(async (workItemId: string, options: {
+    report: string;
+    decision: "authorize-completion" | "request-rework" | "require-further-review";
+    by: string;
+    reason: string;
+    workspace: string;
+  }) => {
+    try {
+      const store = createLocalOperationalStore({ workspace: options.workspace });
+      await new CompleteWorkItemUseCase(
+        store.workItems,
+        store.executionTraces,
+        store.verificationReports,
+        store.completionAuthorizations,
+      ).execute({
+        workItemId: new WorkItemId(workItemId),
+        authorization: {
+          id: randomUUID(),
+          workItemId,
+          verificationReportId: options.report,
+          executionTraceId: (await store.verificationReports.findById(options.report))?.executionTraceId ?? "",
+          decision: options.decision,
+          authorizedBy: options.by,
+          reason: options.reason,
+          authorizedAt: new Date().toISOString(),
+        },
+      });
+      console.log(chalk.green(`✓ Decision '${options.decision}' recorded for '${workItemId}'`));
+    } catch (error) {
+      console.log(chalk.red("✗ Completion authorization failed:"));
       console.log(chalk.red((error as Error).message));
       process.exitCode = 1;
     }
