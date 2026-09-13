@@ -12,3 +12,4 @@ export * from "./release/index.js";
 export * from "./runtime/index.js";
 export * from "./context/index.js";
 export * from "./sdd/index.js";
+export * from "./trace/index.js";

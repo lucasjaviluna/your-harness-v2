@@ -10,7 +10,7 @@
 ## Later
 
 5. Connect `yh work-item execute` to persistent WorkItem and Specification repositories.
-6. Add operational traceability between Change, Specification, WorkItem and execution.
+6. ~~Add operational traceability between Change, Specification, WorkItem and execution.~~ **Completed in-memory:** `ExecutionTrace` records the linkage without changing Domain relationships; durable local persistence remains pending.
 7. Add contextual requirement selection rather than projecting all requirements.
 8. Introduce `ExecutionEligibilityPolicy` when a second concrete eligibility rule exists.
 9. Define Verification/Evidence before interpreting runtime completion as engineering completion.

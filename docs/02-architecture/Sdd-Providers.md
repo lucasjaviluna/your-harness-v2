@@ -12,6 +12,8 @@ El contrato público está en `@your-harness/application` y devuelve una proyecc
 
 Un `Change` proyectado no es un aggregate de Domain, no modifica una `Specification` actual y no se relaciona directamente con un `WorkItem`.
 
+Cuando una ejecución necesita observabilidad, Application puede asociar referencias opacas de Change y tareas en un `ExecutionTrace`. La asociación se conserva fuera de los aggregates y del Runtime; ver [Operational traceability](Operational-Traceability.md).
+
 ## Spike OpenSpec
 
 `OpenSpecSddProvider` vive en `src/sdd/openspec/` y es read-only. Lee los directorios locales convencionales:
