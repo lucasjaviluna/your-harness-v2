@@ -87,6 +87,7 @@ Shared, Domain and Application are composite TypeScript projects connected with 
 - **Operational persistence is pending** — the CLI uses demonstration aggregates and in-memory repositories; `ExecutionTrace` is currently in-memory only.
 - **OpenSpec is read-only only** — `OpenSpecSddProvider` projects local artifacts through `SddProvider`; provider selection, writes, task synchronization and Change lifecycle are pending.
 - **Execution eligibility has two rules** — Application requires an approved Specification and can require normalized Change provenance; project-level policy configuration is pending.
+- **Verification/Evidence is designed, not implemented** — ADR-009 treats RuntimeResult as an observation and requires explicit verification plus completion authorization before a WorkItem can be completed.
 - **Application public exports are complete for the current modules** — specification, work-item, review, release, runtime and context APIs are re-exported from the package root.
 - **Workspace installation is reproducible with npm** — `package-lock.json` is committed, local package links use `file:`, and `rimraf@^6` is declared at the root and packages; verify with `npm ci` followed by `npm ls`.
 

@@ -16,6 +16,7 @@
 | SDD provider contract and OpenSpec spike | Implemented (read-only) | `SddProvider` exposes neutral specification/change projections; `OpenSpecSddProvider` reads local artifacts without invoking a provider CLI or mutating files. |
 | Operational execution trace | Implemented (in-memory) | `ExecutionTrace` links Change/task provenance, Specification, WorkItem and RuntimeResult outside Domain and Runtime; durable repository storage is pending. |
 | Execution eligibility policy | Implemented | Requires an approved Specification and can require normalized Change provenance when SDD traceability is configured; denies before `RuntimePort`. |
+| Verification and evidence | Designed (not implemented) | ADR-009 defines evidence, verification reports and explicit completion authorization; RuntimeResult remains an observation. |
 | Pi workspace tools | Disabled | `noTools: "all"`. |
 | MCP transport | Stub | Client/server interfaces and JSON-RPC skeleton exist; real stdio/HTTP transport is pending. |
 | Agent tools | Stub | CLI ToolExecutor currently reports simulated success. |

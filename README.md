@@ -4,7 +4,7 @@
 
 ## Estado
 
-Prototipo temprano — Stage 1. El Engineering Core, el contrato de ejecución, el adapter inicial de Pi y el spike read-only de OpenSpec están implementados; persistencia, selección de proveedores por proyecto, guardrails y evidence continúan en evolución.
+Prototipo temprano — Stage 1. El Engineering Core, el contrato de ejecución, el adapter inicial de Pi y el spike read-only de OpenSpec están implementados; persistencia, selección de proveedores por proyecto y la implementación de verification/evidence continúan en evolución.
 
 ## Arquitectura actual
 
