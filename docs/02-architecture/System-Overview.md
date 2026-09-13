@@ -19,6 +19,8 @@ flowchart LR
 
 `src/persistence/local/` provides JSON repositories for YH-owned operational state (`WorkItem` and `ExecutionTrace`) beneath `.your-harness/state/`. It does not mirror provider-owned SDD artifacts.
 
+Application `verification/` provides immutable Evidence and VerificationPlan/Report contracts. Evidence registration references an existing ExecutionTrace; durable evidence/report repositories and verification evaluation remain separate future work.
+
 Each package is an independent composite TypeScript project. The root `tsconfig.json` references Shared, Domain and Application and includes only `src/**`. Cross-project consumers use `@your-harness/domain` and `@your-harness/application`; they do not import package source paths.
 
 ## Current vertical slice

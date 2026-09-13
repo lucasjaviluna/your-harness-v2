@@ -28,6 +28,7 @@ src/cli
 - `src/sdd/openspec` adapta material local de OpenSpec al port neutral `SddProvider`, sólo mediante lectura.
 - `packages/application` aplica `ExecutionEligibilityPolicy` antes de ejecutar: Specification aprobada y, opcionalmente, trazabilidad SDD.
 - `src/persistence/local` persiste WorkItems, bindings operacionales y ExecutionTraces bajo `.your-harness/state/`, sin duplicar Specifications u OpenSpec.
+- `packages/application/verification` define Evidence y VerificationPlan/Report; Evidence se ancla a una ExecutionTrace existente, sin completar WorkItems automáticamente.
 
 ## Instalación y verificación
 
