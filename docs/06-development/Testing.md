@@ -19,9 +19,11 @@ npm run verify:pi
 Current tests cover:
 
 - `ContextAssembler` approval and projection rules;
-- `ExecuteWorkItemUseCase` delegation;
+- `ExecuteWorkItemUseCase` delegation through `FakeRuntimeAdapter`;
 - the complete repository-backed Core flow through a `FakeRuntimePort`;
 - Pi prompt projection, result mapping and session disposal.
+
+The dedicated Runtime Boundary test lives under `tests/runtime/` and validates the first executable engineering slice: approved Specification + WorkItem → `ExecuteWorkItemUseCase` → `ExecutionRequest` → fake runtime → `RuntimeResult`.
 
 Tests use English `describe` and `it` descriptions. Code comments remain Spanish by project convention.
 

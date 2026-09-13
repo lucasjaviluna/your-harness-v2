@@ -49,6 +49,8 @@ npm start -- work-item execute "Implementar validación" --workspace .
 
 El comando `work-item execute` usa actualmente un WorkItem y una Specification de demostración en memoria. Pi ejecuta con todas las herramientas deshabilitadas (`noTools: "all"`).
 
+El boundary se valida con dos adaptadores: `FakeRuntimeAdapter` en `tests/runtime/` y `PiRuntimeAdapter` en `src/runtime/pi/`.
+
 ## Documentación
 
 - [Índice técnico](docs/INDEX.md)

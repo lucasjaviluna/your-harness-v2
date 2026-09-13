@@ -79,7 +79,7 @@ Shared, Domain and Application are composite TypeScript projects connected with 
 - **Workflow `command`/`script` steps** are placeholders.
 - **`saveConfig`** writes JSON to a `.yml` path (extension bug in `src/core/config.ts:120`).
 - **No explicit eslint/prettier config files** — lint/format behavior still needs consolidation.
-- **Tests are focused, not broad** — six tests cover context, the Core smoke flow and Pi adapter integration.
+- **Tests are focused, not broad** — seven tests cover context, the Core smoke flows, the Runtime Boundary and Pi adapter integration.
 - **No CI/CD** — no `.github/workflows/`.
 - **Runtime selection is pending** — the CLI still composes Pi directly; no runtime registry exists.
 - **Execution environment policy is pending** — `workspace` maps directly to `cwd`; tools remain disabled with `noTools: "all"`.

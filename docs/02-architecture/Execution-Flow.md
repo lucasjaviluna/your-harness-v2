@@ -27,3 +27,5 @@ sequenceDiagram
 ## Current limitation
 
 Repository-backed loading is implemented in Application and verified with an in-memory repository plus `FakeRuntimePort`. The CLI still creates demonstration aggregates and stores them in memory; persistent repositories, user-facing identifiers and contextual requirement selection are not implemented yet. The CLI also composes Pi directly until runtime selection is available.
+
+The Runtime Boundary is also validated directly without repositories through `ExecuteWorkItemUseCase` and `FakeRuntimeAdapter` in `tests/runtime/execute-work-item.test.ts`. This proves that the same Application contract can be implemented by both Fake and Pi adapters without changing Application.
