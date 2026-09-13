@@ -49,7 +49,7 @@ npm start -- --help
 npm start -- work execute demo-work-item --objective "Implementar validación" --runtime fake --workspace .
 ```
 
-El comando `work-item execute` (alias `work execute`) usa actualmente un WorkItem y una Specification de demostración en memoria. Permite seleccionar `--runtime fake` o `--runtime pi`; Pi ejecuta con todas las herramientas deshabilitadas (`noTools: "all"`).
+El comando `work-item execute` (alias `work execute`) usa actualmente un WorkItem y una Specification de demostración en memoria. Si no se indica `--runtime`, usa `fake` como runtime por defecto. También permite seleccionar `--runtime pi`; Pi sólo se registra cuando se solicita y ejecuta con todas las herramientas deshabilitadas (`noTools: "all"`).
 
 El boundary se valida con dos adaptadores: `FakeRuntimeAdapter` en `tests/runtime/` y `PiRuntimeAdapter` en `src/runtime/pi/`.
 

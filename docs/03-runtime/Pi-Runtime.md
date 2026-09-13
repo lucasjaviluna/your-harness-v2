@@ -2,7 +2,7 @@
 
 `PiRuntimeAdapter` implements `RuntimePort`. It turns an `ExecutionRequest` into a structured prompt containing objective, knowledge, requirements with scenarios, engineering constraints and execution constraints.
 
-The experimental `RuntimeEnvironment` composition root resolves `PiRuntimeAdapter` or `FakeRuntimeAdapter` behind the same `RuntimePort`. The CLI can select either with `--runtime pi` or `--runtime fake`; project-level runtime configuration is still pending.
+The `RuntimeEnvironment` composition root owns a `RuntimeRegistry` and resolves adapters behind the same `RuntimePort`. `fake` is the default when the CLI omits `--runtime`; `PiRuntimeAdapter` is registered lazily only for `--runtime pi`. Project-level runtime configuration and capability negotiation remain pending.
 
 ## Safety status
 

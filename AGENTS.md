@@ -81,7 +81,7 @@ Shared, Domain and Application are composite TypeScript projects connected with 
 - **No explicit eslint/prettier config files** — lint/format behavior still needs consolidation.
 - **Tests are focused, not broad** — nine tests cover context, the Core smoke flows, runtime composition, the Runtime Boundary and Pi adapter integration.
 - **No CI/CD** — no `.github/workflows/`.
-- **Runtime selection is experimental** — `RuntimeEnvironment` resolves `fake` or `pi` for the CLI; project-level configuration and capability negotiation are pending.
+- **Runtime selection is explicit and configurable at composition time** — `RuntimeRegistry` registers available adapters, `fake` is the safe default, and Pi is registered only when selected; project-level configuration and capability negotiation are pending.
 - **Execution environment policy is pending** — `workspace` maps directly to `cwd`; tools remain disabled with `noTools: "all"`.
 - **Operational persistence is pending** — the CLI uses demonstration aggregates and in-memory repositories.
 - **Application public exports are complete for the current modules** — specification, work-item, review, release, runtime and context APIs are re-exported from the package root.

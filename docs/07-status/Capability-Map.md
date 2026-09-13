@@ -11,7 +11,7 @@
 | TypeScript workspace build | Implemented | Composite projects and project references build Shared → Domain → Application → CLI/runtime. |
 | Core-independent verification | Implemented | Smoke flow uses public package APIs and a `FakeRuntimePort`; Pi is tested separately. |
 | First executable engineering slice | Implemented | Direct `ExecuteWorkItemUseCase` validation with `FakeRuntimeAdapter` and the real `PiRuntimeAdapter` test double. |
-| Runtime composition and selection | Experimental | `RuntimeEnvironment` resolves `fake` or `pi` for the CLI; project-level configuration and persistence are pending. |
+| Runtime composition and selection | Implemented (composition-level) | `RuntimeRegistry` resolves explicitly registered adapters; `fake` is the default and Pi is registered lazily when selected. Project-level configuration and persistence are pending. |
 | Execution environment policy | Pending | Workspace is a string mapped to `cwd`; sandbox, tool, network, secret and confirmation policies are not modeled yet. |
 | Pi workspace tools | Disabled | `noTools: "all"`. |
 | MCP transport | Stub | Client/server interfaces and JSON-RPC skeleton exist; real stdio/HTTP transport is pending. |

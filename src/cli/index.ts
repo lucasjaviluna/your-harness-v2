@@ -1037,16 +1037,19 @@ workItemCommand
   .description("Execute a stored work item through the selected runtime")
   .option("-w, --workspace <path>", "Workspace for the execution", process.cwd())
   .option("-c, --constraint <text>", "Execution constraint")
-  .option("-r, --runtime <name>", "Runtime to use (pi or fake)", "pi")
+  .option("-r, --runtime <name>", "Runtime to use (fake by default; pi when selected)")
   .option("-o, --objective <text>", "Temporary objective for the in-memory demo")
-  .action(async (workItemId: string, options: { workspace: string; constraint?: string; runtime: string; objective?: string }) => {
-    const runtimeEnvironment = createRuntimeEnvironment();
-    console.log(chalk.cyan(`Executing work item through ${options.runtime}...`));
+  .action(async (workItemId: string, options: { workspace: string; constraint?: string; runtime?: string; objective?: string }) => {
+    const runtimeEnvironment = createRuntimeEnvironment({
+      includePi: options.runtime === "pi",
+    });
+    const selectedRuntime = runtimeEnvironment.resolveName(options.runtime);
+    console.log(chalk.cyan(`Executing work item through ${selectedRuntime}...`));
     console.log(chalk.gray(`Work item: ${workItemId}`));
     console.log(chalk.gray(`Workspace: ${options.workspace}`));
 
     try {
-      const runtime = runtimeEnvironment.resolve(options.runtime);
+      const runtime = runtimeEnvironment.resolve(selectedRuntime);
       const workItem = new WorkItem(
         new WorkItemId(workItemId),
         new IntentId("cli-intent"),
