@@ -8,11 +8,13 @@
 ## Install and verify
 
 ```bash
-npm install
+npm ci
 npm run build
 npm test -- --run
 npm start -- --help
 ```
+
+`package-lock.json` is the installation source of truth. Use `npm install` only when intentionally changing dependencies; commit the resulting lockfile. The root and package projects share `rimraf@^6` for clean scripts, while older transitive tooling versions remain isolated under their own dependency tree.
 
 To verify the Engineering Core independently from Pi, and then the Pi adapter separately:
 

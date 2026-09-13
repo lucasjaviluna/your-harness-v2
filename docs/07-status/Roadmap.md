@@ -2,7 +2,7 @@
 
 ## Next
 
-1. Consolidate workspace installation hygiene and the public exports of Application.
+1. ~~Consolidate workspace installation hygiene and the public exports of Application.~~ **Completed:** npm lockfile/clean-install path is aligned, `rimraf` resolves without invalid workspace entries, and Application exposes its current public modules.
 2. Extend the experimental `RuntimeEnvironment` with project/execution-level configuration and runtime capability reporting.
 3. Define a neutral execution-environment policy for workspace, tools, network, secrets and confirmations before enabling runtime tools.
 4. Define the first physical `SddProvider` contract and implement a read-only provider spike.

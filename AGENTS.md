@@ -84,8 +84,8 @@ Shared, Domain and Application are composite TypeScript projects connected with 
 - **Runtime selection is experimental** — `RuntimeEnvironment` resolves `fake` or `pi` for the CLI; project-level configuration and capability negotiation are pending.
 - **Execution environment policy is pending** — `workspace` maps directly to `cwd`; tools remain disabled with `noTools: "all"`.
 - **Operational persistence is pending** — the CLI uses demonstration aggregates and in-memory repositories.
-- **Application public exports are incomplete** — specification, work-item, review and release modules are not all re-exported from the package root.
-- **Dependency-install hygiene needs consolidation** — local packages use `file:` dependencies for npm compatibility; verify with `npm ls` after installation.
+- **Application public exports are complete for the current modules** — specification, work-item, review, release, runtime and context APIs are re-exported from the package root.
+- **Workspace installation is reproducible with npm** — `package-lock.json` is committed, local package links use `file:`, and `rimraf@^6` is declared at the root and packages; verify with `npm ci` followed by `npm ls`.
 
 ## Working in this repo
 

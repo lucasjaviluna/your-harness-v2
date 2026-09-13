@@ -46,7 +46,8 @@
     "eslint": "^8.56.0",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
-    "prettier": "^3.2.0"
+    "prettier": "^3.2.0",
+    "rimraf": "^6.0.1"
   },
   "dependencies": {
     "@your-harness/application": "file:./packages/application",

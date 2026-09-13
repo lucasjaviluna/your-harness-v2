@@ -28,10 +28,12 @@ src/cli
 ## Instalación y verificación
 
 ```bash
-npm install
+npm ci
 npm run build
 npm test -- --run
 ```
+
+El workspace usa `package-lock.json` como fuente reproducible para npm. Usá `npm install` sólo al modificar dependencias y commiteá el lockfile resultante.
 
 Verificación independiente del Core y del runtime Pi:
 
