@@ -23,8 +23,7 @@ record; this permits a local durable trace store to anchor evidence across proce
 `VerificationPlan` selects Requirement/Scenario criteria and expected evidence kinds,
 and is bound to one `ExecutionTrace` plus its Specification snapshot digest.
 `VerificationReport` and their repositories are now durable local contracts under
-`.your-harness/state`. They do not yet evaluate evidence automatically, authorize
-completion, or transition a WorkItem. The design remains specified in [ADR-009](../adr/ADR-009.md).
+`.your-harness/state`. They do not authorize completion or transition a WorkItem. The design remains specified in [ADR-009](../adr/ADR-009.md).
 
 Application now includes a conservative deterministic evaluator. It first requires the
 supplied trace ID and Specification ID/digest to match the plan, then ignores Evidence
@@ -39,3 +38,9 @@ from every other execution. For each criterion:
 Report-level precedence is `failed`, then `requires-human-review`, then
 `inconclusive`, then `verified`. This evaluator creates a report only; it does not
 authorize completion.
+
+`CompletionAuthorization` is the separate final decision. `CompleteWorkItemUseCase`
+validates report/trace/WorkItem linkage, accepts `verified` or explicit
+`requires-human-review` outcomes, and is the only path that calls `WorkItem.complete()`.
+`request-rework` and `require-further-review` are persisted decisions that leave the
+WorkItem unchanged.

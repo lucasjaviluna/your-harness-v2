@@ -10,7 +10,8 @@ YH persiste estado operacional propio por workspace bajo un directorio local ign
     ├── execution-traces/<id>.json
     ├── evidence/<id>.json
     ├── verification-plans/<id>.json
-    └── verification-reports/<id>.json
+    ├── verification-reports/<id>.json
+    └── completion-authorizations/<id>.json
 ```
 
 ## Alcance
@@ -26,4 +27,7 @@ Esta base no persiste copias de Specifications ni artefactos de OpenSpec. Las Sp
 ## Límites actuales
 
 - No hay locking multiproceso, índices secundarios ni migraciones entre versiones.
-- No hay persistencia local de Specifications, Evidence o VerificationReport.
+- No hay persistencia local de Specifications ni artefactos SDD; las decisiones operativas se persisten localmente.
+
+El store también expone el repositorio de `CompletionAuthorization`; una autorización
+explícita es la única entrada que puede completar un WorkItem.

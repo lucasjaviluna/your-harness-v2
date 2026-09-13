@@ -14,3 +14,4 @@ export * from "./context/index.js";
 export * from "./sdd/index.js";
 export * from "./trace/index.js";
 export * from "./verification/index.js";
+export * from "./completion/index.js";

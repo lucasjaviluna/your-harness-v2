@@ -3,6 +3,8 @@ import path from "node:path";
 
 import type {
   Evidence,
+  CompletionAuthorization,
+  CompletionAuthorizationRepository,
   ExecutionTrace,
   ExecutionTraceRepository,
   VerificationPlan,
@@ -40,6 +42,7 @@ export interface LocalOperationalStore {
   readonly evidence: EvidenceRepository;
   readonly verificationPlans: VerificationPlanRepository;
   readonly verificationReports: VerificationReportRepository;
+  readonly completionAuthorizations: CompletionAuthorizationRepository;
 }
 
 export interface EvidenceRepository {
@@ -184,6 +187,21 @@ const isVerificationReport = (value: unknown): value is VerificationReport => {
   );
 };
 
+const isCompletionAuthorization = (value: unknown): value is CompletionAuthorization => {
+  if (!value || typeof value !== "object") return false;
+  const authorization = value as Partial<CompletionAuthorization>;
+  return (
+    typeof authorization.id === "string" &&
+    typeof authorization.workItemId === "string" &&
+    typeof authorization.verificationReportId === "string" &&
+    typeof authorization.executionTraceId === "string" &&
+    typeof authorization.decision === "string" &&
+    typeof authorization.authorizedBy === "string" &&
+    typeof authorization.reason === "string" &&
+    typeof authorization.authorizedAt === "string"
+  );
+};
+
 const isExecutionBinding = (value: unknown): value is WorkItemExecutionBinding => {
   if (!value || typeof value !== "object") return false;
   const binding = value as Partial<WorkItemExecutionBinding>;
@@ -213,6 +231,7 @@ export const createLocalOperationalStore = (
   const evidenceDirectory = path.join(root, "evidence");
   const verificationPlansDirectory = path.join(root, "verification-plans");
   const verificationReportsDirectory = path.join(root, "verification-reports");
+  const completionAuthorizationsDirectory = path.join(root, "completion-authorizations");
 
   return {
     root,
@@ -359,6 +378,31 @@ export const createLocalOperationalStore = (
           const entries = await readdir(verificationReportsDirectory);
           const values = await Promise.all(entries.filter((entry) => entry.endsWith(".json")).map((entry) => readJson<unknown>(path.join(verificationReportsDirectory, entry))));
           return values.filter(isVerificationReport).filter((report) => report.planId === planId);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+          throw error;
+        }
+      },
+    },
+    completionAuthorizations: {
+      async save(authorization) {
+        const filePath = path.join(completionAuthorizationsDirectory, fileNameFor(authorization.id));
+        if (await readJson<unknown>(filePath)) {
+          throw new Error(`CompletionAuthorization '${authorization.id}' already exists and is immutable.`);
+        }
+        await writeJson(filePath, authorization);
+      },
+      async findById(id) {
+        const value = await readJson<unknown>(path.join(completionAuthorizationsDirectory, fileNameFor(id)));
+        if (value === null) return null;
+        if (!isCompletionAuthorization(value)) throw new Error("Persisted CompletionAuthorization has an unsupported format.");
+        return value;
+      },
+      async findByWorkItemId(workItemId) {
+        try {
+          const entries = await readdir(completionAuthorizationsDirectory);
+          const values = await Promise.all(entries.filter((entry) => entry.endsWith(".json")).map((entry) => readJson<unknown>(path.join(completionAuthorizationsDirectory, entry))));
+          return values.filter(isCompletionAuthorization).filter((authorization) => authorization.workItemId === workItemId);
         } catch (error) {
           if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
           throw error;

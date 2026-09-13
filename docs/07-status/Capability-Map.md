@@ -18,10 +18,10 @@
 | Operational local persistence | Implemented | `createLocalOperationalStore` persists WorkItems, bindings, ExecutionTraces, Evidence and VerificationPlan/Report under `.your-harness/state`; it does not copy provider-owned Specifications/OpenSpec artifacts. |
 | Execution eligibility policy | Implemented | Requires an approved Specification and can require normalized Change provenance through `runtime.requireSddChangeTraceability`; denies before `RuntimePort`. |
 | Project runtime configuration | Implemented (composition-level) | `.your-harness/config.yml` configures default runtime, SDD provider, SDD traceability and execution environment policy; the CLI composes it for real operational execution. |
-| Verification and evidence | Implemented (scoped durable contracts + evaluator) | ADR-009 contracts bind VerificationPlan to one ExecutionTrace and Specification digest; Evidence is filtered to that execution and evaluated conservatively. Completion authorization remains pending. |
+| Verification and evidence | Implemented (scoped durable contracts + evaluator) | ADR-009 contracts bind VerificationPlan to one ExecutionTrace and Specification digest; Evidence is filtered to that execution and evaluated conservatively. CompletionAuthorization now gates `WorkItem.complete()`. |
 | Pi workspace tools | Disabled | `noTools: "all"`. |
 | MCP transport | Stub | Client/server interfaces and JSON-RPC skeleton exist; real stdio/HTTP transport is pending. |
 | Agent tools | Stub | CLI ToolExecutor currently reports simulated success. |
 | Workflow command/script steps | Stub | Placeholder execution only. |
 | Configuration persistence | Partial | YAML is read; save path behavior requires consolidation. |
-| Test suite | Early | Thirty-six focused tests cover configuration, context projection, Core smoke flows, Runtime composition/boundary, execution environment, OpenSpec read-only projection, operational persistence/bindings, real CLI execution, Evidence/Verification contracts/evaluator, eligibility and Pi adapter; broad coverage is pending. |
+| Test suite | Early | Thirty-eight focused tests cover configuration, context projection, Core smoke flows, Runtime composition/boundary, execution environment, OpenSpec read-only projection, operational persistence/bindings, real CLI execution, Evidence/Verification/evaluator/authorization, eligibility and Pi adapter; broad coverage is pending. |
