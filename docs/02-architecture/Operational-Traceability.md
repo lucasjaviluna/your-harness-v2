@@ -22,4 +22,4 @@ Change y tareas se representan únicamente mediante `SddProvenance` opaca. No se
 
 `ExecuteStoredWorkItemUseCase` puede recibir metadata de traza y un `ExecutionTraceRepository`. Una vez que el runtime devuelve su resultado, guarda la traza sin modificar el estado del WorkItem ni interpretar el resultado como aprobación o evidencia.
 
-La implementación actual `InMemoryExecutionTraceRepository` sirve para composición y tests. Una persistencia local por repositorio es el siguiente paso para conservar las trazas entre procesos.
+`InMemoryExecutionTraceRepository` sigue sirviendo para composición y tests. `createLocalOperationalStore()` aporta un `ExecutionTraceRepository` JSON bajo `.your-harness/state/execution-traces/` para conservar trazas entre procesos. La CLI aún no lo compone y no hay locking, índices ni almacenamiento de evidencia.

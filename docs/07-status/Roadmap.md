@@ -7,6 +7,8 @@
 3. ~~Define a neutral execution-environment policy for workspace, tools, network, secrets and confirmations before enabling runtime tools.~~ **Completed as a contract:** enforcement and tool adapters remain pending.
 4. ~~Define the first physical `SddProvider` contract and implement a read-only provider spike.~~ **Completed:** the neutral port and the local read-only OpenSpec adapter are implemented; provider selection and write workflows remain pending.
 
+Local operational persistence is now available for WorkItems and ExecutionTraces. The next persistence increment is wiring these repositories into the CLI and resolving Specifications from their authoritative source.
+
 ## Later
 
 5. Connect `yh work-item execute` to persistent WorkItem and Specification repositories.

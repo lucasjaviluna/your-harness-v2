@@ -9,6 +9,7 @@ This is the living technical documentation for `your-harness` (`yh`). It describ
 | Understand the platform | [System overview](02-architecture/System-Overview.md) |
 | Understand SDD integrations | [SDD providers](02-architecture/Sdd-Providers.md) |
 | Follow operational provenance | [Operational traceability](02-architecture/Operational-Traceability.md) |
+| Understand local state | [Operational persistence](02-architecture/Operational-Persistence.md) |
 | Understand execution guardrails | [Execution eligibility](02-architecture/Execution-Eligibility.md) |
 | Understand post-execution verification | [Verification and evidence](02-architecture/Verification-Evidence.md) |
 | Follow an execution | [Execution flow](02-architecture/Execution-Flow.md) |

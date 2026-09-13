@@ -44,6 +44,7 @@ src/
 ├── skills/              ← Prompt templates + tools, categorized
 ├── workflows/           ← DAG-based workflow engine (8 step types)
 ├── mcp/                 ← MCP client/server (skeleton JSON-RPC, mocks only)
+├── persistence/         ← Local operational persistence for WorkItems and traces
 ├── sdd/                 ← Read-only SDD provider adapters (OpenSpec spike)
 ├── spec/                ← Spec-driven dev: parse/validate/generate from markdown/YAML/JSON
 └── types/               ← Shared type definitions
@@ -80,11 +81,11 @@ Shared, Domain and Application are composite TypeScript projects connected with 
 - **Workflow `command`/`script` steps** are placeholders.
 - **`saveConfig`** writes JSON to a `.yml` path (extension bug in `src/core/config.ts:120`).
 - **No explicit eslint/prettier config files** — lint/format behavior still needs consolidation.
-- **Tests are focused, not broad** — twenty-two tests cover context, Core smoke flows, runtime composition/boundary, execution environment, read-only OpenSpec projection, operational traceability, execution eligibility and Pi adapter integration.
+- **Tests are focused, not broad** — twenty-five tests cover context, Core smoke flows, runtime composition/boundary, execution environment, read-only OpenSpec projection, operational traceability, local persistence, execution eligibility and Pi adapter integration.
 - **No CI/CD** — no `.github/workflows/`.
 - **Runtime selection is explicit and configurable at composition time** — `RuntimeRegistry` registers available adapters, `fake` is the safe default, and Pi is registered only when selected; project-level configuration and capability negotiation are pending.
 - **Execution environment contract is defined but not enforced by tools** — `ExecutionEnvironment` models workspace, capabilities, network, secrets and confirmations with deny-by-default values; Pi remains `noTools: "all"`.
-- **Operational persistence is pending** — the CLI uses demonstration aggregates and in-memory repositories; `ExecutionTrace` is currently in-memory only.
+- **Operational persistence foundation is implemented** — local JSON repositories persist WorkItems and ExecutionTraces under `.your-harness/state`; the CLI still uses demonstration aggregates and in-memory repositories, and Specifications are not mirrored.
 - **OpenSpec is read-only only** — `OpenSpecSddProvider` projects local artifacts through `SddProvider`; provider selection, writes, task synchronization and Change lifecycle are pending.
 - **Execution eligibility has two rules** — Application requires an approved Specification and can require normalized Change provenance; project-level policy configuration is pending.
 - **Verification/Evidence is designed, not implemented** — ADR-009 treats RuntimeResult as an observation and requires explicit verification plus completion authorization before a WorkItem can be completed.

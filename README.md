@@ -27,6 +27,7 @@ src/cli
 - `src/runtime/execution-environment.ts` define la envolvente mínima de workspace, capabilities, red, secretos y confirmaciones; todavía no habilita tools.
 - `src/sdd/openspec` adapta material local de OpenSpec al port neutral `SddProvider`, sólo mediante lectura.
 - `packages/application` aplica `ExecutionEligibilityPolicy` antes de ejecutar: Specification aprobada y, opcionalmente, trazabilidad SDD.
+- `src/persistence/local` persiste WorkItems y ExecutionTraces bajo `.your-harness/state/`, sin duplicar Specifications u OpenSpec.
 
 ## Instalación y verificación
 
