@@ -81,11 +81,11 @@ Shared, Domain and Application are composite TypeScript projects connected with 
 - **Workflow `command`/`script` steps** are placeholders.
 - **`saveConfig`** writes JSON to a `.yml` path (extension bug in `src/core/config.ts:120`).
 - **No explicit eslint/prettier config files** — lint/format behavior still needs consolidation.
-- **Tests are focused, not broad** — twenty-seven tests cover configuration, context, Core smoke flows, runtime composition/boundary, execution environment, read-only OpenSpec projection, operational traceability, local persistence, execution eligibility and Pi adapter integration.
+- **Tests are focused, not broad** — thirty-one tests cover configuration, context, Core smoke flows, runtime composition/boundary, execution environment, read-only OpenSpec projection, operational bindings, real CLI execution, eligibility and Pi adapter integration.
 - **No CI/CD** — no `.github/workflows/`.
 - **Runtime selection is explicit and project-configured** — `createProjectRuntimeEnvironment` resolves `runtime.defaultRuntime` from `.your-harness/config.yml`, composes `RuntimeRegistry`, `SddProvider`, eligibility policy and execution environment; `fake` remains the safe built-in default and Pi is registered only when resolved.
 - **Execution environment contract is configured but not enforced by tools** — `runtime.executionEnvironment` maps workspace, capabilities, network, secrets and confirmations with deny-by-default values; Pi remains `noTools: "all"`.
-- **Operational persistence foundation is implemented** — local JSON repositories persist WorkItems and ExecutionTraces under `.your-harness/state`; the CLI still uses demonstration aggregates and in-memory repositories, and Specifications are not mirrored.
+- **Operational persistence is implemented** — local JSON repositories persist WorkItems, execution bindings and ExecutionTraces under `.your-harness/state`; the CLI resolves current configured SDD material and Specifications are not mirrored.
 - **OpenSpec is read-only only** — `OpenSpecSddProvider` projects local artifacts through `SddProvider` and is selected via `runtime.sddProvider`; writes, task synchronization and Change lifecycle are pending.
 - **Execution eligibility has two rules** — Application requires an approved Specification and can require normalized Change provenance; `runtime.requireSddChangeTraceability` configures the second rule at composition time.
 - **Verification/Evidence is designed, not implemented** — ADR-009 treats RuntimeResult as an observation and requires explicit verification plus completion authorization before a WorkItem can be completed.

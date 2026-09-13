@@ -27,7 +27,7 @@ src/cli
 - `src/runtime/project-runtime-environment.ts` resuelve desde `config.yml` el runtime por defecto, proveedor SDD, trazabilidad requerida y política de entorno; todavía no habilita tools.
 - `src/sdd/openspec` adapta material local de OpenSpec al port neutral `SddProvider`, sólo mediante lectura.
 - `packages/application` aplica `ExecutionEligibilityPolicy` antes de ejecutar: Specification aprobada y, opcionalmente, trazabilidad SDD.
-- `src/persistence/local` persiste WorkItems y ExecutionTraces bajo `.your-harness/state/`, sin duplicar Specifications u OpenSpec.
+- `src/persistence/local` persiste WorkItems, bindings operacionales y ExecutionTraces bajo `.your-harness/state/`, sin duplicar Specifications u OpenSpec.
 
 ## Instalación y verificación
 
@@ -53,7 +53,7 @@ npm start -- --help
 npm start -- work execute demo-work-item --objective "Implementar validación" --runtime fake --workspace .
 ```
 
-El comando `work-item execute` (alias `work execute`) usa actualmente un WorkItem y una Specification de demostración en memoria. Si no se indica `--runtime`, usa `runtime.defaultRuntime` de la configuración del proyecto (por defecto, `fake`). También permite seleccionar `--runtime pi`; Pi se registra cuando se selecciona por configuración o flag y ejecuta con todas las herramientas deshabilitadas (`noTools: "all"`).
+El comando `work-item execute` (alias `work execute`) carga un WorkItem persistido, resuelve su binding contra el proveedor SDD actual, aplica elegibilidad y guarda una traza durable. Primero se debe ejecutar `work create` y `work bind --approve-specification`; la aprobación no se infiere de un archivo OpenSpec. Si no se indica `--runtime`, usa `runtime.defaultRuntime` de la configuración del proyecto (por defecto, `fake`). Pi continúa con todas las herramientas deshabilitadas (`noTools: "all"`).
 
 El boundary se valida con dos adaptadores: `FakeRuntimeAdapter` en `tests/runtime/` y `PiRuntimeAdapter` en `src/runtime/pi/`.
 

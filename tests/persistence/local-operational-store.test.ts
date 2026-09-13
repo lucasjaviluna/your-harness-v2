@@ -84,6 +84,31 @@ describe("LocalOperationalStore", () => {
     ).resolves.toHaveLength(1);
   });
 
+  it("persists the operational SDD execution binding separately from WorkItem", async () => {
+    const workspace = await createWorkspace();
+    const store = createLocalOperationalStore({ workspace });
+
+    await store.executionBindings.save({
+      workItemId: "persisted-work-item",
+      specificationId: "authentication",
+      specificationApproved: true,
+      changeId: "add-login",
+      taskIds: ["task-1"],
+    });
+
+    await expect(
+      createLocalOperationalStore({ workspace }).executionBindings.findByWorkItemId(
+        new WorkItemId("persisted-work-item"),
+      ),
+    ).resolves.toEqual({
+      workItemId: "persisted-work-item",
+      specificationId: "authentication",
+      specificationApproved: true,
+      changeId: "add-login",
+      taskIds: ["task-1"],
+    });
+  });
+
   it("rejects identifiers that could escape the local state directory", async () => {
     const workspace = await createWorkspace();
     const store = createLocalOperationalStore({ workspace });

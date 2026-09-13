@@ -30,6 +30,22 @@ export interface LocalOperationalStore {
   readonly root: string;
   readonly workItems: WorkItemRepository;
   readonly executionTraces: ExecutionTraceRepository;
+  readonly executionBindings: WorkItemExecutionBindingRepository;
+}
+
+/** Asociación operacional con material SDD; no modifica el aggregate WorkItem. */
+export interface WorkItemExecutionBinding {
+  readonly workItemId: string;
+  readonly specificationId: string;
+  readonly specificationApproved: boolean;
+  readonly changeId?: string;
+  readonly taskIds: ReadonlyArray<string>;
+}
+
+export interface WorkItemExecutionBindingRepository {
+  findByWorkItemId(workItemId: WorkItemId): Promise<WorkItemExecutionBinding | null>;
+  save(binding: WorkItemExecutionBinding): Promise<void>;
+  delete(workItemId: WorkItemId): Promise<void>;
 }
 
 const stateDirectory = "state";
@@ -103,6 +119,19 @@ const isExecutionTrace = (value: unknown): value is ExecutionTrace => {
   );
 };
 
+const isExecutionBinding = (value: unknown): value is WorkItemExecutionBinding => {
+  if (!value || typeof value !== "object") return false;
+  const binding = value as Partial<WorkItemExecutionBinding>;
+  return (
+    typeof binding.workItemId === "string" &&
+    typeof binding.specificationId === "string" &&
+    typeof binding.specificationApproved === "boolean" &&
+    (binding.changeId === undefined || typeof binding.changeId === "string") &&
+    Array.isArray(binding.taskIds) &&
+    binding.taskIds.every((taskId) => typeof taskId === "string")
+  );
+};
+
 /**
  * Infraestructura local de estado operacional.
  *
@@ -115,6 +144,7 @@ export const createLocalOperationalStore = (
   const root = path.join(path.resolve(options.workspace), ".your-harness", stateDirectory);
   const workItemsDirectory = path.join(root, "work-items");
   const executionTracesDirectory = path.join(root, "execution-traces");
+  const executionBindingsDirectory = path.join(root, "execution-bindings");
 
   return {
     root,
@@ -165,6 +195,45 @@ export const createLocalOperationalStore = (
           if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
           throw error;
         }
+      },
+    },
+    executionBindings: {
+      async findByWorkItemId(workItemId) {
+        const binding = await readJson<unknown>(
+          path.join(executionBindingsDirectory, fileNameFor(workItemId.value)),
+        );
+        if (binding === null) return null;
+        if (!isExecutionBinding(binding)) {
+          throw new Error("Persisted WorkItem execution binding has an unsupported format.");
+        }
+        return binding;
+      },
+      async save(binding) {
+        fileNameFor(binding.workItemId);
+        if (!binding.specificationId.trim()) {
+          throw new Error("Execution binding requires a specification id.");
+        }
+        if (binding.changeId !== undefined && !binding.changeId.trim()) {
+          throw new Error("Execution binding change id cannot be empty.");
+        }
+        if (binding.taskIds.some((taskId) => !taskId.trim())) {
+          throw new Error("Execution binding task ids cannot be empty.");
+        }
+        await writeJson(
+          path.join(executionBindingsDirectory, fileNameFor(binding.workItemId)),
+          {
+            workItemId: binding.workItemId,
+            specificationId: binding.specificationId,
+            specificationApproved: binding.specificationApproved,
+            ...(binding.changeId === undefined ? {} : { changeId: binding.changeId }),
+            taskIds: [...binding.taskIds],
+          },
+        );
+      },
+      async delete(workItemId) {
+        await rm(path.join(executionBindingsDirectory, fileNameFor(workItemId.value)), {
+          force: true,
+        });
       },
     },
   };

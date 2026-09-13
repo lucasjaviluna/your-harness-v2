@@ -34,6 +34,8 @@ El adapter usa sólo operaciones de lectura del filesystem. No invoca el CLI de 
 
 La configuración local puede declarar `runtime.sddProvider: openspec`. `createProjectRuntimeEnvironment` compone ese adapter como `SddProvider` sin hacer que sus tipos crucen a Domain ni a Runtime. Es la única opción disponible; un valor desconocido se rechaza durante validación de configuración.
 
+`yh work bind` conserva sólo una selección operacional de Specification, Change y tareas. Al ejecutar, YH vuelve a leer el proveedor para proyectar material actual. La autorización `--approve-specification` es explícita porque OpenSpec no proporciona `SpecificationStatus.Approved` de Domain.
+
 ## Límites actuales
 
 El spike todavía no añade planificación desde tareas, escritura de artefactos ni lifecycle de Change. La CLI de demostración tampoco lee todavía el proveedor configurado para construir sus aggregates. Ningún tipo de OpenSpec cruza al Domain ni al Runtime.

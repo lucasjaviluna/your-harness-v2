@@ -7,11 +7,11 @@
 3. ~~Define a neutral execution-environment policy for workspace, tools, network, secrets and confirmations before enabling runtime tools.~~ **Completed as a contract:** enforcement and tool adapters remain pending.
 4. ~~Define the first physical `SddProvider` contract and implement a read-only provider spike.~~ **Completed:** the neutral port and the local read-only OpenSpec adapter are implemented; provider selection and write workflows remain pending.
 
-Local operational persistence is now available for WorkItems and ExecutionTraces. The next persistence increment is wiring these repositories into the CLI and resolving Specifications from their authoritative source.
+Local operational persistence is now wired into the CLI: `work create` and `work bind` create durable state, while `work execute` resolves current provider-owned SDD material and persists a trace. The next increment is richer lifecycle/authorization UX and an authoritative source beyond the read-only OpenSpec projection.
 
 ## Later
 
-5. Connect `yh work-item execute` to persistent WorkItem and Specification repositories.
+5. ~~Connect `yh work-item execute` to persistent operational state and an authoritative Specification source.~~ **Completed:** the CLI reads persistent WorkItems/bindings, projects the configured read-only SDD source, and writes traces. It intentionally does not mirror Specifications locally.
 6. ~~Add operational traceability between Change, Specification, WorkItem and execution.~~ **Completed in-memory:** `ExecutionTrace` records the linkage without changing Domain relationships; durable local persistence remains pending.
 7. Add contextual requirement selection rather than projecting all requirements.
 8. ~~Introduce `ExecutionEligibilityPolicy` when a second concrete eligibility rule exists.~~ **Completed:** approved Specification is explicit and optional SDD Change traceability can be required before runtime execution.

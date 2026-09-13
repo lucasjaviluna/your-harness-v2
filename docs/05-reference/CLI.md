@@ -8,6 +8,6 @@ The executable name is `yh`.
 | Providers | `provider list`, `provider use`, `provider test` |
 | Extensions | `plugin`, `skill`, `agent` |
 | Integration | `mcp`, `workflow`, `spec` |
-| Execution | `work-item execute <work-item-id>` (`work execute` alias) |
+| Execution | `work-item create <work-item-id>`, `work-item bind <work-item-id>`, `work-item execute <work-item-id>` (`work` alias) |
 
-Run `yh <command> --help` for command-specific options. The execution command accepts `--workspace`, `--constraint`, `--objective` and `--runtime <fake|pi>`. If `--runtime` is omitted, the CLI resolves the registered default (`fake`). Pi is registered lazily only when explicitly selected; persistent WorkItem lookup is not implemented yet.
+Run `yh <command> --help` for command-specific options. `work create` persists a WorkItem; `work bind` requires `--specification` and `--approve-specification`, with optional `--change` and repeated `--task`, before execution. `work execute` accepts `--workspace`, `--constraint` and `--runtime <fake|pi>`. If omitted, the runtime comes from `runtime.defaultRuntime` (`fake` by default).
