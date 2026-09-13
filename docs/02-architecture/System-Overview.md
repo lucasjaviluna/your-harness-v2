@@ -15,7 +15,7 @@ flowchart LR
   CORE --> CONNECTORS["src/connectors\nAI providers"]
 ```
 
-`src/` is the executable harness: CLI composition, provider connectors, MCP skeletons, agents, plugins, skills and workflows. `packages/` is the engineering model: shared primitives, domain aggregates and application use cases.
+`src/` is the executable harness: CLI composition, provider connectors, MCP skeletons, agents, plugins, skills and workflows. `packages/` is the engineering model: shared primitives, domain aggregates and application use cases. The CLI composition starts at `src/cli/create-program.ts`; independent registration modules under `src/cli/commands/` receive explicit context, while shared command dependencies live under `src/cli/composition/`. `CliContext` supplies configuration, logging and replaceable CLI IO, allowing command behavior to be exercised in-process. The binary entrypoint is intentionally limited to program creation and argument parsing.
 
 `src/persistence/local/` provides JSON repositories for YH-owned operational state (`WorkItem` and `ExecutionTrace`) beneath `.your-harness/state/`. It does not mirror provider-owned SDD artifacts.
 

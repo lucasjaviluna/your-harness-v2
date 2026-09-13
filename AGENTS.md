@@ -33,7 +33,10 @@ Two architectural areas coexist and are connected through package contracts:
 ### `src/` — The CLI harness tool
 ```
 src/
-├── cli/index.ts         ← CLI entrypoint (yh binary), wires everything manually
+├── cli/index.ts         ← CLI entrypoint mínimo (yh binary)
+│   ├── create-program.ts ← composition root de Commander
+│   ├── commands/        ← registro por familia de comandos
+│   └── composition/     ← dependencias compartidas de comandos
 ├── core/                ← Interfaces + infra: config, events, context, logger
 │   ├── ai/              ← AIProvider interface, AIManager, AIRegistry
 │   ├── mcp/             ← MCPConnector interface, MCPManager, MCPRegistry
@@ -50,7 +53,7 @@ src/
 └── types/               ← Shared type definitions
 ```
 
-**Flow**: `src/cli/index.ts` creates all managers at module top level, registers builtins, then delegates to Commander commands.
+**Flow**: `src/cli/index.ts` sólo crea y ejecuta el programa. `src/cli/create-program.ts` es el composition root de Commander y registra familias de comandos independientes bajo `src/cli/commands/`. Las dependencias compartidas de agentes viven bajo `src/cli/composition/`; `CliContext` inyecta configuración, logger e IO para que los comandos se prueben sin procesos hijos.
 
 `src/core/harness.ts` is a higher-level facade (initialize → createSession → complete → stream) but is **not wired into the CLI** yet.
 
