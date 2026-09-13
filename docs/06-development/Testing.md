@@ -25,6 +25,8 @@ Current tests cover:
 
 The dedicated Runtime Boundary test lives under `tests/runtime/` and validates the first executable engineering slice: approved Specification + WorkItem → `ExecuteWorkItemUseCase` → `ExecutionRequest` → fake runtime → `RuntimeResult`.
 
+Los tests del Core y del Runtime consumen las APIs públicas `@your-harness/domain` y `@your-harness/application`; no importan rutas físicas bajo `packages/*/src`.
+
 Tests use English `describe` and `it` descriptions. Code comments remain Spanish by project convention.
 
 Before merging a runtime or contract change, run the full build and tests plus the relevant separated verification. Update architecture, capability and roadmap documents whenever their described state changes.

@@ -12,12 +12,10 @@ import {
   Specification,
   SpecificationId,
   SpecificationTitle,
-} from "../packages/domain/src/index.js";
-import { IntentId, WorkItem, WorkItemId, WorkItemTitle } from "../packages/domain/src/index.js";
-import { createContextAssembler } from "../packages/application/src/context/index.js";
-import { ExecuteWorkItemUseCase } from "../packages/application/src/runtime/index.js";
-import { ExecuteStoredWorkItemUseCase } from "../packages/application/src/runtime/index.js";
-import { InMemoryRepository } from "../packages/application/src/shared/index.js";
+} from "@your-harness/domain";
+import { IntentId, WorkItem, WorkItemId, WorkItemTitle } from "@your-harness/domain";
+import { createContextAssembler } from "@your-harness/application";
+import { ExecuteWorkItemUseCase, ExecuteStoredWorkItemUseCase, InMemoryRepository } from "@your-harness/application";
 
 const createSpecification = (approved = true): Specification => {
   const scenario = new Scenario(

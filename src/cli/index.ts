@@ -26,6 +26,7 @@ import type { ToolResult } from "../core/ai/types.js";
 import type { WorkflowDefinition } from "../workflows/types.js";
 import type { SpecGenerationTarget } from "../spec/types.js";
 import type { ProviderType } from "../types/index.js";
+import { createRuntimeEnvironment } from "../runtime/index.js";
 import {
   IntentId,
   NormativeStatement,
@@ -1028,24 +1029,28 @@ specCommand
 // Comando: work-item
 const workItemCommand = program
   .command("work-item")
+  .alias("work")
   .description("Execute engineering work items");
 
 workItemCommand
-  .command("execute <objective>")
-  .description("Execute a work item through the Pi runtime")
+  .command("execute <workItemId>")
+  .description("Execute a stored work item through the selected runtime")
   .option("-w, --workspace <path>", "Workspace for the execution", process.cwd())
   .option("-c, --constraint <text>", "Execution constraint")
-  .action(async (objective: string, options: { workspace: string; constraint?: string }) => {
-    console.log(chalk.cyan("Executing work item through Pi..."));
-    console.log(chalk.gray(`Objective: ${objective}`));
+  .option("-r, --runtime <name>", "Runtime to use (pi or fake)", "pi")
+  .option("-o, --objective <text>", "Temporary objective for the in-memory demo")
+  .action(async (workItemId: string, options: { workspace: string; constraint?: string; runtime: string; objective?: string }) => {
+    const runtimeEnvironment = createRuntimeEnvironment();
+    console.log(chalk.cyan(`Executing work item through ${options.runtime}...`));
+    console.log(chalk.gray(`Work item: ${workItemId}`));
     console.log(chalk.gray(`Workspace: ${options.workspace}`));
 
     try {
-      const { PiRuntimeAdapter } = await import("../runtime/pi/index.js");
+      const runtime = runtimeEnvironment.resolve(options.runtime);
       const workItem = new WorkItem(
-        new WorkItemId(`cli-${Date.now()}`),
+        new WorkItemId(workItemId),
         new IntentId("cli-intent"),
-        new WorkItemTitle(objective)
+        new WorkItemTitle(options.objective ?? workItemId)
       );
       const specification = createDemoSpecification();
       const workItems = new InMemoryRepository<WorkItem, WorkItemId>();
@@ -1056,7 +1061,7 @@ workItemCommand
       const useCase = new ExecuteStoredWorkItemUseCase(
         workItems,
         specifications,
-        new PiRuntimeAdapter(),
+        runtime,
       );
       const result = await useCase.execute({
         workItemId: workItem.id,

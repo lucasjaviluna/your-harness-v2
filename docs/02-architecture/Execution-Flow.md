@@ -10,7 +10,7 @@ sequenceDiagram
   participant R as Repositories
   participant X as ContextAssembler
   participant P as PiRuntimeAdapter
-  U->>C: work-item execute <objective>
+  U->>C: work execute <work-item-id> --runtime <name>
   C->>R: store demo WorkItem + approved Specification
   C->>A: WorkItemId + SpecificationId
   A->>R: load WorkItem + Specification
@@ -28,4 +28,4 @@ sequenceDiagram
 
 Repository-backed loading is implemented in Application and verified with an in-memory repository plus `FakeRuntimePort`. The CLI still creates demonstration aggregates and stores them in memory; persistent repositories, user-facing identifiers and contextual requirement selection are not implemented yet. The CLI also composes Pi directly until runtime selection is available.
 
-The Runtime Boundary is also validated directly without repositories through `ExecuteWorkItemUseCase` and `FakeRuntimeAdapter` in `tests/runtime/execute-work-item.test.ts`. This proves that the same Application contract can be implemented by both Fake and Pi adapters without changing Application.
+The Runtime Boundary is also validated directly without repositories through `ExecuteWorkItemUseCase` and `FakeRuntimeAdapter` in `tests/runtime/execute-work-item.test.ts`. The CLI composition root resolves either `FakeRuntimeAdapter` or `PiRuntimeAdapter` behind the same `RuntimePort`, without changing Application.

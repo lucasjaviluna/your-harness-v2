@@ -3,7 +3,7 @@
 ## Next
 
 1. Consolidate workspace installation hygiene and the public exports of Application.
-2. Add a runtime registry plus project/execution-level runtime selection, removing direct Pi selection from the generic CLI flow.
+2. Extend the experimental `RuntimeEnvironment` with project/execution-level configuration and runtime capability reporting.
 3. Define a neutral execution-environment policy for workspace, tools, network, secrets and confirmations before enabling runtime tools.
 4. Define the first physical `SddProvider` contract and implement a read-only provider spike.
 
