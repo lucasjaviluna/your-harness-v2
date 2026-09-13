@@ -16,7 +16,7 @@
     "build:core": "tsc -b packages/shared packages/domain packages/application",
     "start": "node dist/src/cli/index.js",
     "test": "vitest",
-    "test:core": "vitest run tests/context-assembler.test.ts tests/engineering-core-smoke.test.ts tests/runtime/execute-work-item.test.ts tests/runtime/runtime-environment.test.ts tests/runtime/execution-environment.test.ts tests/sdd/openspec-sdd-provider.test.ts tests/trace/execution-trace.test.ts",
+    "test:core": "vitest run tests/context-assembler.test.ts tests/engineering-core-smoke.test.ts tests/runtime/execute-work-item.test.ts tests/runtime/runtime-environment.test.ts tests/runtime/execution-environment.test.ts tests/runtime/execution-eligibility-policy.test.ts tests/sdd/openspec-sdd-provider.test.ts tests/trace/execution-trace.test.ts",
     "test:pi": "vitest run tests/pi-runtime-integration.test.ts",
     "verify:core": "npm run build:core && npm run test:core",
     "verify:pi": "npm run build && npm run test:pi",

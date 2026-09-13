@@ -10,6 +10,10 @@ import type { RuntimeResult } from "./runtime-result.js";
 import type { ExecutionTraceRepository } from "../trace/execution-trace-repository.js";
 import type { SddChangeReference } from "../trace/execution-trace.js";
 import type { SddProvenance } from "../sdd/sdd-provider.js";
+import {
+  createExecutionEligibilityPolicy,
+  type ExecutionEligibilityPolicy,
+} from "./execution-eligibility-policy.js";
 
 export interface ExecuteStoredWorkItemInput {
   readonly workItemId: WorkItemId;
@@ -34,8 +38,13 @@ export class ExecuteStoredWorkItemUseCase {
     runtime: RuntimePort,
     contextAssembler: ContextAssembler = createContextAssembler(),
     private readonly traces?: ExecutionTraceRepository,
+    eligibilityPolicy: ExecutionEligibilityPolicy = createExecutionEligibilityPolicy(),
   ) {
-    this.#executeWorkItem = new ExecuteWorkItemUseCase(runtime, contextAssembler);
+    this.#executeWorkItem = new ExecuteWorkItemUseCase(
+      runtime,
+      contextAssembler,
+      eligibilityPolicy,
+    );
   }
 
   async execute(input: ExecuteStoredWorkItemInput): Promise<RuntimeResult> {
@@ -50,6 +59,7 @@ export class ExecuteStoredWorkItemUseCase {
       specification,
       workspace: input.workspace,
       executionConstraints: input.executionConstraints,
+      traceability: input.trace ? { change: input.trace.change } : undefined,
     });
 
     if (input.trace) {

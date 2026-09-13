@@ -7,6 +7,11 @@ import type { UseCase } from "../shared/use-cases/use-case.js";
 import type { ExecutionRequest } from "./execution-request.js";
 import type { RuntimePort } from "./runtime-port.js";
 import type { RuntimeResult } from "./runtime-result.js";
+import {
+  createExecutionEligibilityPolicy,
+  type ExecutionEligibilityPolicy,
+} from "./execution-eligibility-policy.js";
+import type { SddChangeReference } from "../trace/execution-trace.js";
 
 export interface ExecuteWorkItemInput {
   readonly workItem: WorkItem;
@@ -15,6 +20,9 @@ export interface ExecuteWorkItemInput {
   readonly knowledge?: ReadonlyArray<EngineeringKnowledge>;
   readonly engineeringConstraints?: ReadonlyArray<string>;
   readonly executionConstraints?: ReadonlyArray<string>;
+  readonly traceability?: {
+    readonly change?: SddChangeReference;
+  };
 }
 
 /**
@@ -26,10 +34,19 @@ export class ExecuteWorkItemUseCase
 {
   constructor(
     private readonly runtime: RuntimePort,
-    private readonly contextAssembler: ContextAssembler = createContextAssembler()
+    private readonly contextAssembler: ContextAssembler = createContextAssembler(),
+    private readonly eligibilityPolicy: ExecutionEligibilityPolicy = createExecutionEligibilityPolicy(),
   ) {}
 
   async execute(input: ExecuteWorkItemInput): Promise<RuntimeResult> {
+    const eligibility = this.eligibilityPolicy.evaluate({
+      specification: input.specification,
+      traceability: input.traceability,
+    });
+    if (!eligibility.eligible) {
+      throw new Error(`Execution is not eligible: ${eligibility.reasons.join(", ")}.`);
+    }
+
     const request: ExecutionRequest = {
       objective: input.workItem.title.value,
       workspace: input.workspace,

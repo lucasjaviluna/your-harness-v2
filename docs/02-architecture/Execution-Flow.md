@@ -8,12 +8,15 @@ sequenceDiagram
   participant C as yh CLI
   participant A as ExecuteStoredWorkItemUseCase
   participant R as Repositories
+  participant G as ExecutionEligibilityPolicy
   participant X as ContextAssembler
   participant P as PiRuntimeAdapter
   U->>C: work execute <work-item-id> --runtime <name>
   C->>R: store demo WorkItem + approved Specification
   C->>A: WorkItemId + SpecificationId
   A->>R: load WorkItem + Specification
+  A->>G: evaluate approved Specification + traceability
+  G-->>A: eligibility decision
   A->>X: assemble Specification
   X-->>A: EngineeringContext
   A->>P: ExecutionRequest
@@ -23,6 +26,8 @@ sequenceDiagram
 ```
 
 `ContextAssembler` only projects approved domain Specifications into execution-safe data. `ExecuteStoredWorkItemUseCase` loads the aggregates through repository ports and delegates to `ExecuteWorkItemUseCase`. Neither use case changes WorkItem state after a runtime result; completion remains an explicit engineering decision.
+
+`ExecutionEligibilityPolicy` now makes the approval rule explicit and can additionally require normalized Change provenance when SDD traceability is enabled. An ineligible request stops before the runtime call.
 
 ## Current limitation
 
