@@ -1,4 +1,4 @@
-import type { ExecutionRequest } from "../../../packages/application/src/runtime/execution-request.js";
+import type { ExecutionRequest } from "@your-harness/application";
 
 export function buildPiExecutionPrompt(request: ExecutionRequest): string {
   const sections: string[] = ["## Objective", request.objective, "", "## Engineering Context"];

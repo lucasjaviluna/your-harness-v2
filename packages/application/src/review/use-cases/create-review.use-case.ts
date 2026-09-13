@@ -1,10 +1,10 @@
-import { CreateReviewInput } from "./create-review.input";
+import type { CreateReviewInput } from "./create-review.input.js";
 import { Review, ReviewId, SpecificationId } from "@your-harness/domain";
 
 import { UseCase } from "../../shared/index.js";
 
-import { ReviewRepository } from "../ports/index.js";
-import { CreateReviewOutput } from "./create-review.output.js";
+import type { ReviewRepository } from "../ports/index.js";
+import type { CreateReviewOutput } from "./create-review.output.js";
 
 export class CreateReviewUseCase implements UseCase<
   CreateReviewInput,

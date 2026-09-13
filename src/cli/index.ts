@@ -42,9 +42,11 @@ import {
   WorkItem,
   WorkItemId,
   WorkItemTitle,
-} from "../../packages/domain/src/index.js";
-import { ExecuteStoredWorkItemUseCase } from "../../packages/application/src/runtime/index.js";
-import { InMemoryRepository } from "../../packages/application/src/shared/index.js";
+} from "@your-harness/domain";
+import {
+  ExecuteStoredWorkItemUseCase,
+  InMemoryRepository,
+} from "@your-harness/application";
 
 const config = loadConfig();
 const logger = createLogger(config.logLevel);

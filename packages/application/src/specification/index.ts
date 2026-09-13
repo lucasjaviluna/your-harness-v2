@@ -1,2 +1,2 @@
-export * from "./ports/index";
-export * from "./use-cases/index";
+export * from "./ports/index.js";
+export * from "./use-cases/index.js";

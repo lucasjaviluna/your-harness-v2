@@ -1,5 +1,4 @@
-import type { SpecificationId } from "../../../domain/src/specification/index.js";
-import type { WorkItemId } from "../../../domain/src/work-item/index.js";
+import type { SpecificationId, WorkItemId } from "@your-harness/domain";
 import type { ContextAssembler } from "../context/context-assembler.js";
 import { createContextAssembler } from "../context/context-assembler.js";
 import type { WorkItemRepository } from "../work-item/ports/index.js";

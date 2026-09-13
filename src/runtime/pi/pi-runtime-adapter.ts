@@ -1,5 +1,5 @@
 import { createAgentSession, SessionManager } from "@earendil-works/pi-coding-agent";
-import type { ExecutionRequest, RuntimePort, RuntimeResult } from "../../../packages/application/src/runtime/index.js";
+import type { ExecutionRequest, RuntimePort, RuntimeResult } from "@your-harness/application";
 import { buildPiExecutionPrompt } from "./pi-execution-prompt.js";
 
 export class PiRuntimeAdapter implements RuntimePort {

@@ -1,1 +1,1 @@
-export * from "./create-specification";
+export * from "./create-specification/index.js";

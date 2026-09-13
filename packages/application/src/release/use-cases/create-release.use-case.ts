@@ -1,10 +1,10 @@
-import { CreateReleaseInput } from "./create-release.input";
+import type { CreateReleaseInput } from "./create-release.input.js";
 import { Release, ReleaseId, ReleaseVersion } from "@your-harness/domain";
 
 import { UseCase } from "../../shared/index.js";
 
-import { ReleaseRepository } from "../ports/index.js";
-import { CreateReleaseOutput } from "./create-release.output.js";
+import type { ReleaseRepository } from "../ports/index.js";
+import type { CreateReleaseOutput } from "./create-release.output.js";
 
 export class CreateReleaseUseCase implements UseCase<
   CreateReleaseInput,

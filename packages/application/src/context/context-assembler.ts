@@ -1,7 +1,7 @@
 import {
   Specification,
   SpecificationStatus,
-} from "../../../domain/src/specification/index.js";
+} from "@your-harness/domain";
 
 import type { EngineeringContext } from "./engineering-context.js";
 import type { EngineeringKnowledge } from "./engineering-knowledge.js";

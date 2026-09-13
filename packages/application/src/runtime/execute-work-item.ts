@@ -1,5 +1,4 @@
-import type { Specification } from "../../../domain/src/specification/index.js";
-import type { WorkItem } from "../../../domain/src/work-item/index.js";
+import type { Specification, WorkItem } from "@your-harness/domain";
 import type { ContextAssembler } from "../context/context-assembler.js";
 import { createContextAssembler } from "../context/context-assembler.js";
 import type { EngineeringKnowledge } from "../context/engineering-knowledge.js";

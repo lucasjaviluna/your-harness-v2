@@ -12,9 +12,14 @@
   ],
   "scripts": {
     "dev": "tsx watch src/cli/index.ts",
-    "build": "tsc",
+    "build": "tsc -b",
+    "build:core": "tsc -b packages/shared packages/domain packages/application",
     "start": "node dist/src/cli/index.js",
     "test": "vitest",
+    "test:core": "vitest run tests/context-assembler.test.ts tests/engineering-core-smoke.test.ts",
+    "test:pi": "vitest run tests/pi-runtime-integration.test.ts",
+    "verify:core": "npm run build:core && npm run test:core",
+    "verify:pi": "npm run build && npm run test:pi",
     "test:watch": "vitest watch",
     "lint": "eslint src/",
     "format": "prettier --write src/"
@@ -44,6 +49,8 @@
     "prettier": "^3.2.0"
   },
   "dependencies": {
+    "@your-harness/application": "file:./packages/application",
+    "@your-harness/domain": "file:./packages/domain",
     "@earendil-works/pi-coding-agent": "^0.85.1",
     "commander": "^12.0.0",
     "chalk": "^5.3.0",

@@ -6,6 +6,8 @@
     "lib": ["ES2022"],
     "outDir": "./dist",
     "rootDir": ".",
+    "composite": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -25,10 +27,11 @@
       "@workflows/*": ["./src/workflows/*"]
     }
   },
-  "include": [
-    "src/**/*",
-    "packages/application/src/context/**/*.ts",
-    "packages/application/src/runtime/**/*.ts"
-  ],
-  "exclude": ["node_modules", "dist", "tests"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "tests"],
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./packages/domain" },
+    { "path": "./packages/application" }
+  ]
 }

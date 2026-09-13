@@ -1,6 +1,6 @@
 import { Repository } from "../../shared/index.js";
 
-import type { Specification, SpecificationId } from "../../../../domain/src/specification/index.js";
+import type { Specification, SpecificationId } from "@your-harness/domain";
 
 /**
  * Specification repository contract.
