@@ -25,7 +25,7 @@ Each package is an independent composite TypeScript project. The root `tsconfig.
 
 ## Current vertical slice
 
-The implemented execution path is `WorkItem + approved Specification → ContextAssembler → EngineeringContext → ExecutionRequest → RuntimePort → RuntimeResult`. It is verified independently with a `FakeRuntimePort`; the CLI resolves the selected adapter through `RuntimeRegistry` and uses `fake` by default with demonstration data.
+The implemented execution path is `WorkItem + approved Specification → ContextAssembler → EngineeringContext → ExecutionRequest → RuntimePort → RuntimeResult`. It is verified independently with a `FakeRuntimePort`; the CLI resolves the selected adapter through `RuntimeRegistry`, uses `fake` by default, and the persistent `work` flow resolves the configured SDD source before writing an `ExecutionTrace`.
 
 The first SDD integration is independent from this execution path: `OpenSpecSddProvider` reads current specification material and proposed change descriptors through the Application `SddProvider` port. It does not mutate OpenSpec files or pass provider artifacts to the Runtime.
 

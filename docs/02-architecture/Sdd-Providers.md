@@ -38,4 +38,4 @@ La configuración local puede declarar `runtime.sddProvider: openspec`. `createP
 
 ## Límites actuales
 
-El spike todavía no añade planificación desde tareas, escritura de artefactos ni lifecycle de Change. La CLI de demostración tampoco lee todavía el proveedor configurado para construir sus aggregates. Ningún tipo de OpenSpec cruza al Domain ni al Runtime.
+El spike todavía no añade planificación desde tareas, escritura de artefactos ni lifecycle de Change. `yh work execute` sí lee el proveedor configurado y proyecta el material actual en Application para construir la solicitud de ejecución; no construye aggregates de Domain desde tipos OpenSpec ni pasa tipos del proveedor al Runtime.

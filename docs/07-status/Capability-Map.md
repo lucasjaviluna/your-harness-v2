@@ -24,4 +24,4 @@
 | Agent tools | Stub | CLI ToolExecutor currently reports simulated success. |
 | Workflow command/script steps | Stub | Placeholder execution only. |
 | Configuration persistence | Partial | YAML is read; save path behavior requires consolidation. |
-| Test suite | Early | Thirty-eight focused tests cover configuration, context projection, Core smoke flows, Runtime composition/boundary, execution environment, OpenSpec read-only projection, operational persistence/bindings, real CLI execution, Evidence/Verification/evaluator/authorization, eligibility and Pi adapter; broad coverage is pending. |
+| Test suite | Early | Forty focused tests cover configuration, context projection, Core smoke flows, Runtime composition/boundary, execution environment, OpenSpec read-only projection, operational persistence/bindings, in-process and process-level CLI execution, Evidence/Verification/evaluator/authorization, eligibility and Pi adapter; broad coverage is pending. |

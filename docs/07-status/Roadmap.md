@@ -7,7 +7,7 @@
 3. ~~Define a neutral execution-environment policy for workspace, tools, network, secrets and confirmations before enabling runtime tools.~~ **Completed as a contract:** enforcement and tool adapters remain pending.
 4. ~~Define the first physical `SddProvider` contract and implement a read-only provider spike.~~ **Completed:** the neutral port and the local read-only OpenSpec adapter are implemented and selected through project configuration; write workflows remain pending.
 
-Local operational persistence is now wired into the CLI: `work create` and `work bind` create durable state, while `work execute` resolves current provider-owned SDD material and persists a trace. The next increment is richer lifecycle/authorization UX and an authoritative source beyond the read-only OpenSpec projection.
+Local operational persistence is now wired into the CLI: `work create` and `work bind` create durable state, while `work execute` resolves current provider-owned SDD material and persists a trace. The next increment is CLI UX for Evidence/VerificationPlan/VerificationReport and an authoritative source beyond the read-only OpenSpec projection.
 
 ## Later
 

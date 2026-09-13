@@ -21,9 +21,15 @@ Current tests cover:
 - `ContextAssembler` approval and projection rules;
 - `ExecuteWorkItemUseCase` delegation through `FakeRuntimeAdapter`;
 - the complete repository-backed Core flow through a `FakeRuntimePort`;
-- Pi prompt projection, result mapping and session disposal.
+- Pi prompt projection, result mapping and session disposal;
+- CLI composition and the persistent `work` flow both in-process and as a child process;
+- SDD projection, durable traceability, Evidence/Verification evaluation and CompletionAuthorization.
 
 The dedicated Runtime Boundary test lives under `tests/runtime/` and validates the first executable engineering slice: approved Specification + WorkItem → `ExecuteWorkItemUseCase` → `ExecutionRequest` → fake runtime → `RuntimeResult`.
+
+The CLI composition test uses injected `CliContext` IO, so command behavior can be
+verified without spawning a process. The persistent CLI test remains as a process-level
+regression for the durable workspace flow.
 
 Los tests del Core y del Runtime consumen las APIs públicas `@your-harness/domain` y `@your-harness/application`; no importan rutas físicas bajo `packages/*/src`.
 

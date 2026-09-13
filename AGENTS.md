@@ -79,12 +79,12 @@ Shared, Domain and Application are composite TypeScript projects connected with 
 
 ## Known Gaps
 
-- **ToolExecutor** is a stub — logs calls, returns mock results. Wired in `src/cli/index.ts:393`.
+- **ToolExecutor** is a stub — logs calls, returns mock results. The CLI agent adapter wires it in `src/cli/commands/register-agent-commands.ts`.
 - **MCP client/server** are skeleton JSON-RPC with no real transport.
 - **Workflow `command`/`script` steps** are placeholders.
-- **`saveConfig`** writes JSON to a `.yml` path (extension bug in `src/core/config.ts:120`).
+- **`saveConfig`** writes YAML to the configured `.yml` path; provider/runtime configuration remains intentionally minimal.
 - **No explicit eslint/prettier config files** — lint/format behavior still needs consolidation.
-- **Tests are focused, not broad** — thirty-six tests cover configuration, context, Core smoke flows, runtime composition/boundary, execution environment, read-only OpenSpec projection, operational bindings, real CLI execution, Evidence/Verification contracts/evaluator, eligibility and Pi adapter integration.
+- **Tests are focused, not broad** — forty tests cover configuration, context, Core smoke flows, runtime composition/boundary, execution environment, read-only OpenSpec projection, operational bindings, in-process and process-level CLI execution, Evidence/Verification contracts/evaluator, eligibility and Pi adapter integration.
 - **No CI/CD** — no `.github/workflows/`.
 - **Runtime selection is explicit and project-configured** — `createProjectRuntimeEnvironment` resolves `runtime.defaultRuntime` from `.your-harness/config.yml`, composes `RuntimeRegistry`, `SddProvider`, eligibility policy and execution environment; `fake` remains the safe built-in default and Pi is registered only when resolved.
 - **Execution environment contract is configured but not enforced by tools** — `runtime.executionEnvironment` maps workspace, capabilities, network, secrets and confirmations with deny-by-default values; Pi remains `noTools: "all"`.

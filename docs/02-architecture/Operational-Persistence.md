@@ -16,7 +16,7 @@ YH persiste estado operacional propio por workspace bajo un directorio local ign
 
 ## Alcance
 
-`createLocalOperationalStore({ workspace })` expone repositorios para `WorkItem`, bindings de ejecución, `ExecutionTrace`, `Evidence`, `VerificationPlan` y `VerificationReport`. Los WorkItems se serializan con una versión de formato y se rehidratan como aggregates de Domain. Un binding selecciona una Specification SDD, Change/tareas opcionales y una autorización explícita de ejecución. Las trazas conservan Change/task provenance, WorkItem, runtime, RuntimeResult y un snapshot de Specification con provenance y digest.
+`createLocalOperationalStore({ workspace })` expone repositorios para `WorkItem`, bindings de ejecución, `ExecutionTrace`, `Evidence`, `VerificationPlan`, `VerificationReport` y `CompletionAuthorization`. Los WorkItems se serializan con una versión de formato y se rehidratan como aggregates de Domain. Un binding selecciona una Specification SDD, Change/tareas opcionales y una autorización explícita de ejecución. Las trazas conservan Change/task provenance, WorkItem, runtime, RuntimeResult y un snapshot de Specification con provenance y digest.
 
 Las escrituras usan un archivo temporal seguido de `rename`, y los IDs persistidos aceptan sólo caracteres seguros para evitar escapes del directorio de estado.
 
@@ -29,5 +29,4 @@ Esta base no persiste copias de Specifications ni artefactos de OpenSpec. Las Sp
 - No hay locking multiproceso, índices secundarios ni migraciones entre versiones.
 - No hay persistencia local de Specifications ni artefactos SDD; las decisiones operativas se persisten localmente.
 
-El store también expone el repositorio de `CompletionAuthorization`; una autorización
-explícita es la única entrada que puede completar un WorkItem.
+Una `CompletionAuthorization` explícita es la única entrada que puede completar un WorkItem.
