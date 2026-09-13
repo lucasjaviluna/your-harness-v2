@@ -9,7 +9,9 @@ export interface VerificationCriterion {
 /** Criterios seleccionados sobre comportamiento ya aprobado. */
 export interface VerificationPlan {
   readonly id: string;
+  readonly executionTraceId: string;
   readonly specificationId: string;
+  readonly specificationSnapshotDigest: string;
   readonly criteria: ReadonlyArray<VerificationCriterion>;
   readonly createdAt: string;
 }
@@ -20,7 +22,9 @@ const nonEmpty = (value: string, field: string): void => {
 
 export const createVerificationPlan = (input: VerificationPlan): VerificationPlan => {
   nonEmpty(input.id, "id");
+  nonEmpty(input.executionTraceId, "execution trace id");
   nonEmpty(input.specificationId, "specification id");
+  nonEmpty(input.specificationSnapshotDigest, "specification snapshot digest");
   nonEmpty(input.createdAt, "createdAt");
   if (input.criteria.length === 0) throw new Error("VerificationPlan requires at least one criterion.");
   const ids = new Set(input.criteria.map((criterion) => criterion.id));

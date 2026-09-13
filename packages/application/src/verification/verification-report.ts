@@ -15,7 +15,9 @@ export interface VerificationCriterionResult {
 export interface VerificationReport {
   readonly id: string;
   readonly planId: string;
+  readonly executionTraceId: string;
   readonly specificationId: string;
+  readonly specificationSnapshotDigest: string;
   readonly outcome: VerificationOutcome;
   readonly criteria: ReadonlyArray<VerificationCriterionResult>;
   readonly createdAt: string;

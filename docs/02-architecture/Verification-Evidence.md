@@ -20,12 +20,15 @@ outcome, locator/digest, summary and capture time. `RecordEvidenceUseCase` verif
 that its `ExecutionTrace` exists through the repository port before it accepts the
 record; this permits a local durable trace store to anchor evidence across processes.
 
-`VerificationPlan` selects Requirement/Scenario criteria and expected evidence kinds.
+`VerificationPlan` selects Requirement/Scenario criteria and expected evidence kinds,
+and is bound to one `ExecutionTrace` plus its Specification snapshot digest.
 `VerificationReport` and their repositories are now durable local contracts under
 `.your-harness/state`. They do not yet evaluate evidence automatically, authorize
 completion, or transition a WorkItem. The design remains specified in [ADR-009](../adr/ADR-009.md).
 
-Application now includes a conservative deterministic evaluator. For each criterion:
+Application now includes a conservative deterministic evaluator. It first requires the
+supplied trace ID and Specification ID/digest to match the plan, then ignores Evidence
+from every other execution. For each criterion:
 
 - failed matching evidence produces `failed`;
 - missing expected evidence kinds produce `inconclusive`;

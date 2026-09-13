@@ -124,7 +124,9 @@ describe("LocalOperationalStore", () => {
     });
     await store.verificationPlans.save({
       id: "plan-1",
+      executionTraceId: "trace-1",
       specificationId: "spec-1",
+      specificationSnapshotDigest: "digest-1",
       criteria: [{
         id: "criterion-1",
         subject: { kind: "scenario", scenarioId: "login" },
@@ -135,7 +137,9 @@ describe("LocalOperationalStore", () => {
     await store.verificationReports.save({
       id: "report-1",
       planId: "plan-1",
+      executionTraceId: "trace-1",
       specificationId: "spec-1",
+      specificationSnapshotDigest: "digest-1",
       outcome: "verified",
       criteria: [{
         criterionId: "criterion-1",

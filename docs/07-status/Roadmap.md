@@ -15,7 +15,7 @@ Local operational persistence is now wired into the CLI: `work create` and `work
 6. ~~Add operational traceability between Change, Specification, WorkItem and execution.~~ **Completed:** `ExecutionTrace` records the linkage without changing Domain relationships and is persisted locally by the CLI.
 7. Add contextual requirement selection rather than projecting all requirements.
 8. ~~Introduce `ExecutionEligibilityPolicy` when a second concrete eligibility rule exists.~~ **Completed:** approved Specification is explicit and optional SDD Change traceability can be required before runtime execution.
-9. ~~Define Verification/Evidence before interpreting runtime completion as engineering completion.~~ **Contracts, local durability and deterministic evaluation implemented:** ADR-009 has Evidence and VerificationPlan/Report contracts, repositories, trace-existence validation, auditable Specification snapshots and conservative report evaluation. Completion authorization remains pending.
+9. ~~Define Verification/Evidence before interpreting runtime completion as engineering completion.~~ **Scoped contracts, local durability and deterministic evaluation implemented:** ADR-009 binds plans to one trace and Specification digest, filters Evidence to that execution, and produces conservative reports. Completion authorization remains pending.
 10. Implement real MCP transport and replace simulated tools and workflow steps with guarded implementations.
 
 Roadmap items are directional, not commitments; accepted architectural changes belong in ADRs.

@@ -1,4 +1,5 @@
 import type { Evidence, EvidenceSubject } from "./evidence.js";
+import type { ExecutionTrace } from "../trace/execution-trace.js";
 import type { VerificationCriterion, VerificationPlan } from "./verification-plan.js";
 import type {
   VerificationCriterionResult,
@@ -8,6 +9,7 @@ import type {
 
 export interface EvaluateVerificationPlanInput {
   readonly plan: VerificationPlan;
+  readonly executionTrace: ExecutionTrace;
   readonly evidence: ReadonlyArray<Evidence>;
   readonly reportId: string;
   readonly createdAt: string;
@@ -68,11 +70,25 @@ export const evaluateVerificationPlan = (
 ): VerificationReport => {
   if (!input.reportId.trim()) throw new Error("VerificationReport id cannot be empty.");
   if (!input.createdAt.trim()) throw new Error("VerificationReport createdAt cannot be empty.");
-  const criteria = input.plan.criteria.map((criterion) => evaluateCriterion(criterion, input.evidence));
+  if (input.executionTrace.id !== input.plan.executionTraceId) {
+    throw new Error("VerificationPlan execution trace does not match the supplied ExecutionTrace.");
+  }
+  if (input.executionTrace.specificationId !== input.plan.specificationId) {
+    throw new Error("VerificationPlan specification does not match the supplied ExecutionTrace.");
+  }
+  if (input.executionTrace.specificationSnapshot?.contentDigest !== input.plan.specificationSnapshotDigest) {
+    throw new Error("VerificationPlan specification snapshot does not match the supplied ExecutionTrace.");
+  }
+  const scopedEvidence = input.evidence.filter(
+    (item) => item.executionTraceId === input.plan.executionTraceId,
+  );
+  const criteria = input.plan.criteria.map((criterion) => evaluateCriterion(criterion, scopedEvidence));
   return {
     id: input.reportId,
     planId: input.plan.id,
+    executionTraceId: input.plan.executionTraceId,
     specificationId: input.plan.specificationId,
+    specificationSnapshotDigest: input.plan.specificationSnapshotDigest,
     outcome: reportOutcome(criteria),
     criteria,
     createdAt: input.createdAt,

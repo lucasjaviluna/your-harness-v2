@@ -161,7 +161,9 @@ const isVerificationPlan = (value: unknown): value is VerificationPlan => {
   const plan = value as Partial<VerificationPlan>;
   return (
     typeof plan.id === "string" &&
+    typeof plan.executionTraceId === "string" &&
     typeof plan.specificationId === "string" &&
+    typeof plan.specificationSnapshotDigest === "string" &&
     typeof plan.createdAt === "string" &&
     Array.isArray(plan.criteria)
   );
@@ -173,7 +175,9 @@ const isVerificationReport = (value: unknown): value is VerificationReport => {
   return (
     typeof report.id === "string" &&
     typeof report.planId === "string" &&
+    typeof report.executionTraceId === "string" &&
     typeof report.specificationId === "string" &&
+    typeof report.specificationSnapshotDigest === "string" &&
     typeof report.outcome === "string" &&
     typeof report.createdAt === "string" &&
     Array.isArray(report.criteria)

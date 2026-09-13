@@ -67,7 +67,9 @@ describe("Evidence and Verification contracts", () => {
   it("defines verification criteria over requirements and scenarios without completion authority", () => {
     const plan = createVerificationPlan({
       id: "plan-1",
+      executionTraceId: "trace-1",
       specificationId: "spec-1",
+      specificationSnapshotDigest: "digest-1",
       createdAt: "2026-09-13T00:00:00.000Z",
       criteria: [
         {
@@ -87,7 +89,9 @@ describe("Evidence and Verification contracts", () => {
   it("evaluates criteria conservatively and returns a durable report shape", () => {
     const plan = createVerificationPlan({
       id: "plan-evaluation",
+      executionTraceId: "trace-1",
       specificationId: "spec-1",
+      specificationSnapshotDigest: "digest-1",
       createdAt: "2026-09-13T00:00:00.000Z",
       criteria: [
         {
@@ -105,6 +109,22 @@ describe("Evidence and Verification contracts", () => {
 
     const report = evaluateVerificationPlan({
       plan,
+      executionTrace: {
+        id: "trace-1",
+        workItemId: "work-1",
+        specificationId: "spec-1",
+        specificationSnapshot: {
+          id: "spec-1",
+          title: "Spec",
+          provenance: { providerId: "openspec", reference: "spec.md" },
+          contentDigest: "digest-1",
+          requirementIds: ["authentication"],
+        },
+        taskReferences: [],
+        runtimeId: "fake",
+        runtimeResult: { status: "completed", summary: "done", timestamps: { startedAt: "now" } },
+        recordedAt: "2026-09-13T00:00:00.000Z",
+      },
       reportId: "report-evaluation",
       createdAt: "2026-09-13T00:01:00.000Z",
       evidence: [
@@ -126,6 +146,15 @@ describe("Evidence and Verification contracts", () => {
           summary: "A reviewer attested the result.",
           capturedAt: "2026-09-13T00:00:40.000Z",
         },
+        {
+          id: "evidence-other-trace-failed",
+          executionTraceId: "trace-other",
+          subject: { kind: "scenario", scenarioId: "login" },
+          kind: "test-result",
+          outcome: "failed",
+          summary: "A different execution failed.",
+          capturedAt: "2026-09-13T00:00:50.000Z",
+        },
       ],
     });
 
@@ -134,12 +163,37 @@ describe("Evidence and Verification contracts", () => {
       expect.objectContaining({ criterionId: "criterion-passed", outcome: "verified" }),
       expect.objectContaining({ criterionId: "criterion-human", outcome: "requires-human-review" }),
     ]);
+
+    expect(() => evaluateVerificationPlan({
+      plan,
+      executionTrace: {
+        id: "trace-1",
+        workItemId: "work-1",
+        specificationId: "spec-1",
+        specificationSnapshot: {
+          id: "spec-1",
+          title: "Spec",
+          provenance: { providerId: "openspec", reference: "spec.md" },
+          contentDigest: "another-digest",
+          requirementIds: ["authentication"],
+        },
+        taskReferences: [],
+        runtimeId: "fake",
+        runtimeResult: { status: "completed", summary: "done", timestamps: { startedAt: "now" } },
+        recordedAt: "2026-09-13T00:00:00.000Z",
+      },
+      evidence: [],
+      reportId: "report-mismatch",
+      createdAt: "2026-09-13T00:02:00.000Z",
+    })).toThrow("snapshot does not match");
   });
 
   it("makes failed evidence dominate and missing evidence inconclusive", () => {
     const plan = createVerificationPlan({
       id: "plan-outcomes",
+      executionTraceId: "trace-1",
       specificationId: "spec-1",
+      specificationSnapshotDigest: "digest-1",
       createdAt: "2026-09-13T00:00:00.000Z",
       criteria: [
         { id: "failed", subject: { kind: "scenario", scenarioId: "failed" }, expectedEvidenceKinds: ["test-result"] },
@@ -148,6 +202,22 @@ describe("Evidence and Verification contracts", () => {
     });
     const report = evaluateVerificationPlan({
       plan,
+      executionTrace: {
+        id: "trace-1",
+        workItemId: "work-1",
+        specificationId: "spec-1",
+        specificationSnapshot: {
+          id: "spec-1",
+          title: "Spec",
+          provenance: { providerId: "openspec", reference: "spec.md" },
+          contentDigest: "digest-1",
+          requirementIds: ["failed", "missing"],
+        },
+        taskReferences: [],
+        runtimeId: "fake",
+        runtimeResult: { status: "completed", summary: "done", timestamps: { startedAt: "now" } },
+        recordedAt: "2026-09-13T00:00:00.000Z",
+      },
       reportId: "report-outcomes",
       createdAt: "2026-09-13T00:01:00.000Z",
       evidence: [{
