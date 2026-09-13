@@ -109,6 +109,53 @@ describe("LocalOperationalStore", () => {
     });
   });
 
+  it("persists Evidence, VerificationPlan and VerificationReport across store instances", async () => {
+    const workspace = await createWorkspace();
+    const store = createLocalOperationalStore({ workspace });
+
+    await store.evidence.save({
+      id: "evidence-1",
+      executionTraceId: "trace-1",
+      subject: { kind: "scenario", scenarioId: "login" },
+      kind: "test-result",
+      outcome: "passed",
+      summary: "Login test passed.",
+      capturedAt: "2026-09-13T00:00:00.000Z",
+    });
+    await store.verificationPlans.save({
+      id: "plan-1",
+      specificationId: "spec-1",
+      criteria: [{
+        id: "criterion-1",
+        subject: { kind: "scenario", scenarioId: "login" },
+        expectedEvidenceKinds: ["test-result"],
+      }],
+      createdAt: "2026-09-13T00:00:00.000Z",
+    });
+    await store.verificationReports.save({
+      id: "report-1",
+      planId: "plan-1",
+      specificationId: "spec-1",
+      outcome: "verified",
+      criteria: [{
+        criterionId: "criterion-1",
+        outcome: "verified",
+        evidenceIds: ["evidence-1"],
+        summary: "Evidence is sufficient.",
+      }],
+      createdAt: "2026-09-13T00:00:01.000Z",
+    });
+
+    const reopened = createLocalOperationalStore({ workspace });
+    await expect(reopened.evidence.findById("evidence-1")).resolves.toMatchObject({
+      executionTraceId: "trace-1",
+    });
+    await expect(reopened.verificationPlans.findById("plan-1")).resolves.toMatchObject({
+      specificationId: "spec-1",
+    });
+    await expect(reopened.verificationReports.findByPlanId("plan-1")).resolves.toHaveLength(1);
+  });
+
   it("rejects identifiers that could escape the local state directory", async () => {
     const workspace = await createWorkspace();
     const store = createLocalOperationalStore({ workspace });

@@ -1116,6 +1116,7 @@ workItemCommand
             ? { id: source.change.id, provenance: source.change.provenance }
             : undefined,
           taskReferences: source.taskReferences,
+          specificationSnapshot: source.specificationSnapshot,
         },
       });
 

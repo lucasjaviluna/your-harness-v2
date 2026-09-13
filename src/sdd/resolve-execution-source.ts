@@ -1,4 +1,6 @@
+import { createHash } from "node:crypto";
 import type { SddChangeProjection, SddProjectProjection, SddSpecificationProjection } from "@your-harness/application";
+import type { SddSpecificationSnapshot } from "@your-harness/application";
 import {
   NormativeStatement,
   Requirement,
@@ -18,6 +20,7 @@ import type { WorkItemExecutionBinding } from "../persistence/local/index.js";
 
 export interface ResolvedExecutionSource {
   readonly specification: Specification;
+  readonly specificationSnapshot: SddSpecificationSnapshot;
   readonly change?: SddChangeProjection;
   readonly taskReferences: ReadonlyArray<{ readonly providerId: string; readonly reference: string }>;
 }
@@ -54,6 +57,22 @@ const toApprovedSpecification = (source: SddSpecificationProjection): Specificat
     ),
   );
 
+const toSpecificationSnapshot = (source: SddSpecificationProjection): SddSpecificationSnapshot => {
+  const canonical = JSON.stringify({
+    id: source.id,
+    title: source.title,
+    provenance: source.provenance,
+    requirements: source.requirements,
+  });
+  return {
+    id: source.id,
+    title: source.title,
+    provenance: source.provenance,
+    contentDigest: createHash("sha256").update(canonical).digest("hex"),
+    requirementIds: source.requirements.map((requirement) => requirement.id),
+  };
+};
+
 /** Proyecta la fuente actual; el binding aporta la autorización explícita. */
 export const resolveExecutionSource = (
   project: SddProjectProjection,
@@ -70,8 +89,10 @@ export const resolveExecutionSource = (
     return task.provenance;
   });
 
+  const source = requiredSpecification(project, binding.specificationId);
   return {
-    specification: toApprovedSpecification(requiredSpecification(project, binding.specificationId)),
+    specification: toApprovedSpecification(source),
+    specificationSnapshot: toSpecificationSnapshot(source),
     change,
     taskReferences,
   };

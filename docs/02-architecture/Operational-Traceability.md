@@ -14,7 +14,7 @@ Specification + WorkItem
 
 ## Contenido
 
-Una traza contiene identificadores de WorkItem y Specification, una referencia opcional al Change, referencias a tareas del proveedor, el runtime elegido, el `RuntimeResult` y el instante de registro.
+Una traza contiene identificadores de WorkItem y Specification, un snapshot con provenance/digest de la Specification proyectada, una referencia opcional al Change, referencias a tareas del proveedor, el runtime elegido, el `RuntimeResult` y el instante de registro.
 
 Change y tareas se representan únicamente mediante `SddProvenance` opaca. No se convierten en relaciones de Domain ni cruzan el Runtime Boundary: el runtime continúa recibiendo sólo `ExecutionRequest`.
 

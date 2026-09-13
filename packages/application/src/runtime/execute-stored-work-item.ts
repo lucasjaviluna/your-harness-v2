@@ -8,7 +8,7 @@ import { ExecuteWorkItemUseCase } from "./execute-work-item.js";
 import type { RuntimePort } from "./runtime-port.js";
 import type { RuntimeResult } from "./runtime-result.js";
 import type { ExecutionTraceRepository } from "../trace/execution-trace-repository.js";
-import type { SddChangeReference } from "../trace/execution-trace.js";
+import type { SddChangeReference, SddSpecificationSnapshot } from "../trace/execution-trace.js";
 import type { SddProvenance } from "../sdd/sdd-provider.js";
 import {
   createExecutionEligibilityPolicy,
@@ -23,6 +23,7 @@ export interface ExecuteStoredWorkItemInput {
   readonly trace?: {
     readonly id: string;
     readonly runtimeId: string;
+    readonly specificationSnapshot?: SddSpecificationSnapshot;
     readonly change?: SddChangeReference;
     readonly taskReferences?: ReadonlyArray<SddProvenance>;
   };
@@ -70,6 +71,7 @@ export class ExecuteStoredWorkItemUseCase {
         id: input.trace.id,
         workItemId: workItem.id.value,
         specificationId: specification.id.value,
+        specificationSnapshot: input.trace.specificationSnapshot,
         change: input.trace.change,
         taskReferences: [...(input.trace.taskReferences ?? [])],
         runtimeId: input.trace.runtimeId,

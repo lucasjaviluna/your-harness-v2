@@ -29,6 +29,7 @@ src/cli
 - `packages/application` aplica `ExecutionEligibilityPolicy` antes de ejecutar: Specification aprobada y, opcionalmente, trazabilidad SDD.
 - `src/persistence/local` persiste WorkItems, bindings operacionales y ExecutionTraces bajo `.your-harness/state/`, sin duplicar Specifications u OpenSpec.
 - `packages/application/verification` define Evidence y VerificationPlan/Report; Evidence se ancla a una ExecutionTrace existente, sin completar WorkItems automáticamente.
+- Las trazas nuevas incluyen provenance y digest de la Specification proyectada; Evidence y VerificationPlan/Report también tienen almacenamiento operacional local.
 
 ## Instalación y verificación
 

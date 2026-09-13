@@ -81,14 +81,14 @@ Shared, Domain and Application are composite TypeScript projects connected with 
 - **Workflow `command`/`script` steps** are placeholders.
 - **`saveConfig`** writes JSON to a `.yml` path (extension bug in `src/core/config.ts:120`).
 - **No explicit eslint/prettier config files** — lint/format behavior still needs consolidation.
-- **Tests are focused, not broad** — thirty-three tests cover configuration, context, Core smoke flows, runtime composition/boundary, execution environment, read-only OpenSpec projection, operational bindings, real CLI execution, Evidence/Verification contracts, eligibility and Pi adapter integration.
+- **Tests are focused, not broad** — thirty-four tests cover configuration, context, Core smoke flows, runtime composition/boundary, execution environment, read-only OpenSpec projection, operational bindings, real CLI execution, Evidence/Verification contracts, eligibility and Pi adapter integration.
 - **No CI/CD** — no `.github/workflows/`.
 - **Runtime selection is explicit and project-configured** — `createProjectRuntimeEnvironment` resolves `runtime.defaultRuntime` from `.your-harness/config.yml`, composes `RuntimeRegistry`, `SddProvider`, eligibility policy and execution environment; `fake` remains the safe built-in default and Pi is registered only when resolved.
 - **Execution environment contract is configured but not enforced by tools** — `runtime.executionEnvironment` maps workspace, capabilities, network, secrets and confirmations with deny-by-default values; Pi remains `noTools: "all"`.
 - **Operational persistence is implemented** — local JSON repositories persist WorkItems, execution bindings and ExecutionTraces under `.your-harness/state`; the CLI resolves current configured SDD material and Specifications are not mirrored.
 - **OpenSpec is read-only only** — `OpenSpecSddProvider` projects local artifacts through `SddProvider` and is selected via `runtime.sddProvider`; writes, task synchronization and Change lifecycle are pending.
 - **Execution eligibility has two rules** — Application requires an approved Specification and can require normalized Change provenance; `runtime.requireSddChangeTraceability` configures the second rule at composition time.
-- **Verification/Evidence contracts are implemented** — ADR-009 treats RuntimeResult as an observation; immutable Evidence references an existing ExecutionTrace and VerificationPlan/Report contracts are public. Evaluation, durable evidence storage and completion authorization remain pending.
+- **Verification/Evidence contracts are durable** — ADR-009 treats RuntimeResult as an observation; immutable Evidence references an existing ExecutionTrace, local JSON repositories persist Evidence and VerificationPlan/Report, and auditable Specification snapshots are attached to new traces. Evaluation and completion authorization remain pending.
 - **Application public exports are complete for the current modules** — specification, work-item, review, release, runtime and context APIs are re-exported from the package root.
 - **Workspace installation is reproducible with npm** — `package-lock.json` is committed, local package links use `file:`, and `rimraf@^6` is declared at the root and packages; verify with `npm ci` followed by `npm ls`.
 

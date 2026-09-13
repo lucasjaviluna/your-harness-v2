@@ -78,10 +78,16 @@ describe("yh work execute", () => {
     expect(trace).toMatchObject({
       workItemId: "login-work",
       specificationId: "authentication",
+      specificationSnapshot: {
+        id: "authentication",
+        provenance: { providerId: "openspec" },
+        requirementIds: [expect.any(String)],
+      },
       change: { id: "add-login" },
       runtimeId: "fake",
       runtimeResult: { status: "completed" },
     });
+    expect(trace.specificationSnapshot.contentDigest).toMatch(/^[a-f0-9]{64}$/);
     expect(trace.taskReferences).toHaveLength(1);
   }, 30_000);
 });

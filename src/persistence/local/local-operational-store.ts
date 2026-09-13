@@ -2,10 +2,16 @@ import { mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promise
 import path from "node:path";
 
 import type {
+  Evidence,
   ExecutionTrace,
   ExecutionTraceRepository,
+  VerificationPlan,
+  VerificationPlanRepository,
+  VerificationReport,
+  VerificationReportRepository,
   WorkItemRepository,
 } from "@your-harness/application";
+import { createEvidence, createVerificationPlan } from "@your-harness/application";
 import {
   IntentId,
   WorkItem,
@@ -31,6 +37,15 @@ export interface LocalOperationalStore {
   readonly workItems: WorkItemRepository;
   readonly executionTraces: ExecutionTraceRepository;
   readonly executionBindings: WorkItemExecutionBindingRepository;
+  readonly evidence: EvidenceRepository;
+  readonly verificationPlans: VerificationPlanRepository;
+  readonly verificationReports: VerificationReportRepository;
+}
+
+export interface EvidenceRepository {
+  save(evidence: Evidence): Promise<void>;
+  findById(id: string): Promise<Evidence | null>;
+  findByExecutionTraceId(executionTraceId: string): Promise<ReadonlyArray<Evidence>>;
 }
 
 /** Asociación operacional con material SDD; no modifica el aggregate WorkItem. */
@@ -108,6 +123,7 @@ const toWorkItem = (stored: StoredWorkItem): WorkItem => {
 const isExecutionTrace = (value: unknown): value is ExecutionTrace => {
   if (!value || typeof value !== "object") return false;
   const trace = value as Partial<ExecutionTrace>;
+  const snapshot = trace.specificationSnapshot;
   return (
     typeof trace.id === "string" &&
     typeof trace.workItemId === "string" &&
@@ -115,7 +131,52 @@ const isExecutionTrace = (value: unknown): value is ExecutionTrace => {
     typeof trace.runtimeId === "string" &&
     typeof trace.recordedAt === "string" &&
     Array.isArray(trace.taskReferences) &&
-    !!trace.runtimeResult
+    !!trace.runtimeResult &&
+    (snapshot === undefined || (
+      typeof snapshot.id === "string" &&
+      typeof snapshot.title === "string" &&
+      typeof snapshot.contentDigest === "string" &&
+      Array.isArray(snapshot.requirementIds) &&
+      !!snapshot.provenance
+    ))
+  );
+};
+
+const isEvidence = (value: unknown): value is Evidence => {
+  if (!value || typeof value !== "object") return false;
+  const evidence = value as Partial<Evidence>;
+  return (
+    typeof evidence.id === "string" &&
+    typeof evidence.executionTraceId === "string" &&
+    typeof evidence.kind === "string" &&
+    typeof evidence.outcome === "string" &&
+    typeof evidence.summary === "string" &&
+    typeof evidence.capturedAt === "string" &&
+    !!evidence.subject
+  );
+};
+
+const isVerificationPlan = (value: unknown): value is VerificationPlan => {
+  if (!value || typeof value !== "object") return false;
+  const plan = value as Partial<VerificationPlan>;
+  return (
+    typeof plan.id === "string" &&
+    typeof plan.specificationId === "string" &&
+    typeof plan.createdAt === "string" &&
+    Array.isArray(plan.criteria)
+  );
+};
+
+const isVerificationReport = (value: unknown): value is VerificationReport => {
+  if (!value || typeof value !== "object") return false;
+  const report = value as Partial<VerificationReport>;
+  return (
+    typeof report.id === "string" &&
+    typeof report.planId === "string" &&
+    typeof report.specificationId === "string" &&
+    typeof report.outcome === "string" &&
+    typeof report.createdAt === "string" &&
+    Array.isArray(report.criteria)
   );
 };
 
@@ -145,6 +206,9 @@ export const createLocalOperationalStore = (
   const workItemsDirectory = path.join(root, "work-items");
   const executionTracesDirectory = path.join(root, "execution-traces");
   const executionBindingsDirectory = path.join(root, "execution-bindings");
+  const evidenceDirectory = path.join(root, "evidence");
+  const verificationPlansDirectory = path.join(root, "verification-plans");
+  const verificationReportsDirectory = path.join(root, "verification-reports");
 
   return {
     root,
@@ -234,6 +298,67 @@ export const createLocalOperationalStore = (
         await rm(path.join(executionBindingsDirectory, fileNameFor(workItemId.value)), {
           force: true,
         });
+      },
+    },
+    evidence: {
+      async save(evidence) {
+        const filePath = path.join(evidenceDirectory, fileNameFor(evidence.id));
+        if (await readJson<unknown>(filePath)) {
+          throw new Error(`Evidence '${evidence.id}' already exists and is immutable.`);
+        }
+        await writeJson(filePath, createEvidence(evidence));
+      },
+      async findById(id) {
+        const value = await readJson<unknown>(path.join(evidenceDirectory, fileNameFor(id)));
+        if (value === null) return null;
+        if (!isEvidence(value)) throw new Error("Persisted Evidence has an unsupported format.");
+        return createEvidence(value);
+      },
+      async findByExecutionTraceId(executionTraceId) {
+        try {
+          const entries = await readdir(evidenceDirectory);
+          const values = await Promise.all(entries.filter((entry) => entry.endsWith(".json")).map((entry) => readJson<unknown>(path.join(evidenceDirectory, entry))));
+          return values.filter(isEvidence).filter((evidence) => evidence.executionTraceId === executionTraceId).map(createEvidence);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+          throw error;
+        }
+      },
+    },
+    verificationPlans: {
+      async save(plan) {
+        const filePath = path.join(verificationPlansDirectory, fileNameFor(plan.id));
+        if (await readJson<unknown>(filePath)) throw new Error(`VerificationPlan '${plan.id}' already exists.`);
+        await writeJson(filePath, createVerificationPlan(plan));
+      },
+      async findById(id) {
+        const value = await readJson<unknown>(path.join(verificationPlansDirectory, fileNameFor(id)));
+        if (value === null) return null;
+        if (!isVerificationPlan(value)) throw new Error("Persisted VerificationPlan has an unsupported format.");
+        return createVerificationPlan(value);
+      },
+    },
+    verificationReports: {
+      async save(report) {
+        const filePath = path.join(verificationReportsDirectory, fileNameFor(report.id));
+        if (await readJson<unknown>(filePath)) throw new Error(`VerificationReport '${report.id}' already exists.`);
+        await writeJson(filePath, report);
+      },
+      async findById(id) {
+        const value = await readJson<unknown>(path.join(verificationReportsDirectory, fileNameFor(id)));
+        if (value === null) return null;
+        if (!isVerificationReport(value)) throw new Error("Persisted VerificationReport has an unsupported format.");
+        return value;
+      },
+      async findByPlanId(planId) {
+        try {
+          const entries = await readdir(verificationReportsDirectory);
+          const values = await Promise.all(entries.filter((entry) => entry.endsWith(".json")).map((entry) => readJson<unknown>(path.join(verificationReportsDirectory, entry))));
+          return values.filter(isVerificationReport).filter((report) => report.planId === planId);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+          throw error;
+        }
       },
     },
   };
