@@ -9,7 +9,11 @@ import {
   MaterializeApprovedChangeUseCase,
 } from "@your-harness/application";
 import { createExecutionEnvironment, createExecutionEnvironmentGuard } from "../../src/runtime/index.js";
-import { OpenSpecMaterializer, type OpenSpecGenerationStrategy } from "../../src/sdd/openspec/index.js";
+import {
+  createOpenSpecCommandGenerationStrategy,
+  OpenSpecMaterializer,
+  type OpenSpecGenerationStrategy,
+} from "../../src/sdd/openspec/index.js";
 import { OpenSpecSddProvider } from "../../src/sdd/index.js";
 
 const roots: string[] = [];
@@ -62,6 +66,49 @@ describe("OpenSpecMaterializer", () => {
     await new MaterializeApprovedChangeUseCase(materializer).execute(preview, approvals);
     expect(calls).toHaveLength(1);
     expect(calls[0]).toContain("add-mfa:");
+  });
+
+  it("puede adaptar un runner externo sin ejecutar procesos por sí mismo", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "yh-materializer-"));
+    roots.push(root);
+    const environment = createExecutionEnvironment({
+      workspace: { root, mode: "read-write" },
+      capabilities: ["workspace.write"],
+    });
+    let invocation: { changeId: string; instruction: string; targetRoot: string } | undefined;
+    const strategy = createOpenSpecCommandGenerationStrategy({
+      async execute(request) {
+        invocation = request;
+        const { writeFile } = await import("node:fs/promises");
+        await writeFile(path.join(request.targetRoot, "proposal.md"), "# Proposal", "utf8");
+        await writeFile(path.join(request.targetRoot, "design.md"), "# Design", "utf8");
+        await writeFile(path.join(request.targetRoot, "tasks.md"), "- [ ] Task", "utf8");
+        return { exitCode: 0 };
+      },
+    });
+    const materializer = new OpenSpecMaterializer({
+      guard: createExecutionEnvironmentGuard(environment), confirmed: true, generationStrategy: strategy,
+    });
+    const preview = await materializer.previewDraftChange({
+      scope: { root }, changeId: "add-mfa", proposal: "# Proposal", design: "# Design", tasks: "- [ ] Task",
+    });
+    const approvals = ["proposal", "design", "task-plan", "apply-readiness"].map((stage, index) =>
+      createChangeStageApproval({
+        id: `runner-approval-${stage}`,
+        changeId: preview.changeId,
+        stage: stage as "proposal" | "design" | "task-plan" | "apply-readiness",
+        changeVersion: preview.version,
+        changeDigest: preview.contentDigest,
+        decision: "approve",
+        approvedBy: "architect@example.com",
+        approvedByRole: "reviewer",
+        reason: `Approved ${stage}.`,
+        approvedAt: `2026-09-14T21:0${index}:00.000Z`,
+      }),
+    );
+
+    await new MaterializeApprovedChangeUseCase(materializer).execute(preview, approvals);
+    expect(invocation).toMatchObject({ changeId: "add-mfa", instruction: "/opsx:propose add-mfa" });
   });
 
   it("materializa un Change nuevo sólo después de Apply Readiness aprobado", async () => {
