@@ -4,7 +4,7 @@
 
 ## Estado
 
-Prototipo temprano — Stage 1. El Engineering Core, el contrato de ejecución, el adapter inicial de Pi, el spike read-only de OpenSpec, la composición configurable por proyecto, la integración persistente de la CLI y el ciclo CLI acotado de verification/evidence están implementados.
+Prototipo temprano — Stage 1. El Engineering Core, el contrato de ejecución, el adapter inicial de Pi, el provider read-only de OpenSpec con materialización gobernada de Changes nuevos, la composición configurable por proyecto, la integración persistente de la CLI y el ciclo CLI acotado de verification/evidence están implementados.
 
 ## Arquitectura actual
 
@@ -25,7 +25,9 @@ src/cli
 - `src/runtime/pi` adapta Pi al `RuntimePort` sin exponer tipos de Pi al Core.
 - `src/cli` compone temporalmente el flujo de ejecución.
 - `src/runtime/project-runtime-environment.ts` resuelve desde `config.yml` el runtime por defecto, proveedor SDD, trazabilidad requerida y política de entorno; Pi sólo habilita la tool `read` cuando `workspace.read` está explícitamente configurado.
+- `src/runtime/project-runtime-environment.ts` compone el materializer SDD configurado: filesystem por defecto o external-command sólo con runner inyectado.
 - `src/sdd/openspec` adapta material local de OpenSpec al port neutral `SddProvider`, sólo mediante lectura.
+- `src/sdd/openspec` también expone un `SddMaterializer` gobernado para crear Changes nuevos; no actualiza Changes existentes ni `openspec/specs/**`.
 - `packages/application` aplica `ExecutionEligibilityPolicy` antes de ejecutar: Specification aprobada y, opcionalmente, trazabilidad SDD.
 - `src/persistence/local` persiste WorkItems, bindings operacionales y ExecutionTraces bajo `.your-harness/state/`, sin duplicar Specifications u OpenSpec.
 - `packages/application/verification` define Evidence y VerificationPlan/Report; Evidence se ancla a una ExecutionTrace existente, sin completar WorkItems automáticamente.
