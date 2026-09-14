@@ -83,6 +83,8 @@ describe("OpenSpecSddProvider", () => {
       expect.objectContaining({
         id: "add-mfa",
         title: "Add MFA",
+        version: "1",
+        contentDigest: expect.stringMatching(/^[a-f0-9]{64}$/),
         status: "unknown",
         rationale: "Accounts need stronger protection.",
         tasks: [

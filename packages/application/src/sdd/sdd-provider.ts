@@ -49,6 +49,10 @@ export interface SddArtifactReference {
 export interface SddChangeProjection {
   readonly id: string;
   readonly title: string;
+  /** Revisión del proveedor; puede ser una versión nativa o un fallback estable. */
+  readonly version: string;
+  /** Digest estable del Change y sus artefactos proyectados. */
+  readonly contentDigest: string;
   readonly status: SddChangeStatus;
   readonly rationale?: string;
   readonly tasks: ReadonlyArray<SddTaskProjection>;

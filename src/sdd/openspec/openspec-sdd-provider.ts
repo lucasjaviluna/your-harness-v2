@@ -244,9 +244,10 @@ export class OpenSpecSddProvider implements SddProvider {
       artifacts.push({ kind: "specification-effect", provenance: provenance(root, filePath) }),
     );
 
-    return {
+    const projection = {
       id: directoryName,
       title: proposal ? firstHeading(proposal, directoryName) : directoryName,
+      version: "1",
       status: SddChangeStatus.Unknown,
       rationale: proposal ? sectionAfterHeading(proposal, "Why") : undefined,
       tasks: this.parseTasks(root, tasksPath, tasks),
@@ -255,6 +256,10 @@ export class OpenSpecSddProvider implements SddProvider {
         providerId,
         reference: toReference(root, changeRoot),
       },
+    };
+    return {
+      ...projection,
+      contentDigest: createHash("sha256").update(JSON.stringify(projection)).digest("hex"),
     };
   }
 

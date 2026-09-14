@@ -25,6 +25,8 @@ Application expone `ChangeStageApproval` y su repositorio para conservar cada de
 
 `ChangeStageApprovalPolicy` impide saltar etapas y exige la cadena completa de aprobaciones compatibles con la versión y digest actuales. Una solicitud de rework bloquea el avance, pero se conserva como decisión HITM auditable.
 
+El vertical slice actual de governance recorre `OpenSpecSddProvider → Change projection/version/digest → Proposal → Design → Task Plan → Apply Readiness → durable ChangeStageApproval`. El slice todavía no materializa archivos: esa capacidad depende de `SddMaterializer` y queda separada para evitar confundir aprobación con escritura.
+
 `ApproveChangeStageUseCase` concentra el registro de decisiones. Esta frontera evita que una futura CLI, skill, agente o integración de proveedor pueda saltarse la policy escribiendo aprobaciones directamente.
 
 Cuando una ejecución necesita observabilidad, Application puede asociar referencias opacas de Change y tareas en un `ExecutionTrace`. La asociación se conserva fuera de los aggregates y del Runtime; ver [Operational traceability](Operational-Traceability.md).

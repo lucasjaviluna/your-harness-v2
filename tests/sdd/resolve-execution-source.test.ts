@@ -29,6 +29,8 @@ const project: SddProjectProjection = {
   changes: [{
     id: "add-login",
     title: "Add login",
+    version: "1",
+    contentDigest: "change-digest",
     status: "unknown",
     provenance: { providerId: "test-sdd", reference: "changes/add-login/proposal.md" },
     artifacts: [],
