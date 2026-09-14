@@ -9,7 +9,7 @@ import {
   MaterializeApprovedChangeUseCase,
 } from "@your-harness/application";
 import { createExecutionEnvironment, createExecutionEnvironmentGuard } from "../../src/runtime/index.js";
-import { OpenSpecMaterializer } from "../../src/sdd/openspec/index.js";
+import { OpenSpecMaterializer, type OpenSpecGenerationStrategy } from "../../src/sdd/openspec/index.js";
 import { OpenSpecSddProvider } from "../../src/sdd/index.js";
 
 const roots: string[] = [];
@@ -19,6 +19,51 @@ afterEach(async () => {
 });
 
 describe("OpenSpecMaterializer", () => {
+  it("permite reemplazar el mecanismo de generación sin mover los guardrails", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "yh-materializer-"));
+    roots.push(root);
+    const environment = createExecutionEnvironment({
+      workspace: { root, mode: "read-write" },
+      capabilities: ["workspace.write"],
+    });
+    const calls: string[] = [];
+    const generationStrategy: OpenSpecGenerationStrategy = {
+      async generate(preview, targetRoot) {
+        calls.push(`${preview.changeId}:${targetRoot}`);
+        const { writeFile } = await import("node:fs/promises");
+        await writeFile(path.join(targetRoot, "proposal.md"), preview.proposal, "utf8");
+        await writeFile(path.join(targetRoot, "design.md"), preview.design, "utf8");
+        await writeFile(path.join(targetRoot, "tasks.md"), preview.tasks, "utf8");
+      },
+    };
+    const materializer = new OpenSpecMaterializer({
+      guard: createExecutionEnvironmentGuard(environment),
+      confirmed: true,
+      generationStrategy,
+    });
+    const preview = await materializer.previewDraftChange({
+      scope: { root }, changeId: "add-mfa", proposal: "# Proposal", design: "# Design", tasks: "- [ ] Task",
+    });
+    const approvals = ["proposal", "design", "task-plan", "apply-readiness"].map((stage, index) =>
+      createChangeStageApproval({
+        id: `strategy-approval-${stage}`,
+        changeId: preview.changeId,
+        stage: stage as "proposal" | "design" | "task-plan" | "apply-readiness",
+        changeVersion: preview.version,
+        changeDigest: preview.contentDigest,
+        decision: "approve",
+        approvedBy: "architect@example.com",
+        approvedByRole: "reviewer",
+        reason: `Approved ${stage}.`,
+        approvedAt: `2026-09-14T20:0${index}:00.000Z`,
+      }),
+    );
+
+    await new MaterializeApprovedChangeUseCase(materializer).execute(preview, approvals);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toContain("add-mfa:");
+  });
+
   it("materializa un Change nuevo sólo después de Apply Readiness aprobado", async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "yh-materializer-"));
     roots.push(root);

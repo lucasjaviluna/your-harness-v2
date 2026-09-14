@@ -27,6 +27,8 @@ Application expone `ChangeStageApproval` y su repositorio para conservar cada de
 
 El vertical slice actual de governance recorre `OpenSpecSddProvider → Change projection/version/digest → Proposal → Design → Task Plan → Apply Readiness → durable ChangeStageApproval → SddMaterializer`. El materializer sólo crea Changes nuevos con `proposal.md`, `design.md` y `tasks.md`, usando workspace write, capability, confirmación humana, escritura atómica y verificación posterior del digest. No modifica Changes existentes ni `openspec/specs/**`.
 
+`OpenSpecMaterializer` delega la generación física a `OpenSpecGenerationStrategy`. La estrategia filesystem es la implementación predeterminada; una futura estrategia podría invocar una skill o mecanismo oficial de OpenSpec sin trasladar sus detalles a Application. Los guardrails, la aprobación HITM y la verificación posterior siguen fuera de la estrategia.
+
 `ApproveChangeStageUseCase` concentra el registro de decisiones. Esta frontera evita que una futura CLI, skill, agente o integración de proveedor pueda saltarse la policy escribiendo aprobaciones directamente.
 
 Cuando una ejecución necesita observabilidad, Application puede asociar referencias opacas de Change y tareas en un `ExecutionTrace`. La asociación se conserva fuera de los aggregates y del Runtime; ver [Operational traceability](Operational-Traceability.md).
@@ -55,4 +57,4 @@ La configuración local puede declarar `runtime.sddProvider: openspec`. `createP
 
 ## Límites actuales
 
-El spike todavía no añade planificación desde tareas, escritura de artefactos ni lifecycle de Change. `yh work execute` sí lee el proveedor configurado y proyecta el material actual en Application para construir la solicitud de ejecución; no construye aggregates de Domain desde tipos OpenSpec ni pasa tipos del proveedor al Runtime.
+El slice todavía no añade planificación desde tareas, actualización de Changes existentes, invocación de `/opsx:propose` ni aplicación de deltas sobre `openspec/specs/**`. `yh work execute` sí lee el proveedor configurado y proyecta el material actual en Application para construir la solicitud de ejecución; no construye aggregates de Domain desde tipos OpenSpec ni pasa tipos del proveedor al Runtime.

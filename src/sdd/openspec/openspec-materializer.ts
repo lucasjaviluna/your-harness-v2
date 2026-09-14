@@ -1,4 +1,4 @@
-import { mkdir, rename, rm, writeFile } from "node:fs/promises";
+import { mkdir, rename, rm } from "node:fs/promises";
 import path from "node:path";
 
 import type {
@@ -9,6 +9,10 @@ import type {
 } from "@your-harness/application";
 import type { ExecutionEnvironmentGuard } from "../../runtime/execution-environment.js";
 import { openSpecChangeDigest } from "./openspec-change-digest.js";
+import {
+  createFilesystemOpenSpecGenerationStrategy,
+  type OpenSpecGenerationStrategy,
+} from "./openspec-generation-strategy.js";
 import { OpenSpecSddProvider } from "./openspec-sdd-provider.js";
 
 const safeChangeId = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
@@ -16,11 +20,16 @@ const safeChangeId = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 export interface OpenSpecMaterializerOptions {
   readonly guard: ExecutionEnvironmentGuard;
   readonly confirmed: boolean;
+  readonly generationStrategy?: OpenSpecGenerationStrategy;
 }
 
 /** Materializa únicamente Changes nuevos; no modifica Specifications existentes. */
 export class OpenSpecMaterializer implements SddMaterializer {
-  constructor(private readonly options: OpenSpecMaterializerOptions) {}
+  private readonly generationStrategy: OpenSpecGenerationStrategy;
+
+  constructor(private readonly options: OpenSpecMaterializerOptions) {
+    this.generationStrategy = options.generationStrategy ?? createFilesystemOpenSpecGenerationStrategy();
+  }
 
   async previewDraftChange(input: SddDraftChangeInput): Promise<SddDraftChangePreview> {
     if (!safeChangeId.test(input.changeId)) throw new Error(`OpenSpec Change id '${input.changeId}' is unsafe.`);
@@ -62,9 +71,7 @@ export class OpenSpecMaterializer implements SddMaterializer {
     const temporaryRoot = path.join(changesRoot, `.yh-materialize-${preview.changeId}-${process.pid}`);
     try {
       await mkdir(temporaryRoot);
-      await writeFile(path.join(temporaryRoot, "proposal.md"), preview.proposal, "utf8");
-      await writeFile(path.join(temporaryRoot, "design.md"), preview.design, "utf8");
-      await writeFile(path.join(temporaryRoot, "tasks.md"), preview.tasks, "utf8");
+      await this.generationStrategy.generate(preview, temporaryRoot);
       await rename(temporaryRoot, changeRoot);
     } catch (error) {
       await rm(temporaryRoot, { recursive: true, force: true });
