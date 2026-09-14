@@ -33,6 +33,7 @@ describe("ProjectRuntimeEnvironment", () => {
     expect(environment.runtimeEnvironment.listRuntimes()).toEqual(["fake", "pi"]);
     expect(environment.sddProvider.id).toBe("openspec");
     expect(environment.sddMaterializerMode).toBe("filesystem");
+    expect(environment.sddMaterializer).toBeDefined();
     expect(environment.runtimeEnvironment.executionEnvironment.workspace).toMatchObject({
       root: path.resolve("C:/workspace"),
       allowedPaths: [path.resolve("C:/workspace", "src")],
@@ -43,5 +44,17 @@ describe("ProjectRuntimeEnvironment", () => {
         specification: { status: "approved" } as never,
       }),
     ).toMatchObject({ eligible: false, reasons: ["SDD_CHANGE_TRACEABILITY_REQUIRED"] });
+  });
+
+  it("exige runner explícito para el materializer externo", () => {
+    const config = loadConfig({ globalConfigPath: "does-not-exist.yml", localConfigPath: "does-not-exist.yml" });
+    const externalConfig = {
+      ...config,
+      runtime: { ...config.runtime, sddMaterializer: "external-command" as const },
+    };
+
+    expect(() => createProjectRuntimeEnvironment({ config: externalConfig, workspace: "C:/workspace" })).toThrow(
+      "requires an injected sddMaterializerRunner",
+    );
   });
 });
