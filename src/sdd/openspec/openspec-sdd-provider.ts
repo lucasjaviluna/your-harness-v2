@@ -2,6 +2,7 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import type { Dirent } from "node:fs";
 import path from "node:path";
 
+import { SddChangeStatus, SddTaskStatus } from "@your-harness/application";
 import type {
   SddArtifactReference,
   SddChangeProjection,
@@ -235,6 +236,7 @@ export class OpenSpecSddProvider implements SddProvider {
     return {
       id: directoryName,
       title: proposal ? firstHeading(proposal, directoryName) : directoryName,
+      status: SddChangeStatus.Unknown,
       rationale: proposal ? sectionAfterHeading(proposal, "Why") : undefined,
       tasks: this.parseTasks(root, tasksPath, tasks),
       artifacts,
@@ -260,6 +262,7 @@ export class OpenSpecSddProvider implements SddProvider {
         id: `${toReference(root, filePath)}#${index + 1}`,
         title: match[2].trim(),
         completed: match[1].toLowerCase() === "x",
+        status: match[1].toLowerCase() === "x" ? SddTaskStatus.Completed : SddTaskStatus.Pending,
         provenance: provenance(root, filePath),
       }));
   }

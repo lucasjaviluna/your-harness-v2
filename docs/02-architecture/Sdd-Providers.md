@@ -2,6 +2,8 @@
 
 `SddProvider` es un port de Application para leer material SDD sin acoplar el Engineering Core a una herramienta, formato o CLI concreto.
 
+La propuesta de estados neutrales para Specifications y Changes está documentada en [ADR-010](../adr/ADR-010.md). Continúa en estado `Proposed` hasta resolver las decisiones abiertas sobre estados nativos, escritura y aprobación HITM.
+
 ## Contrato mínimo
 
 El contrato público está en `@your-harness/application` y devuelve una proyección neutral de:
@@ -11,6 +13,8 @@ El contrato público está en `@your-harness/application` y devuelve una proyecc
 - Provenance con `providerId` y una referencia estable propiedad del proveedor.
 
 Un `Change` proyectado no es un aggregate de Domain, no modifica una `Specification` actual y no se relaciona directamente con un `WorkItem`.
+
+Las proyecciones de Changes y tareas incluyen estados normalizados. `SddChangeStatus` describe únicamente lo que el proveedor puede demostrar; `SddTaskStatus` comienza con `pending`, `completed` y `unknown`. El estado operacional de your-harness se representa por separado mediante `GovernedChangeStatus` y no se deriva de forma implícita desde OpenSpec.
 
 Cuando una ejecución necesita observabilidad, Application puede asociar referencias opacas de Change y tareas en un `ExecutionTrace`. La asociación se conserva fuera de los aggregates y del Runtime; ver [Operational traceability](Operational-Traceability.md).
 

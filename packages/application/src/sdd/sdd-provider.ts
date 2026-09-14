@@ -1,3 +1,5 @@
+import { SddChangeStatus, SddTaskStatus } from "./sdd-lifecycle-status.js";
+
 /** Identidad opaca de un artefacto propiedad de un proveedor SDD. */
 export interface SddProvenance {
   readonly providerId: string;
@@ -32,6 +34,7 @@ export interface SddTaskProjection {
   readonly id: string;
   readonly title: string;
   readonly completed: boolean;
+  readonly status: SddTaskStatus;
   readonly provenance: SddProvenance;
 }
 
@@ -44,6 +47,7 @@ export interface SddArtifactReference {
 export interface SddChangeProjection {
   readonly id: string;
   readonly title: string;
+  readonly status: SddChangeStatus;
   readonly rationale?: string;
   readonly tasks: ReadonlyArray<SddTaskProjection>;
   readonly artifacts: ReadonlyArray<SddArtifactReference>;

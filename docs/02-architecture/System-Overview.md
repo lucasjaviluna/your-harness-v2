@@ -39,3 +39,4 @@ The first SDD integration is independent from this execution path: `OpenSpecSddP
 - [ADR-007](../adr/ADR-007.md): layered engineering guardrails.
 - [ADR-008](../adr/ADR-008.md): user-selectable SDD providers and runtimes.
 - [ADR-009](../adr/ADR-009.md): verification, evidence and post-execution interpretation.
+- [ADR-010](../adr/ADR-010.md): neutral SDD lifecycle proposal.

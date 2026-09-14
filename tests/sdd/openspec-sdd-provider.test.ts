@@ -82,10 +82,11 @@ describe("OpenSpecSddProvider", () => {
       expect.objectContaining({
         id: "add-mfa",
         title: "Add MFA",
+        status: "unknown",
         rationale: "Accounts need stronger protection.",
         tasks: [
-          expect.objectContaining({ title: "Add challenge", completed: false }),
-          expect.objectContaining({ title: "Document the flow", completed: true }),
+          expect.objectContaining({ title: "Add challenge", completed: false, status: "pending" }),
+          expect.objectContaining({ title: "Document the flow", completed: true, status: "completed" }),
         ],
       }),
     ]);
