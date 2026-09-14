@@ -25,7 +25,7 @@ Application expone `ChangeStageApproval` y su repositorio para conservar cada de
 
 `ChangeStageApprovalPolicy` impide saltar etapas y exige la cadena completa de aprobaciones compatibles con la versión y digest actuales. Una solicitud de rework bloquea el avance, pero se conserva como decisión HITM auditable.
 
-El vertical slice actual de governance recorre `OpenSpecSddProvider → Change projection/version/digest → Proposal → Design → Task Plan → Apply Readiness → durable ChangeStageApproval`. El slice todavía no materializa archivos: esa capacidad depende de `SddMaterializer` y queda separada para evitar confundir aprobación con escritura.
+El vertical slice actual de governance recorre `OpenSpecSddProvider → Change projection/version/digest → Proposal → Design → Task Plan → Apply Readiness → durable ChangeStageApproval → SddMaterializer`. El materializer sólo crea Changes nuevos con `proposal.md`, `design.md` y `tasks.md`, usando workspace write, capability, confirmación humana, escritura atómica y verificación posterior del digest. No modifica Changes existentes ni `openspec/specs/**`.
 
 `ApproveChangeStageUseCase` concentra el registro de decisiones. Esta frontera evita que una futura CLI, skill, agente o integración de proveedor pueda saltarse la policy escribiendo aprobaciones directamente.
 

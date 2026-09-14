@@ -16,6 +16,7 @@ import type {
   SddSpecificationProjection,
   SddTaskProjection,
 } from "@your-harness/application";
+import { openSpecChangeDigest } from "./openspec-change-digest.js";
 
 const providerId = "openspec";
 
@@ -233,12 +234,17 @@ export class OpenSpecSddProvider implements SddProvider {
     const designPath = path.join(changeRoot, "design.md");
     const tasksPath = path.join(changeRoot, "tasks.md");
     const proposal = await readOptional(proposalPath);
+    const design = await readOptional(designPath);
     const tasks = await readOptional(tasksPath);
     const specificationEffects = await readMarkdownFiles(path.join(changeRoot, "specs"));
+    const specificationEffectContents = await Promise.all(specificationEffects.map(async (filePath) => ({
+      reference: toReference(root, filePath),
+      content: await readFile(filePath, "utf8"),
+    })));
     const artifacts: SddArtifactReference[] = [];
 
     if (proposal !== undefined) artifacts.push({ kind: "proposal", provenance: provenance(root, proposalPath) });
-    if ((await readOptional(designPath)) !== undefined) artifacts.push({ kind: "design", provenance: provenance(root, designPath) });
+    if (design !== undefined) artifacts.push({ kind: "design", provenance: provenance(root, designPath) });
     if (tasks !== undefined) artifacts.push({ kind: "tasks", provenance: provenance(root, tasksPath) });
     specificationEffects.forEach((filePath) =>
       artifacts.push({ kind: "specification-effect", provenance: provenance(root, filePath) }),
@@ -259,7 +265,14 @@ export class OpenSpecSddProvider implements SddProvider {
     };
     return {
       ...projection,
-      contentDigest: createHash("sha256").update(JSON.stringify(projection)).digest("hex"),
+      contentDigest: openSpecChangeDigest({
+        changeId: directoryName,
+        version: "1",
+        proposal: proposal ?? "",
+        design: design ?? "",
+        tasks: tasks ?? "",
+        specificationEffects: specificationEffectContents,
+      }),
     };
   }
 

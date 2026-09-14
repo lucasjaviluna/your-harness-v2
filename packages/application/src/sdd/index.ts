@@ -6,3 +6,5 @@ export * from "./change-stage-approval-repository.js";
 export * from "./in-memory-change-stage-approval-repository.js";
 export * from "./change-stage-approval-policy.js";
 export * from "./approve-change-stage.js";
+export * from "./sdd-materializer.js";
+export * from "./materialize-approved-change.js";
