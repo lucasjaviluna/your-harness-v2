@@ -47,4 +47,10 @@ describe("RuntimeEnvironment", () => {
       "Runtime 'native' is not available",
     );
   });
+
+  it("guards runtime requests against the configured workspace boundary", async () => {
+    const environment = createRuntimeEnvironment({ workspace: "C:/workspace" });
+
+    await expect(environment.resolve().execute({ workspace: "C:/outside" } as never)).rejects.toThrow("outside");
+  });
 });

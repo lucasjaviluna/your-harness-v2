@@ -4,7 +4,7 @@
 
 1. ~~Consolidate workspace installation hygiene and the public exports of Application.~~ **Completed:** npm lockfile/clean-install path is aligned, `rimraf` resolves without invalid workspace entries, and Application exposes its current public modules.
 2. ~~Extend `RuntimeEnvironment` with project/execution-level configuration.~~ **Completed:** `.your-harness/config.yml` resolves runtime, SDD provider, eligibility and environment-policy composition. Runtime capability reporting remains pending.
-3. ~~Define a neutral execution-environment policy for workspace, tools, network, secrets and confirmations before enabling runtime tools.~~ **Completed as a contract:** enforcement and tool adapters remain pending.
+3. ~~Define a neutral execution-environment policy for workspace, tools, network, secrets and confirmations before enabling runtime tools.~~ **Completed at the runtime boundary:** resolved runtimes reject workspace escape and the guard exposes capability/network/secret/confirmation checks; tool adapters remain pending.
 4. ~~Define the first physical `SddProvider` contract and implement a read-only provider spike.~~ **Completed:** the neutral port and the local read-only OpenSpec adapter are implemented and selected through project configuration; write workflows remain pending.
 
 Local operational persistence is now wired into the CLI: `work create` and `work bind` create durable state, `work execute` resolves current provider-owned SDD material and persists a trace, and the Evidence/VerificationPlan/VerificationReport cycle is available through CLI commands. The next increment is SDD drift protection and an authoritative source beyond the read-only OpenSpec projection.

@@ -4,7 +4,9 @@ import { FakeRuntimeAdapter } from "./fake-runtime-adapter.js";
 import { PiRuntimeAdapter } from "./pi/pi-runtime-adapter.js";
 import {
   createExecutionEnvironment,
+  createExecutionEnvironmentGuard,
   type ExecutionEnvironment,
+  type ExecutionEnvironmentGuard,
 } from "./execution-environment.js";
 
 export type RuntimeName = string;
@@ -51,6 +53,7 @@ export interface RuntimeEnvironment {
   readonly defaultRuntime: RuntimeName;
   readonly registry: RuntimeRegistry;
   readonly executionEnvironment: ExecutionEnvironment;
+  readonly guard: ExecutionEnvironmentGuard;
   listRuntimes(): ReadonlyArray<RuntimeName>;
   resolveName(name?: RuntimeName): RuntimeName;
   resolve(name?: RuntimeName): RuntimePort;
@@ -87,17 +90,34 @@ export const createRuntimeEnvironment = (
     );
   }
 
+  const executionEnvironment = options.executionEnvironment ??
+    createExecutionEnvironment({ workspace: { root: options.workspace ?? process.cwd() } });
+  const guard = createExecutionEnvironmentGuard(executionEnvironment);
+  const guardedRuntimes = new Map<RuntimeName, RuntimePort>();
+
   return {
     defaultRuntime,
     registry,
-    executionEnvironment:
-      options.executionEnvironment ??
-      createExecutionEnvironment({ workspace: { root: options.workspace ?? process.cwd() } }),
+    executionEnvironment,
+    guard,
     listRuntimes: () => registry.list(),
     resolveName: (name = defaultRuntime) => {
       registry.resolve(name);
       return name;
     },
-    resolve: (name = defaultRuntime) => registry.resolve(name),
+    resolve: (name = defaultRuntime) => {
+      const selected = name;
+      const existing = guardedRuntimes.get(selected);
+      if (existing) return existing;
+      const runtime = registry.resolve(selected);
+      const guarded: RuntimePort = {
+        execute: async (request) => {
+          guard.assertWorkspacePath(request.workspace, "read");
+          return runtime.execute(request);
+        },
+      };
+      guardedRuntimes.set(selected, guarded);
+      return guarded;
+    },
   };
 };

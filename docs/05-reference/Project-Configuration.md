@@ -58,4 +58,7 @@ The policy is deny-by-default. To enable a capability, its corresponding boundar
 - `secrets.read` requires `secrets.mode: allowlist` and at least one secret name.
 - Every `allowedPaths` entry must remain inside the execution workspace.
 
-These checks fail before runtime execution. They are a composition contract, not yet tool enforcement.
+These checks fail before runtime execution. The runtime boundary now enforces the
+workspace boundary for every resolved `RuntimePort` and exposes guard methods for
+capabilities, network, secrets and confirmations. Tool adapters must use those guard
+methods before they are enabled.

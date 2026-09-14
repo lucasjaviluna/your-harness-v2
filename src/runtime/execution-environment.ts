@@ -37,6 +37,14 @@ export interface ExecutionEnvironment {
   readonly confirmations: ConfirmationPolicy;
 }
 
+export interface ExecutionEnvironmentGuard {
+  assertWorkspacePath(candidate: string, access?: "read" | "write"): void;
+  assertCapability(capability: RuntimeCapability): void;
+  assertNetworkHost(host: string): void;
+  assertSecret(name: string): void;
+  requireConfirmation(riskClass: string, confirmed: boolean): void;
+}
+
 export interface ExecutionEnvironmentInput {
   readonly workspace: {
     readonly root: string;
@@ -53,6 +61,54 @@ const isWithin = (root: string, candidate: string): boolean => {
   const relative = path.relative(root, candidate);
   return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
 };
+
+/** Enforce la envolvente antes de que un runtime o tool acceda a recursos. */
+export const createExecutionEnvironmentGuard = (
+  environment: ExecutionEnvironment,
+): ExecutionEnvironmentGuard => ({
+  assertWorkspacePath(candidate, access = "read") {
+    const resolved = path.resolve(candidate);
+    if (!environment.workspace.allowedPaths.some((allowed) => isWithin(allowed, resolved))) {
+      throw new Error(`Workspace path '${candidate}' is outside the allowed execution environment.`);
+    }
+    if (access === "write") {
+      if (environment.workspace.mode !== "read-write") {
+        throw new Error("Workspace write access is denied by the execution environment.");
+      }
+      if (!environment.capabilities.includes("workspace.write")) {
+        throw new Error("Capability 'workspace.write' is not allowed by the execution environment.");
+      }
+    }
+  },
+  assertCapability(capability) {
+    if (!environment.capabilities.includes(capability)) {
+      throw new Error(`Capability '${capability}' is not allowed by the execution environment.`);
+    }
+  },
+  assertNetworkHost(host) {
+    if (!environment.capabilities.includes("network.access")) {
+      throw new Error("Capability 'network.access' is not allowed by the execution environment.");
+    }
+    if (environment.network.mode !== "allowlist" || !environment.network.allowedHosts.includes(host)) {
+      throw new Error(`Network host '${host}' is not allowed by the execution environment.`);
+    }
+  },
+  assertSecret(name) {
+    if (!environment.capabilities.includes("secrets.read")) {
+      throw new Error("Capability 'secrets.read' is not allowed by the execution environment.");
+    }
+    if (environment.secrets.mode !== "allowlist" || !environment.secrets.allowedNames.includes(name)) {
+      throw new Error(`Secret '${name}' is not allowed by the execution environment.`);
+    }
+  },
+  requireConfirmation(riskClass, confirmed) {
+    if (environment.confirmations.mode === "never") return;
+    const requires = environment.confirmations.mode === "always" || environment.confirmations.riskClasses.includes(riskClass);
+    if (requires && !confirmed) {
+      throw new Error(`Human confirmation is required for risk class '${riskClass}'.`);
+    }
+  },
+});
 
 /** Construye una envolvente segura y todavía sin autorización de tools. */
 export const createExecutionEnvironment = (
