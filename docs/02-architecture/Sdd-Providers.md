@@ -2,7 +2,7 @@
 
 `SddProvider` es un port de Application para leer material SDD sin acoplar el Engineering Core a una herramienta, formato o CLI concreto.
 
-La propuesta de estados neutrales para Specifications y Changes está documentada en [ADR-010](../adr/ADR-010.md). Continúa en estado `Proposed` hasta resolver las decisiones abiertas sobre estados nativos, escritura y aprobación HITM.
+La propuesta de estados neutrales para Specifications y Changes está documentada en [ADR-010](../adr/ADR-010.md). El límite de escritura y sincronización está propuesto por separado en [ADR-011](../adr/ADR-011.md), para que un proveedor read-only no obtenga permisos de modificación por accidente.
 
 ## Contrato mínimo
 
@@ -18,6 +18,10 @@ Application expone `SddDriftReport` mediante `evaluateSddDrift`. El resultado di
 Un `Change` proyectado no es un aggregate de Domain, no modifica una `Specification` actual y no se relaciona directamente con un `WorkItem`.
 
 Las proyecciones de Changes y tareas incluyen estados normalizados. `SddChangeStatus` describe únicamente lo que el proveedor puede demostrar; `SddTaskStatus` comienza con `pending`, `completed` y `unknown`. El estado operacional de your-harness se representa por separado mediante `GovernedChangeStatus` y no se deriva de forma implícita desde OpenSpec.
+
+La aprobación de un Change es incremental: Proposal, Design, Task Plan y Apply Readiness requieren checkpoints HITM independientes. Design es el gate arquitectónico obligatorio antes de aplicar efectos o iniciar la implementación; si se modifica, las aprobaciones posteriores deben invalidarse.
+
+Application expone `ChangeStageApproval` y su repositorio para conservar cada decisión de forma inmutable. La aprobación queda ligada al digest y versión revisados; por eso una nueva proyección no puede reutilizar silenciosamente una aprobación anterior.
 
 Cuando una ejecución necesita observabilidad, Application puede asociar referencias opacas de Change y tareas en un `ExecutionTrace`. La asociación se conserva fuera de los aggregates y del Runtime; ver [Operational traceability](Operational-Traceability.md).
 
