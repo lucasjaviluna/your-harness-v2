@@ -37,7 +37,7 @@ describe("createCliProgram", () => {
         config,
         logger: createLogger("fatal"),
         io: {
-          write: (...values) => output.push(values),
+          write: (...values) => output.push([...values]),
           setExitCode: () => undefined,
         },
       },

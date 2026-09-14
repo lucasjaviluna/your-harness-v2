@@ -6,11 +6,13 @@ The `RuntimeEnvironment` composition root owns a `RuntimeRegistry`, an `Executio
 
 ## Safety status
 
-The adapter currently creates Pi sessions with `noTools: "all"`. It can reason over the supplied context but is not yet authorized to read, edit, or execute commands in a workspace.
+By default the adapter creates Pi sessions with `noTools: "all"`. When the project
+explicitly grants `workspace.read`, it enables only Pi's built-in `read` tool. Edit,
+write, process, network and secret tools remain disabled.
 
 Future tool enablement must consume the guard for capability, network, secret and
-confirmation checks, and add adapter-specific enforcement tests before changing the
-current `noTools: "all"` default.
+confirmation checks, and add adapter-specific enforcement tests before expanding
+beyond the current guarded read-only tool.
 
 ## Verification
 

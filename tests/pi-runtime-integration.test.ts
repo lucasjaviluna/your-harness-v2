@@ -1,27 +1,33 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const prompt = vi.fn(async () => undefined);
-const dispose = vi.fn();
-
-vi.mock("@earendil-works/pi-coding-agent", () => ({
-  createAgentSession: vi.fn(async () => ({
+const { prompt, dispose, createSession } = vi.hoisted(() => {
+  const prompt = vi.fn(async () => undefined);
+  const dispose = vi.fn();
+  const createSession = vi.fn(async () => ({
     session: {
       sessionId: "pi-test-session",
       prompt,
       dispose,
     },
-  })),
+  }));
+  return { prompt, dispose, createSession };
+});
+
+vi.mock("@earendil-works/pi-coding-agent", () => ({
+  createAgentSession: createSession,
   SessionManager: {
     inMemory: vi.fn(() => ({})),
   },
 }));
 
 import { PiRuntimeAdapter } from "../src/runtime/pi/index.js";
+import { createExecutionEnvironment } from "../src/runtime/index.js";
 
 describe("PiRuntimeAdapter", () => {
   beforeEach(() => {
     prompt.mockClear();
     dispose.mockClear();
+    createSession.mockClear();
   });
 
   it("projects an ExecutionRequest into the Pi prompt and returns the result", async () => {
@@ -53,5 +59,22 @@ describe("PiRuntimeAdapter", () => {
     expect(prompt).toHaveBeenCalledWith(expect.stringContaining("The system SHALL process valid requests."));
     expect(prompt).toHaveBeenCalledWith(expect.stringContaining("- Run tests"));
     expect(dispose).toHaveBeenCalledOnce();
+  });
+
+  it("habilita sólo la tool read cuando la capability fue explícitamente otorgada", async () => {
+    const environment = createExecutionEnvironment({
+      workspace: { root: "/workspace/project" },
+      capabilities: ["workspace.read"],
+    });
+
+    await new PiRuntimeAdapter(environment).execute({
+      objective: "Read the project",
+      workspace: "/workspace/project",
+      engineeringContext: { knowledge: [], requirements: [], engineeringConstraints: [] },
+      executionConstraints: [],
+    });
+
+    expect(createSession).toHaveBeenCalledWith(expect.objectContaining({ tools: ["read"] }));
+    expect(createSession).toHaveBeenCalledWith(expect.not.objectContaining({ noTools: "all" }));
   });
 });

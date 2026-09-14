@@ -47,7 +47,7 @@ config.yml
    └── ExecutionEligibilityPolicy + ExecutionEnvironment
 ```
 
-The configured SDD provider is composed but the current demonstration CLI does not read OpenSpec to construct aggregates yet. Similarly, `ExecutionEnvironment` validates policy consistency but Pi tools remain disabled. Configuration therefore cannot grant filesystem, process, network, or secret access today.
+The configured SDD provider is composed and the CLI reads the current OpenSpec projection for persistent work execution. `ExecutionEnvironment` validates and enforces the runtime boundary. Configuration may explicitly grant the read-only Pi tool with `workspace.read`; process, write, network and secret access remain unavailable until their adapters consume the corresponding guard checks.
 
 ## Environment policy validation
 

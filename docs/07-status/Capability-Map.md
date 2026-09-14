@@ -19,9 +19,9 @@
 | Execution eligibility policy | Implemented | Requires an approved Specification, can require normalized Change provenance through `runtime.requireSddChangeTraceability`, and the CLI denies SDD snapshot drift before `RuntimePort`. |
 | Project runtime configuration | Implemented (composition-level) | `.your-harness/config.yml` configures default runtime, SDD provider, SDD traceability and execution environment policy; the CLI composes it for real operational execution. |
 | Verification and evidence | Implemented (scoped durable contracts + CLI) | ADR-009 contracts bind VerificationPlan to one ExecutionTrace and Specification digest; CLI records Evidence, creates/evaluates plans and persists reports. CompletionAuthorization gates `WorkItem.complete()` through role-based HITM decisions. |
-| Pi workspace tools | Disabled | `noTools: "all"`. |
+| Pi workspace tools | Controlled read-only | Pi enables built-in `read` only when `workspace.read` is explicitly configured; edit/write/process/network/secret tools remain disabled. |
 | MCP transport | Stub | Client/server interfaces and JSON-RPC skeleton exist; real stdio/HTTP transport is pending. |
 | Agent tools | Stub | CLI ToolExecutor currently reports simulated success. |
 | Workflow command/script steps | Stub | Placeholder execution only. |
 | Configuration persistence | Partial | YAML is read; save path behavior requires consolidation. |
-| Test suite | Early | Forty-eight focused tests cover configuration, context projection, Core smoke flows, Runtime composition/boundary, execution environment, OpenSpec read-only projection, SDD drift, operational persistence/bindings, in-process and process-level CLI execution, Evidence/Verification/evaluator/HITM authorization, eligibility and Pi adapter; broad coverage is pending. |
+| Test suite | Early | Forty-nine focused tests cover configuration, context projection, Core smoke flows, Runtime composition/boundary, execution environment, OpenSpec read-only projection, SDD drift, operational persistence/bindings, in-process and process-level CLI execution, Evidence/Verification/evaluator/HITM authorization, eligibility and guarded Pi tool integration; broad coverage is pending. |

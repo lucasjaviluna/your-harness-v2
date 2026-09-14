@@ -24,7 +24,7 @@ src/cli
 - `packages/application` contiene casos de uso, proyecciones, ports y trazas operacionales de ejecución.
 - `src/runtime/pi` adapta Pi al `RuntimePort` sin exponer tipos de Pi al Core.
 - `src/cli` compone temporalmente el flujo de ejecución.
-- `src/runtime/project-runtime-environment.ts` resuelve desde `config.yml` el runtime por defecto, proveedor SDD, trazabilidad requerida y política de entorno; todavía no habilita tools.
+- `src/runtime/project-runtime-environment.ts` resuelve desde `config.yml` el runtime por defecto, proveedor SDD, trazabilidad requerida y política de entorno; Pi sólo habilita la tool `read` cuando `workspace.read` está explícitamente configurado.
 - `src/sdd/openspec` adapta material local de OpenSpec al port neutral `SddProvider`, sólo mediante lectura.
 - `packages/application` aplica `ExecutionEligibilityPolicy` antes de ejecutar: Specification aprobada y, opcionalmente, trazabilidad SDD.
 - `src/persistence/local` persiste WorkItems, bindings operacionales y ExecutionTraces bajo `.your-harness/state/`, sin duplicar Specifications u OpenSpec.
@@ -58,7 +58,7 @@ npm start -- --help
 npm start -- work execute demo-work-item --objective "Implementar validación" --runtime fake --workspace .
 ```
 
-El comando `work-item execute` (alias `work execute`) carga un WorkItem persistido, resuelve su binding contra el proveedor SDD actual, aplica elegibilidad y guarda una traza durable. Primero se debe ejecutar `work create` y `work bind --approve-specification`; la aprobación no se infiere de un archivo OpenSpec. Si no se indica `--runtime`, usa `runtime.defaultRuntime` de la configuración del proyecto (por defecto, `fake`). Pi continúa con todas las herramientas deshabilitadas (`noTools: "all"`).
+El comando `work-item execute` (alias `work execute`) carga un WorkItem persistido, resuelve su binding contra el proveedor SDD actual, aplica elegibilidad y guarda una traza durable. Primero se debe ejecutar `work create` y `work bind --approve-specification`; la aprobación no se infiere de un archivo OpenSpec. Si no se indica `--runtime`, usa `runtime.defaultRuntime` de la configuración del proyecto (por defecto, `fake`). Pi sólo habilita lectura cuando la capability `workspace.read` está explícitamente configurada; las demás tools siguen deshabilitadas.
 
 El boundary se valida con dos adaptadores: `FakeRuntimeAdapter` en `tests/runtime/` y `PiRuntimeAdapter` en `src/runtime/pi/`.
 

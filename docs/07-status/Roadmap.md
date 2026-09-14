@@ -19,5 +19,6 @@ Local operational persistence is now wired into the CLI: `work create` and `work
 10. Implement real MCP transport and replace simulated tools and workflow steps with guarded implementations.
 11. ~~Add SDD snapshot/digest drift detection before execution and require rebind or reauthorization when the approved projection changes.~~ **Completed:** `work bind` stores the approved digest and `work execute` denies changed or legacy bindings before invoking the runtime.
 12. ~~Add a minimum HITM policy for CompletionAuthorization.~~ **Completed:** actor identity and role are explicit, roles have allowed decisions, and the immutable authorization record preserves the audit fields.
+13. ~~Enable one Pi tool under `ExecutionEnvironmentGuard`.~~ **Completed narrowly:** Pi can expose only built-in `read` when `workspace.read` is explicitly configured; broader tools remain gated.
 
 Roadmap items are directional, not commitments; accepted architectural changes belong in ADRs.

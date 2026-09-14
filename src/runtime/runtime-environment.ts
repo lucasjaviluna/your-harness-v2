@@ -72,13 +72,16 @@ export interface RuntimeEnvironmentOptions {
 export const createRuntimeEnvironment = (
   options: RuntimeEnvironmentOptions = {},
 ): RuntimeEnvironment => {
+  const executionEnvironment = options.executionEnvironment ??
+    createExecutionEnvironment({ workspace: { root: options.workspace ?? process.cwd() } });
+  const guard = createExecutionEnvironmentGuard(executionEnvironment);
   const registry = createRuntimeRegistry(options.runtimes);
 
   if (!registry.has("fake")) {
     registry.register("fake", new FakeRuntimeAdapter());
   }
   if (options.includePi && !registry.has("pi")) {
-    registry.register("pi", new PiRuntimeAdapter());
+    registry.register("pi", new PiRuntimeAdapter(executionEnvironment));
   }
 
   const defaultRuntime = options.defaultRuntime ?? "fake";
@@ -90,9 +93,6 @@ export const createRuntimeEnvironment = (
     );
   }
 
-  const executionEnvironment = options.executionEnvironment ??
-    createExecutionEnvironment({ workspace: { root: options.workspace ?? process.cwd() } });
-  const guard = createExecutionEnvironmentGuard(executionEnvironment);
   const guardedRuntimes = new Map<RuntimeName, RuntimePort>();
 
   return {
