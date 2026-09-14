@@ -19,6 +19,9 @@ runtime:
   # Only `openspec` exists today and is read-only.
   sddProvider: openspec
 
+  # Safe default. `external-command` is opt-in and requires an injected runner.
+  sddMaterializer: filesystem
+
   # Adds Change provenance as an Application eligibility requirement.
   requireSddChangeTraceability: false
 
@@ -44,10 +47,11 @@ runtime:
 config.yml
    ├── RuntimeEnvironment / RuntimeRegistry
    ├── SddProvider
+   ├── SddMaterializer mode
    └── ExecutionEligibilityPolicy + ExecutionEnvironment
 ```
 
-The configured SDD provider is composed and the CLI reads the current OpenSpec projection for persistent work execution. `ExecutionEnvironment` validates and enforces the runtime boundary. Configuration may explicitly grant the read-only Pi tool with `workspace.read`; process, write, network and secret access remain unavailable until their adapters consume the corresponding guard checks.
+The configured SDD provider is composed and the CLI reads the current OpenSpec projection for persistent work execution. `sddMaterializer` only selects the generation mode at this stage; `external-command` does not create a process unless a runner is explicitly injected by a future composition path. `ExecutionEnvironment` validates and enforces the runtime boundary. Configuration may explicitly grant the read-only Pi tool with `workspace.read`; process, write, network and secret access remain unavailable until their adapters consume the corresponding guard checks.
 
 ## Environment policy validation
 

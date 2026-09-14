@@ -32,6 +32,7 @@ describe("ProjectRuntimeEnvironment", () => {
     expect(environment.runtimeEnvironment.defaultRuntime).toBe("pi");
     expect(environment.runtimeEnvironment.listRuntimes()).toEqual(["fake", "pi"]);
     expect(environment.sddProvider.id).toBe("openspec");
+    expect(environment.sddMaterializerMode).toBe("filesystem");
     expect(environment.runtimeEnvironment.executionEnvironment.workspace).toMatchObject({
       root: path.resolve("C:/workspace"),
       allowedPaths: [path.resolve("C:/workspace", "src")],

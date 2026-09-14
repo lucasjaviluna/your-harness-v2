@@ -21,6 +21,7 @@ describe("configuración de runtime por proyecto", () => {
       `runtime:
   defaultRuntime: pi
   sddProvider: openspec
+  sddMaterializer: external-command
   requireSddChangeTraceability: true
   executionEnvironment:
     workspace:
@@ -43,6 +44,7 @@ describe("configuración de runtime por proyecto", () => {
     expect(config.runtime).toMatchObject({
       defaultRuntime: "pi",
       sddProvider: "openspec",
+      sddMaterializer: "external-command",
       requireSddChangeTraceability: true,
       executionEnvironment: {
         workspace: { mode: "read-write", allowedPaths: ["src"] },

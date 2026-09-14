@@ -53,7 +53,7 @@ El adapter usa sólo operaciones de lectura del filesystem. No invoca el CLI de 
 
 ## Selección por proyecto
 
-La configuración local puede declarar `runtime.sddProvider: openspec`. `createProjectRuntimeEnvironment` compone ese adapter como `SddProvider` sin hacer que sus tipos crucen a Domain ni a Runtime. Es la única opción disponible; un valor desconocido se rechaza durante validación de configuración.
+La configuración local puede declarar `runtime.sddProvider: openspec` y `runtime.sddMaterializer: filesystem|external-command`. `createProjectRuntimeEnvironment` compone el provider y expone el modo de materialización sin hacer que sus tipos crucen a Domain ni a Runtime. `filesystem` es el default; `external-command` sólo expresa intención y requiere un runner inyectado por una composición futura. Un valor desconocido se rechaza durante validación de configuración.
 
 `yh work bind` conserva sólo una selección operacional de Specification, Change y tareas. Al ejecutar, YH vuelve a leer el proveedor para proyectar material actual y compara el `contentDigest` de la Specification con el snapshot aprobado. La autorización `--approve-specification` es explícita porque OpenSpec no proporciona `SpecificationStatus.Approved` de Domain.
 

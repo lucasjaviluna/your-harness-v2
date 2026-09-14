@@ -22,6 +22,7 @@ import type { ToolInvocationRecorder } from "./tool-invocation-trace.js";
 export interface ProjectRuntimeEnvironment {
   readonly runtimeEnvironment: RuntimeEnvironment;
   readonly sddProvider: SddProvider;
+  readonly sddMaterializerMode: ValidatedConfig["runtime"]["sddMaterializer"];
   readonly executionEligibilityPolicy: ExecutionEligibilityPolicy;
 }
 
@@ -88,6 +89,7 @@ export const createProjectRuntimeEnvironment = (
       executionTraceId: options.executionTraceId,
     }),
     sddProvider: createConfiguredSddProvider(options.config.runtime.sddProvider),
+    sddMaterializerMode: options.config.runtime.sddMaterializer,
     executionEligibilityPolicy: createExecutionEligibilityPolicy({
       requireSddChangeTraceability:
         options.config.runtime.requireSddChangeTraceability,

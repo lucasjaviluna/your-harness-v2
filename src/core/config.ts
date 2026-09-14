@@ -64,6 +64,7 @@ const executionEnvironmentConfigSchema = z.object({
 const runtimeConfigSchema = z.object({
   defaultRuntime: z.string().trim().min(1).default("fake"),
   sddProvider: z.enum(["openspec"]).default("openspec"),
+  sddMaterializer: z.enum(["filesystem", "external-command"]).default("filesystem"),
   requireSddChangeTraceability: z.boolean().default(false),
   executionEnvironment: executionEnvironmentConfigSchema.default({}),
 });
@@ -126,6 +127,7 @@ const DEFAULT_CONFIG: ValidatedConfig = {
   runtime: {
     defaultRuntime: "fake",
     sddProvider: "openspec",
+    sddMaterializer: "filesystem",
     requireSddChangeTraceability: false,
     executionEnvironment: {
       workspace: {},
