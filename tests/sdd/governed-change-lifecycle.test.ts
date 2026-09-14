@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   GovernedChangeStatus,
   InMemoryGovernedChangeRepository,
+  InMemoryChangeStageApprovalRepository,
+  createChangeStageApproval,
   TransitionGovernedChangeUseCase,
 } from "@your-harness/application";
 
@@ -19,11 +21,26 @@ const base = {
 describe("lifecycle gobernado de Change", () => {
   it("aplica transiciones explícitas y conserva el historial", async () => {
     const repository = new InMemoryGovernedChangeRepository();
-    const useCase = new TransitionGovernedChangeUseCase(repository);
+    const approvals = new InMemoryChangeStageApprovalRepository();
+    const useCase = new TransitionGovernedChangeUseCase(repository, approvals);
     const transition = (status: GovernedChangeStatus, id: string, completionAuthorized?: boolean) =>
       useCase.execute({ ...base, id, requestedStatus: status, changedAt: `2026-09-14T22:0${id.length}:00.000Z`, completionAuthorized });
 
     await transition(GovernedChangeStatus.Proposed, "change-1");
+    for (const [index, stage] of ["proposal", "design", "task-plan", "apply-readiness", "verification-completion"].entries()) {
+      await approvals.save(createChangeStageApproval({
+        id: `approval-${stage}`,
+        changeId: base.changeId,
+        stage: stage as "proposal" | "design" | "task-plan" | "apply-readiness" | "verification-completion",
+        changeVersion: base.changeVersion,
+        changeDigest: base.changeDigest,
+        decision: "approve",
+        approvedBy: base.changedBy,
+        approvedByRole: "reviewer",
+        reason: "Aprobado por HITM.",
+        approvedAt: `2026-09-14T21:0${index}:00.000Z`,
+      }));
+    }
     await transition(GovernedChangeStatus.Approved, "change-2");
     await transition(GovernedChangeStatus.Executing, "change-3");
     await transition(GovernedChangeStatus.VerificationPending, "change-4");
@@ -36,7 +53,8 @@ describe("lifecycle gobernado de Change", () => {
 
   it("rechaza saltos de estado y completion sin autorización", async () => {
     const repository = new InMemoryGovernedChangeRepository();
-    const useCase = new TransitionGovernedChangeUseCase(repository);
+    const approvals = new InMemoryChangeStageApprovalRepository();
+    const useCase = new TransitionGovernedChangeUseCase(repository, approvals);
     const input = { ...base, id: "change-1", changedAt: "2026-09-14T22:00:00.000Z" };
 
     await expect(useCase.execute({ ...input, requestedStatus: GovernedChangeStatus.Executing })).rejects.toThrow(

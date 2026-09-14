@@ -1,5 +1,8 @@
 import { createGovernedChangeRecord, type GovernedChangeRecord } from "./governed-change.js";
 import type { GovernedChangeRepository } from "./governed-change-repository.js";
+import type { ChangeStage } from "./change-stage-approval.js";
+import type { ChangeStageApprovalRepository } from "./change-stage-approval-repository.js";
+import { createChangeStageApprovalPolicy } from "./change-stage-approval-policy.js";
 import { evaluateGovernedChangeTransition } from "./governed-change-policy.js";
 import { GovernedChangeStatus } from "./sdd-lifecycle-status.js";
 
@@ -18,7 +21,10 @@ export interface TransitionGovernedChangeInput {
 }
 
 export class TransitionGovernedChangeUseCase {
-  constructor(private readonly changes: GovernedChangeRepository) {}
+  constructor(
+    private readonly changes: GovernedChangeRepository,
+    private readonly approvals: ChangeStageApprovalRepository,
+  ) {}
 
   async execute(input: TransitionGovernedChangeInput): Promise<GovernedChangeRecord> {
     const current = await this.changes.findCurrentByChangeId(input.changeId);
@@ -29,6 +35,24 @@ export class TransitionGovernedChangeUseCase {
     });
     if (!evaluation.allowed) {
       throw new Error(`Governed Change '${input.changeId}' cannot transition: ${evaluation.reasons.join(" ")}`);
+    }
+    const requiredStage: ChangeStage | undefined =
+      input.requestedStatus === GovernedChangeStatus.Completed
+        ? "verification-completion"
+        : input.requestedStatus === GovernedChangeStatus.Approved || input.requestedStatus === GovernedChangeStatus.Executing
+          ? "apply-readiness"
+          : undefined;
+    if (requiredStage) {
+      const approvalEvaluation = createChangeStageApprovalPolicy().evaluate({
+        changeId: input.changeId,
+        stage: requiredStage,
+        changeVersion: input.changeVersion,
+        changeDigest: input.changeDigest,
+        approvals: await this.approvals.findByChangeId(input.changeId),
+      });
+      if (!approvalEvaluation.allowed) {
+        throw new Error(`Governed Change '${input.changeId}' cannot transition: ${approvalEvaluation.reasons.join(" ")}`);
+      }
     }
     const record = createGovernedChangeRecord({
       ...input,

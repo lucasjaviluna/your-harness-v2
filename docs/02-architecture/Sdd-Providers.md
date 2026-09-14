@@ -21,7 +21,7 @@ Las proyecciones de Changes y tareas incluyen estados normalizados. `SddChangeSt
 
 La aprobación de un Change es incremental: Proposal, Design, Task Plan y Apply Readiness requieren checkpoints HITM independientes. Design es el gate arquitectónico obligatorio antes de aplicar efectos o iniciar la implementación; si se modifica, las aprobaciones posteriores deben invalidarse.
 
-El lifecycle gobernado ya cuenta con `GovernedChangeRecord`, `GovernedChangeRepository`, `evaluateGovernedChangeTransition` y `TransitionGovernedChangeUseCase` en Application. El repository en memoria conserva el historial de transiciones; la persistencia local y la integración completa con aprobaciones/digest son el siguiente subincremento.
+El lifecycle gobernado ya cuenta con `GovernedChangeRecord`, `GovernedChangeRepository`, `evaluateGovernedChangeTransition` y `TransitionGovernedChangeUseCase` en Application. El historial se conserva en memoria o en `.your-harness/state/governed-changes`. Las transiciones a `approved`/`executing` exigen HITM hasta Apply Readiness; `completed` exige Verification/Completion y autorización explícita, con coincidencia exacta de versión y digest. La invalidación automática por edición y la integración CLI siguen pendientes.
 
 Application expone `ChangeStageApproval` y su repositorio para conservar cada decisión de forma inmutable. La aprobación queda ligada al digest y versión revisados; por eso una nueva proyección no puede reutilizar silenciosamente una aprobación anterior.
 
