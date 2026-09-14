@@ -12,6 +12,11 @@ yh work execute login-work --runtime fake --workspace . --constraint "Run tests 
 
 `execute` loads the WorkItem and binding, reads the configured SDD provider, projects the selected Specification, evaluates `ExecutionEligibilityPolicy`, resolves the selected `RuntimePort`, and persists an `ExecutionTrace`. It does not transition the WorkItem automatically.
 
+`bind` stores the digest of the approved Specification projection. `execute` compares
+that digest with the current SDD projection before invoking the runtime. If the
+Specification changed, or if an older binding has no digest, execution is denied with
+an instruction to run `work bind` again.
+
 To collect and evaluate durable evidence before authorization:
 
 ```bash

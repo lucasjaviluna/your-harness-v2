@@ -25,6 +25,23 @@ export interface ResolvedExecutionSource {
   readonly taskReferences: ReadonlyArray<{ readonly providerId: string; readonly reference: string }>;
 }
 
+/** Impide ejecutar una proyección SDD distinta de la aprobada al hacer bind. */
+export const assertSpecificationSnapshotMatchesBinding = (
+  binding: WorkItemExecutionBinding,
+  snapshot: SddSpecificationSnapshot,
+): void => {
+  if (!binding.specificationSnapshotDigest) {
+    throw new Error(
+      `Work item '${binding.workItemId}' has no approved SDD snapshot digest; rebind the WorkItem before execution.`,
+    );
+  }
+  if (binding.specificationSnapshotDigest !== snapshot.contentDigest) {
+    throw new Error(
+      `SDD specification '${binding.specificationId}' changed since binding (approved digest '${binding.specificationSnapshotDigest}', current '${snapshot.contentDigest}'); rebind the WorkItem before execution.`,
+    );
+  }
+};
+
 const requiredSpecification = (project: SddProjectProjection, id: string): SddSpecificationProjection => {
   const specification = project.specifications.find((item) => item.id === id);
   if (!specification) throw new Error(`Configured SDD specification '${id}' was not found.`);

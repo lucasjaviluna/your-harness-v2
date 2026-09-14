@@ -30,6 +30,7 @@ src/cli
 - `src/persistence/local` persiste WorkItems, bindings operacionales y ExecutionTraces bajo `.your-harness/state/`, sin duplicar Specifications u OpenSpec.
 - `packages/application/verification` define Evidence y VerificationPlan/Report; Evidence se ancla a una ExecutionTrace existente, sin completar WorkItems automáticamente.
 - Las trazas nuevas incluyen provenance y digest de la Specification proyectada; Evidence y VerificationPlan/Report también tienen almacenamiento operacional local.
+- `work bind` conserva el digest de la Specification aprobada y `work execute` rechaza drift SDD antes de invocar el runtime; un cambio exige volver a enlazar el WorkItem.
 - `CompletionAuthorization` es la única ruta de Application que puede completar un WorkItem; la CLI exige report, actor y motivo explícitos.
 - La CLI ya expone `work start` y `work authorize`; la autorización exige un VerificationReport y registra actor, motivo y decisión antes de completar.
 

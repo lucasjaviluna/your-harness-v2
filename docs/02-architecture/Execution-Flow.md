@@ -31,7 +31,7 @@ sequenceDiagram
 
 ## Current limitation
 
-Repository-backed loading is implemented in Application and the CLI. `work execute` loads persistent WorkItems/bindings, reads the configured SDD provider and stores a durable ExecutionTrace; `work start` and `work authorize` apply the explicit Domain completion lifecycle. Runtime selection is handled by the composition-level `RuntimeRegistry`.
+Repository-backed loading is implemented in Application and the CLI. `work execute` loads persistent WorkItems/bindings, reads the configured SDD provider, verifies the binding's approved Specification digest against the current projection and stores a durable ExecutionTrace; `work start` and `work authorize` apply the explicit Domain completion lifecycle. Runtime selection is handled by the composition-level `RuntimeRegistry`.
 
 The Runtime Boundary is also validated directly without repositories through `ExecuteWorkItemUseCase` and `FakeRuntimeAdapter` in `tests/runtime/execute-work-item.test.ts`. The CLI composition root resolves a `RuntimeRegistry` behind the same `RuntimePort`; `fake` is the default and Pi is registered only when explicitly selected, without changing Application.
 

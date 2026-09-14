@@ -5,7 +5,7 @@ import { CompleteWorkItemUseCase, ExecuteStoredWorkItemUseCase, InMemoryReposito
 import { IntentId, Specification, SpecificationId, WorkItem, WorkItemId, WorkItemTitle } from "@your-harness/domain";
 import { createLocalOperationalStore } from "../../persistence/index.js";
 import { createProjectRuntimeEnvironment } from "../../runtime/index.js";
-import { resolveExecutionSource } from "../../sdd/index.js";
+import { assertSpecificationSnapshotMatchesBinding, resolveExecutionSource } from "../../sdd/index.js";
 import type { CliContext } from "../cli-context.js";
 import { createCliConsole } from "../presentation/cli-io.js";
 
@@ -42,13 +42,23 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
     .option("-w, --workspace <path>", "Workspace state location", process.cwd())
     .action(async (workItemId: string, options: { specification: string; approveSpecification: boolean; change?: string; task?: string[]; workspace: string }) => {
       try {
+        const projectEnvironment = createProjectRuntimeEnvironment({ config, workspace: options.workspace });
         const store = createLocalOperationalStore({ workspace: options.workspace });
         const id = new WorkItemId(workItemId);
         if (!(await store.workItems.findById(id))) throw new Error(`Work item '${workItemId}' was not found in local operational state.`);
+        const sddProject = await projectEnvironment.sddProvider.readProject({ root: options.workspace });
+        const source = resolveExecutionSource(sddProject, {
+          workItemId,
+          specificationId: options.specification,
+          specificationApproved: options.approveSpecification,
+          changeId: options.change,
+          taskIds: options.task ?? [],
+        });
         await store.executionBindings.save({
           workItemId,
           specificationId: options.specification,
           specificationApproved: options.approveSpecification,
+          specificationSnapshotDigest: source.specificationSnapshot.contentDigest,
           changeId: options.change,
           taskIds: options.task ?? [],
         });
@@ -129,6 +139,7 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
         if (!binding) throw new Error(`Work item '${workItemId}' has no persistent SDD execution binding.`);
         const sddProject = await projectEnvironment.sddProvider.readProject({ root: options.workspace });
         const source = resolveExecutionSource(sddProject, binding);
+        assertSpecificationSnapshotMatchesBinding(binding, source.specificationSnapshot);
         const specifications = new InMemoryRepository<Specification, SpecificationId>();
         await specifications.save(source.specification);
         const useCase = new ExecuteStoredWorkItemUseCase(

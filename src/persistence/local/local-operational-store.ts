@@ -56,6 +56,8 @@ export interface WorkItemExecutionBinding {
   readonly workItemId: string;
   readonly specificationId: string;
   readonly specificationApproved: boolean;
+  /** Digest de la proyección aprobada al momento del bind. */
+  readonly specificationSnapshotDigest?: string;
   readonly changeId?: string;
   readonly taskIds: ReadonlyArray<string>;
 }
@@ -209,6 +211,7 @@ const isExecutionBinding = (value: unknown): value is WorkItemExecutionBinding =
     typeof binding.workItemId === "string" &&
     typeof binding.specificationId === "string" &&
     typeof binding.specificationApproved === "boolean" &&
+    (binding.specificationSnapshotDigest === undefined || typeof binding.specificationSnapshotDigest === "string") &&
     (binding.changeId === undefined || typeof binding.changeId === "string") &&
     Array.isArray(binding.taskIds) &&
     binding.taskIds.every((taskId) => typeof taskId === "string")
@@ -312,6 +315,7 @@ export const createLocalOperationalStore = (
             workItemId: binding.workItemId,
             specificationId: binding.specificationId,
             specificationApproved: binding.specificationApproved,
+            ...(binding.specificationSnapshotDigest === undefined ? {} : { specificationSnapshotDigest: binding.specificationSnapshotDigest }),
             ...(binding.changeId === undefined ? {} : { changeId: binding.changeId }),
             taskIds: [...binding.taskIds],
           },

@@ -17,6 +17,6 @@ Local operational persistence is now wired into the CLI: `work create` and `work
 8. ~~Introduce `ExecutionEligibilityPolicy` when a second concrete eligibility rule exists.~~ **Completed:** approved Specification is explicit and optional SDD Change traceability can be required before runtime execution.
 9. ~~Define Verification/Evidence before interpreting runtime completion as engineering completion.~~ **Scoped contracts, local durability, deterministic evaluation and explicit authorization implemented:** ADR-009 binds plans to one trace and Specification digest, filters Evidence to that execution, produces conservative reports and gates `WorkItem.complete()` through `CompletionAuthorization` and `work authorize`.
 10. Implement real MCP transport and replace simulated tools and workflow steps with guarded implementations.
-11. Add SDD snapshot/digest drift detection before execution and require rebind or reauthorization when the approved projection changes.
+11. ~~Add SDD snapshot/digest drift detection before execution and require rebind or reauthorization when the approved projection changes.~~ **Completed:** `work bind` stores the approved digest and `work execute` denies changed or legacy bindings before invoking the runtime.
 
 Roadmap items are directional, not commitments; accepted architectural changes belong in ADRs.

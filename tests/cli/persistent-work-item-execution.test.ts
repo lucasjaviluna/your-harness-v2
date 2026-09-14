@@ -70,6 +70,10 @@ describe("yh work execute", () => {
       "--task",
       "openspec/changes/add-login/tasks.md#1",
     );
+    const boundStore = createLocalOperationalStore({ workspace });
+    await expect(boundStore.executionBindings.findByWorkItemId(new WorkItemId("login-work"))).resolves.toMatchObject({
+      specificationSnapshotDigest: expect.stringMatching(/^[a-f0-9]{64}$/),
+    });
     const output = await runYh(workspace, "work", "execute", "login-work", "--runtime", "fake");
 
     expect(output).toContain("Work item completed");

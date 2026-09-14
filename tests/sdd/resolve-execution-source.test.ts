@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { SddProjectProjection } from "@your-harness/application";
-import { resolveExecutionSource } from "../../src/sdd/index.js";
+import { assertSpecificationSnapshotMatchesBinding, resolveExecutionSource } from "../../src/sdd/index.js";
 
 const project: SddProjectProjection = {
   providerId: "test-sdd",
@@ -63,5 +63,45 @@ describe("resolveExecutionSource", () => {
       specificationApproved: false,
       taskIds: [],
     })).toThrow("is not approved for execution");
+  });
+
+  it("rejects a specification whose projection changed after binding", () => {
+    const source = resolveExecutionSource(project, {
+      workItemId: "work-1",
+      specificationId: "authentication",
+      specificationApproved: true,
+      specificationSnapshotDigest: "approved-digest",
+      taskIds: [],
+    });
+
+    expect(() => assertSpecificationSnapshotMatchesBinding(
+      {
+        workItemId: "work-1",
+        specificationId: "authentication",
+        specificationApproved: true,
+        specificationSnapshotDigest: "approved-digest",
+        taskIds: [],
+      },
+      source.specificationSnapshot,
+    )).toThrow("changed since binding");
+  });
+
+  it("requires a digest so legacy bindings cannot bypass the drift guard", () => {
+    const source = resolveExecutionSource(project, {
+      workItemId: "work-1",
+      specificationId: "authentication",
+      specificationApproved: true,
+      taskIds: [],
+    });
+
+    expect(() => assertSpecificationSnapshotMatchesBinding(
+      {
+        workItemId: "work-1",
+        specificationId: "authentication",
+        specificationApproved: true,
+        taskIds: [],
+      },
+      source.specificationSnapshot,
+    )).toThrow("rebind the WorkItem");
   });
 });

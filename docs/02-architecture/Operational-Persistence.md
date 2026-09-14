@@ -29,4 +29,8 @@ Esta base no persiste copias de Specifications ni artefactos de OpenSpec. Las Sp
 - No hay locking multiproceso, índices secundarios ni migraciones entre versiones.
 - No hay persistencia local de Specifications ni artefactos SDD; las decisiones operativas se persisten localmente.
 
-Una `CompletionAuthorization` explícita es la única entrada que puede completar un WorkItem.
+El binding operacional conserva el digest de la proyección de Specification aprobada.
+Antes de ejecutar, la CLI vuelve a proyectar el proveedor SDD y niega la ejecución si
+el digest cambió o si el binding legado no tiene digest; en ambos casos exige volver a
+hacer `work bind`. Una `CompletionAuthorization` explícita es la única entrada que
+puede completar un WorkItem.
