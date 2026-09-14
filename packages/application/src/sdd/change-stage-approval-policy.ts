@@ -25,6 +25,27 @@ export interface ChangeStageApprovalPolicy {
   }): ChangeStageApprovalEvaluation;
 }
 
+export interface InvalidatedChangeStageApproval {
+  readonly approvalId: string;
+  readonly stage: ChangeStage;
+  readonly reason: "version-mismatch" | "digest-mismatch";
+}
+
+/** Proyección explícita de aprobaciones que ya no son aplicables al snapshot actual. */
+export const findInvalidatedChangeStageApprovals = (input: {
+  readonly changeId: string;
+  readonly changeVersion: string;
+  readonly changeDigest: string;
+  readonly approvals: ReadonlyArray<ChangeStageApproval>;
+}): ReadonlyArray<InvalidatedChangeStageApproval> => input.approvals
+  .filter((approval) => approval.changeId === input.changeId && approval.decision === "approve")
+  .filter((approval) => approval.changeVersion !== input.changeVersion || approval.changeDigest !== input.changeDigest)
+  .map((approval) => ({
+    approvalId: approval.id,
+    stage: approval.stage,
+    reason: approval.changeVersion !== input.changeVersion ? "version-mismatch" : "digest-mismatch",
+  }));
+
 const approvalsFor = (
   approvals: ReadonlyArray<ChangeStageApproval>,
   changeId: string,
@@ -71,6 +92,18 @@ export const createChangeStageApprovalPolicy = (): ChangeStageApprovalPolicy => 
         input.changeDigest,
       );
       if (approvals.length === 0) {
+        const invalidated = findInvalidatedChangeStageApprovals({
+          changeId: input.changeId,
+          changeVersion: input.changeVersion,
+          changeDigest: input.changeDigest,
+          approvals: input.approvals,
+        }).filter((approval) => approval.stage === requiredStage);
+        if (invalidated.length > 0) {
+          reasons.push(
+            `Change stage '${requiredStage}' approval is stale for version '${input.changeVersion}' and digest '${input.changeDigest}'.`,
+          );
+          continue;
+        }
         reasons.push(
           `Change stage '${requiredStage}' has no approval for version '${input.changeVersion}' and digest '${input.changeDigest}'.`,
         );

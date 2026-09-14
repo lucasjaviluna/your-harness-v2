@@ -23,6 +23,8 @@ La aprobación de un Change es incremental: Proposal, Design, Task Plan y Apply 
 
 El lifecycle gobernado ya cuenta con `GovernedChangeRecord`, `GovernedChangeRepository`, `evaluateGovernedChangeTransition` y `TransitionGovernedChangeUseCase` en Application. El historial se conserva en memoria o en `.your-harness/state/governed-changes`. Las transiciones a `approved`/`executing` exigen HITM hasta Apply Readiness; `completed` exige Verification/Completion y autorización explícita, con coincidencia exacta de versión y digest. La invalidación automática por edición y la integración CLI siguen pendientes.
 
+Las aprobaciones históricas no se modifican ni eliminan. `findInvalidatedChangeStageApprovals` proyecta cuáles quedaron obsoletas por `version-mismatch` o `digest-mismatch`, y la policy devuelve una razón `stale` en lugar de reutilizarlas. Una nueva versión debe obtener aprobaciones nuevas para poder avanzar.
+
 Application expone `ChangeStageApproval` y su repositorio para conservar cada decisión de forma inmutable. La aprobación queda ligada al digest y versión revisados; por eso una nueva proyección no puede reutilizar silenciosamente una aprobación anterior.
 
 `ChangeStageApprovalPolicy` impide saltar etapas y exige la cadena completa de aprobaciones compatibles con la versión y digest actuales. Una solicitud de rework bloquea el avance, pero se conserva como decisión HITM auditable.

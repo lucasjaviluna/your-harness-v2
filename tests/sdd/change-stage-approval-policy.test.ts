@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   createChangeStageApproval,
   createChangeStageApprovalPolicy,
+  findInvalidatedChangeStageApprovals,
   ApproveChangeStageUseCase,
   InMemoryChangeStageApprovalRepository,
 } from "@your-harness/application";
@@ -60,6 +61,14 @@ describe("ChangeStageApprovalPolicy", () => {
 
     expect(decision.allowed).toBe(false);
     expect(decision.reasons[0]).toContain("version '4'");
+    expect(findInvalidatedChangeStageApprovals({
+      ...base,
+      changeVersion: "4",
+      approvals: [approval("proposal"), approval("design")],
+    })).toEqual([
+      { approvalId: "approval-proposal", stage: "proposal", reason: "version-mismatch" },
+      { approvalId: "approval-design", stage: "design", reason: "version-mismatch" },
+    ]);
   });
 
   it("does not accept a rework decision as approval", () => {
