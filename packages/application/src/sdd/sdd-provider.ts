@@ -26,6 +26,8 @@ export interface SddRequirementProjection {
 export interface SddSpecificationProjection {
   readonly id: string;
   readonly title: string;
+  /** Digest estable de esta proyección neutral, calculado por el proveedor. */
+  readonly contentDigest: string;
   readonly requirements: ReadonlyArray<SddRequirementProjection>;
   readonly provenance: SddProvenance;
 }

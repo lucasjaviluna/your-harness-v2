@@ -1,4 +1,5 @@
 import { readdir, readFile, stat } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import type { Dirent } from "node:fs";
 import path from "node:path";
 
@@ -32,6 +33,15 @@ const provenance = (root: string, filePath: string): SddProvenance => ({
   providerId,
   reference: toReference(root, filePath),
 });
+
+const projectionDigest = (projection: {
+  readonly id: string;
+  readonly title: string;
+  readonly provenance: SddProvenance;
+  readonly requirements: ReadonlyArray<SddRequirementProjection>;
+}): string => createHash("sha256")
+  .update(JSON.stringify(projection))
+  .digest("hex");
 
 const firstHeading = (markdown: string, fallback: string): string =>
   markdown.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? fallback;
@@ -182,12 +192,13 @@ export class OpenSpecSddProvider implements SddProvider {
     return Promise.all(
       files.map(async (filePath) => {
         const markdown = await readFile(filePath, "utf8");
-        return {
+        const projection = {
           id: toId(path.basename(path.dirname(filePath))),
           title: firstHeading(markdown, path.basename(path.dirname(filePath))),
           requirements: parseRequirements(root, filePath, markdown),
           provenance: provenance(root, filePath),
         };
+        return { ...projection, contentDigest: projectionDigest(projection) };
       }),
     );
   }

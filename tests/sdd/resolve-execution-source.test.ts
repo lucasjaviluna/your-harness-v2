@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { evaluateSddDrift } from "@your-harness/application";
 import type { SddProjectProjection } from "@your-harness/application";
 import { assertSpecificationSnapshotMatchesBinding, resolveExecutionSource } from "../../src/sdd/index.js";
 
@@ -9,6 +10,7 @@ const project: SddProjectProjection = {
   specifications: [{
     id: "authentication",
     title: "Authentication",
+    contentDigest: "test-digest",
     provenance: { providerId: "test-sdd", reference: "specs/authentication.md" },
     requirements: [{
       id: "login",
@@ -41,6 +43,21 @@ const project: SddProjectProjection = {
 };
 
 describe("resolveExecutionSource", () => {
+  it("returns an explicit report when the approved digest matches", () => {
+    const source = resolveExecutionSource(project, {
+      workItemId: "work-1",
+      specificationId: "authentication",
+      specificationApproved: true,
+      specificationSnapshotDigest: "test-digest",
+      taskIds: [],
+    });
+
+    expect(evaluateSddDrift({
+      approvedDigest: "test-digest",
+      currentSnapshot: source.specificationSnapshot,
+    })).toEqual(expect.objectContaining({ hasDrift: false, reason: "match" }));
+  });
+
   it("projects an explicitly approved SDD binding with Change/task provenance", () => {
     const source = resolveExecutionSource(project, {
       workItemId: "work-1",

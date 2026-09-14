@@ -64,6 +64,7 @@ describe("OpenSpecSddProvider", () => {
       expect.objectContaining({
         id: "authentication",
         title: "Authentication",
+        contentDigest: expect.stringMatching(/^[a-f0-9]{64}$/),
         requirements: [
           expect.objectContaining({
             name: "Authenticate users",

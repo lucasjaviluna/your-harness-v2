@@ -1,6 +1,5 @@
-import { createHash } from "node:crypto";
-import type { SddChangeProjection, SddProjectProjection, SddSpecificationProjection } from "@your-harness/application";
-import type { SddSpecificationSnapshot } from "@your-harness/application";
+import { evaluateSddDrift } from "@your-harness/application";
+import type { SddChangeProjection, SddProjectProjection, SddSpecificationProjection, SddSpecificationSnapshot } from "@your-harness/application";
 import {
   NormativeStatement,
   Requirement,
@@ -30,12 +29,16 @@ export const assertSpecificationSnapshotMatchesBinding = (
   binding: WorkItemExecutionBinding,
   snapshot: SddSpecificationSnapshot,
 ): void => {
-  if (!binding.specificationSnapshotDigest) {
+  const report = evaluateSddDrift({
+    approvedDigest: binding.specificationSnapshotDigest,
+    currentSnapshot: snapshot,
+  });
+  if (report.reason === "missing-approved-digest") {
     throw new Error(
       `Work item '${binding.workItemId}' has no approved SDD snapshot digest; rebind the WorkItem before execution.`,
     );
   }
-  if (binding.specificationSnapshotDigest !== snapshot.contentDigest) {
+  if (report.reason === "digest-mismatch") {
     throw new Error(
       `SDD specification '${binding.specificationId}' changed since binding (approved digest '${binding.specificationSnapshotDigest}', current '${snapshot.contentDigest}'); rebind the WorkItem before execution.`,
     );
@@ -75,17 +78,11 @@ const toApprovedSpecification = (source: SddSpecificationProjection): Specificat
   );
 
 const toSpecificationSnapshot = (source: SddSpecificationProjection): SddSpecificationSnapshot => {
-  const canonical = JSON.stringify({
-    id: source.id,
-    title: source.title,
-    provenance: source.provenance,
-    requirements: source.requirements,
-  });
   return {
     id: source.id,
     title: source.title,
     provenance: source.provenance,
-    contentDigest: createHash("sha256").update(canonical).digest("hex"),
+    contentDigest: source.contentDigest,
     requirementIds: source.requirements.map((requirement) => requirement.id),
   };
 };

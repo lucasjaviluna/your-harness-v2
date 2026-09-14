@@ -11,6 +11,9 @@ El contrato público está en `@your-harness/application` y devuelve una proyecc
 - Specifications actuales con Requirements normativos y Scenarios WHEN/THEN.
 - Changes propuestos, con rationale, tareas y referencias opacas a artefactos.
 - Provenance con `providerId` y una referencia estable propiedad del proveedor.
+- `contentDigest` estable por Specification proyectada, calculado por el proveedor y usado por Application para detectar drift.
+
+Application expone `SddDriftReport` mediante `evaluateSddDrift`. El resultado distingue `match`, `missing-approved-digest` y `digest-mismatch`, para que las políticas, el agente y la UX puedan explicar la decisión sin depender de analizar mensajes de excepción.
 
 Un `Change` proyectado no es un aggregate de Domain, no modifica una `Specification` actual y no se relaciona directamente con un `WorkItem`.
 
@@ -38,7 +41,7 @@ El adapter usa sólo operaciones de lectura del filesystem. No invoca el CLI de 
 
 La configuración local puede declarar `runtime.sddProvider: openspec`. `createProjectRuntimeEnvironment` compone ese adapter como `SddProvider` sin hacer que sus tipos crucen a Domain ni a Runtime. Es la única opción disponible; un valor desconocido se rechaza durante validación de configuración.
 
-`yh work bind` conserva sólo una selección operacional de Specification, Change y tareas. Al ejecutar, YH vuelve a leer el proveedor para proyectar material actual. La autorización `--approve-specification` es explícita porque OpenSpec no proporciona `SpecificationStatus.Approved` de Domain.
+`yh work bind` conserva sólo una selección operacional de Specification, Change y tareas. Al ejecutar, YH vuelve a leer el proveedor para proyectar material actual y compara el `contentDigest` de la Specification con el snapshot aprobado. La autorización `--approve-specification` es explícita porque OpenSpec no proporciona `SpecificationStatus.Approved` de Domain.
 
 ## Límites actuales
 
