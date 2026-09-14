@@ -173,4 +173,24 @@ describe("LocalOperationalStore", () => {
       "contains unsupported characters",
     );
   });
+
+  it("persists tool invocation traces for later audit", async () => {
+    const workspace = await createWorkspace();
+    const store = createLocalOperationalStore({ workspace });
+
+    await store.toolInvocations.record({
+      id: "tool-read-1",
+      runtimeId: "pi",
+      sessionId: "session-1",
+      toolName: "read",
+      requestedPath: "src/index.ts",
+      resolvedPath: "C:/workspace/src/index.ts",
+      bytesRead: 42,
+      outcome: "allowed",
+      invokedAt: "2026-09-14T00:00:00.000Z",
+    });
+
+    await expect(createLocalOperationalStore({ workspace }).toolInvocations.findByRuntimeId("pi"))
+      .resolves.toMatchObject([{ toolName: "read", outcome: "allowed", bytesRead: 42 }]);
+  });
 });

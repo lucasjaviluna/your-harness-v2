@@ -17,6 +17,7 @@ import {
   type RuntimeEnvironment,
   type RuntimeName,
 } from "./runtime-environment.js";
+import type { ToolInvocationRecorder } from "./tool-invocation-trace.js";
 
 export interface ProjectRuntimeEnvironment {
   readonly runtimeEnvironment: RuntimeEnvironment;
@@ -29,6 +30,7 @@ export interface ProjectRuntimeEnvironmentOptions {
   readonly workspace: string;
   /** Sobrescribe sólo esta ejecución; si falta se usa runtime.defaultRuntime. */
   readonly runtime?: RuntimeName;
+  readonly toolInvocationRecorder?: ToolInvocationRecorder;
 }
 
 const createConfiguredSddProvider = (
@@ -81,6 +83,7 @@ export const createProjectRuntimeEnvironment = (
       includePi: selectedRuntime === "pi",
       workspace: options.workspace,
       executionEnvironment,
+      toolInvocationRecorder: options.toolInvocationRecorder,
     }),
     sddProvider: createConfiguredSddProvider(options.config.runtime.sddProvider),
     executionEligibilityPolicy: createExecutionEligibilityPolicy({

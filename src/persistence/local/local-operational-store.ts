@@ -21,6 +21,7 @@ import {
   WorkItemStatus,
   WorkItemTitle,
 } from "@your-harness/domain";
+import type { ToolInvocationTrace } from "../../runtime/tool-invocation-trace.js";
 
 interface StoredWorkItem {
   readonly version: 1;
@@ -43,6 +44,12 @@ export interface LocalOperationalStore {
   readonly verificationPlans: VerificationPlanRepository;
   readonly verificationReports: VerificationReportRepository;
   readonly completionAuthorizations: CompletionAuthorizationRepository;
+  readonly toolInvocations: ToolInvocationRepository;
+}
+
+export interface ToolInvocationRepository {
+  record(trace: ToolInvocationTrace): Promise<void>;
+  findByRuntimeId(runtimeId: string): Promise<ReadonlyArray<ToolInvocationTrace>>;
 }
 
 export interface EvidenceRepository {
@@ -236,6 +243,7 @@ export const createLocalOperationalStore = (
   const verificationPlansDirectory = path.join(root, "verification-plans");
   const verificationReportsDirectory = path.join(root, "verification-reports");
   const completionAuthorizationsDirectory = path.join(root, "completion-authorizations");
+  const toolInvocationsDirectory = path.join(root, "tool-invocations");
 
   return {
     root,
@@ -408,6 +416,21 @@ export const createLocalOperationalStore = (
           const entries = await readdir(completionAuthorizationsDirectory);
           const values = await Promise.all(entries.filter((entry) => entry.endsWith(".json")).map((entry) => readJson<unknown>(path.join(completionAuthorizationsDirectory, entry))));
           return values.filter(isCompletionAuthorization).filter((authorization) => authorization.workItemId === workItemId);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+          throw error;
+        }
+      },
+    },
+    toolInvocations: {
+      async record(trace) {
+        await writeJson(path.join(toolInvocationsDirectory, fileNameFor(trace.id)), trace);
+      },
+      async findByRuntimeId(runtimeId) {
+        try {
+          const entries = await readdir(toolInvocationsDirectory);
+          const values = await Promise.all(entries.filter((entry) => entry.endsWith(".json")).map((entry) => readJson<unknown>(path.join(toolInvocationsDirectory, entry))));
+          return values.filter((value): value is ToolInvocationTrace => !!value && typeof value === "object" && (value as Partial<ToolInvocationTrace>).runtimeId === runtimeId);
         } catch (error) {
           if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
           throw error;

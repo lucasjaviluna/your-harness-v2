@@ -11,6 +11,10 @@ explicitly grants `workspace.read`, it enables only a guarded `read` tool. Each 
 access is checked against the allowed workspace paths and files larger than 256 KiB
 are rejected. Edit, write, process, network and secret tools remain disabled.
 
+Each read operation emits a durable `ToolInvocationTrace` when the CLI supplies the
+local operational recorder. Allowed, denied and failed outcomes are recorded with
+the resolved path, byte count when available, session and timestamp.
+
 Future tool enablement must consume the guard for capability, network, secret and
 confirmation checks, and add adapter-specific enforcement tests before expanding
 beyond the current guarded read-only tool.

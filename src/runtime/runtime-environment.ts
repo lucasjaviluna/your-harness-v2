@@ -1,4 +1,5 @@
 import type { RuntimePort } from "@your-harness/application";
+import type { ToolInvocationRecorder } from "./tool-invocation-trace.js";
 
 import { FakeRuntimeAdapter } from "./fake-runtime-adapter.js";
 import { PiRuntimeAdapter } from "./pi/pi-runtime-adapter.js";
@@ -66,6 +67,7 @@ export interface RuntimeEnvironmentOptions {
   readonly includePi?: boolean;
   readonly workspace?: string;
   readonly executionEnvironment?: ExecutionEnvironment;
+  readonly toolInvocationRecorder?: ToolInvocationRecorder;
 }
 
 /** Composition root configurable para seleccionar un RuntimePort disponible. */
@@ -81,7 +83,7 @@ export const createRuntimeEnvironment = (
     registry.register("fake", new FakeRuntimeAdapter());
   }
   if (options.includePi && !registry.has("pi")) {
-    registry.register("pi", new PiRuntimeAdapter(executionEnvironment));
+    registry.register("pi", new PiRuntimeAdapter(executionEnvironment, options.toolInvocationRecorder));
   }
 
   const defaultRuntime = options.defaultRuntime ?? "fake";

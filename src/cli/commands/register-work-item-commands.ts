@@ -126,16 +126,20 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
     .option("-c, --constraint <text>", "Execution constraint")
     .option("-r, --runtime <name>", "Runtime to use (fake by default; pi when selected)")
     .action(async (workItemId: string, options: { workspace: string; constraint?: string; runtime?: string }) => {
-      const projectEnvironment = createProjectRuntimeEnvironment({ config, workspace: options.workspace, runtime: options.runtime });
-      const { runtimeEnvironment } = projectEnvironment;
-      const selectedRuntime = runtimeEnvironment.resolveName(options.runtime);
-      console.log(chalk.cyan(`Executing work item through ${selectedRuntime}...`));
-      console.log(chalk.gray(`Work item: ${workItemId}`));
-      console.log(chalk.gray(`Workspace: ${options.workspace}`));
-
       try {
-        const runtime = runtimeEnvironment.resolve(selectedRuntime);
         const store = createLocalOperationalStore({ workspace: options.workspace });
+        const projectEnvironment = createProjectRuntimeEnvironment({
+          config,
+          workspace: options.workspace,
+          runtime: options.runtime,
+          toolInvocationRecorder: store.toolInvocations,
+        });
+        const { runtimeEnvironment } = projectEnvironment;
+        const selectedRuntime = runtimeEnvironment.resolveName(options.runtime);
+        console.log(chalk.cyan(`Executing work item through ${selectedRuntime}...`));
+        console.log(chalk.gray(`Work item: ${workItemId}`));
+        console.log(chalk.gray(`Workspace: ${options.workspace}`));
+        const runtime = runtimeEnvironment.resolve(selectedRuntime);
         const workItemIdValue = new WorkItemId(workItemId);
         const binding = await store.executionBindings.findByWorkItemId(workItemIdValue);
         if (!binding) throw new Error(`Work item '${workItemId}' has no persistent SDD execution binding.`);

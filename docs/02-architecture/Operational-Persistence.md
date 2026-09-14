@@ -11,12 +11,13 @@ YH persiste estado operacional propio por workspace bajo un directorio local ign
     ├── evidence/<id>.json
     ├── verification-plans/<id>.json
     ├── verification-reports/<id>.json
-    └── completion-authorizations/<id>.json
+    ├── completion-authorizations/<id>.json
+    └── tool-invocations/<id>.json
 ```
 
 ## Alcance
 
-`createLocalOperationalStore({ workspace })` expone repositorios para `WorkItem`, bindings de ejecución, `ExecutionTrace`, `Evidence`, `VerificationPlan`, `VerificationReport` y `CompletionAuthorization`. Los WorkItems se serializan con una versión de formato y se rehidratan como aggregates de Domain. Un binding selecciona una Specification SDD, Change/tareas opcionales y una autorización explícita de ejecución. Las trazas conservan Change/task provenance, WorkItem, runtime, RuntimeResult y un snapshot de Specification con provenance y digest.
+`createLocalOperationalStore({ workspace })` expone repositorios para `WorkItem`, bindings de ejecución, `ExecutionTrace`, `Evidence`, `VerificationPlan`, `VerificationReport`, `CompletionAuthorization` y `ToolInvocationTrace`. Los WorkItems se serializan con una versión de formato y se rehidratan como aggregates de Domain. Un binding selecciona una Specification SDD, Change/tareas opcionales y una autorización explícita de ejecución. Las trazas conservan Change/task provenance, WorkItem, runtime, RuntimeResult y un snapshot de Specification con provenance y digest. Las invocaciones de tools conservan runtime, sesión, ruta, resultado, tamaño y motivo de denegación para auditoría.
 
 Las escrituras usan un archivo temporal seguido de `rename`, y los IDs persistidos aceptan sólo caracteres seguros para evitar escapes del directorio de estado.
 
