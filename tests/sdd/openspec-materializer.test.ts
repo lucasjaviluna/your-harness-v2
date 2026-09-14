@@ -12,6 +12,7 @@ import { createExecutionEnvironment, createExecutionEnvironmentGuard } from "../
 import {
   createOpenSpecCommandGenerationStrategy,
   OpenSpecMaterializer,
+  OpenSpecGenerationError,
   type OpenSpecGenerationStrategy,
 } from "../../src/sdd/openspec/index.js";
 import { OpenSpecSddProvider } from "../../src/sdd/index.js";
@@ -28,7 +29,7 @@ describe("OpenSpecMaterializer", () => {
     roots.push(root);
     const environment = createExecutionEnvironment({
       workspace: { root, mode: "read-write" },
-      capabilities: ["workspace.write"],
+      capabilities: ["workspace.write", "process.execute"],
     });
     const calls: string[] = [];
     const generationStrategy: OpenSpecGenerationStrategy = {
@@ -73,7 +74,7 @@ describe("OpenSpecMaterializer", () => {
     roots.push(root);
     const environment = createExecutionEnvironment({
       workspace: { root, mode: "read-write" },
-      capabilities: ["workspace.write"],
+      capabilities: ["workspace.write", "process.execute"],
     });
     let invocation: { changeId: string; instruction: string; targetRoot: string } | undefined;
     const strategy = createOpenSpecCommandGenerationStrategy({
@@ -109,6 +110,36 @@ describe("OpenSpecMaterializer", () => {
 
     await new MaterializeApprovedChangeUseCase(materializer).execute(preview, approvals);
     expect(invocation).toMatchObject({ changeId: "add-mfa", instruction: "/opsx:propose add-mfa" });
+  });
+
+  it("rechaza el runner externo si process.execute no está permitido", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "yh-materializer-"));
+    roots.push(root);
+    const environment = createExecutionEnvironment({ workspace: { root, mode: "read-write" }, capabilities: ["workspace.write"] });
+    let called = false;
+    const strategy = createOpenSpecCommandGenerationStrategy({
+      async execute() {
+        called = true;
+        return { exitCode: 0 };
+      },
+    });
+    const materializer = new OpenSpecMaterializer({ guard: createExecutionEnvironmentGuard(environment), confirmed: true, generationStrategy: strategy });
+    const preview = await materializer.previewDraftChange({ scope: { root }, changeId: "add-mfa", proposal: "# Proposal", design: "# Design", tasks: "- [ ] Task" });
+
+    await expect(materializer.materializeApprovedChange(preview)).rejects.toThrow("process.execute");
+    expect(called).toBe(false);
+  });
+
+  it("normaliza el fallo del runner externo", async () => {
+    const strategy = createOpenSpecCommandGenerationStrategy({
+      async execute() {
+        return { exitCode: 7, stderr: "OpenSpec unavailable" };
+      },
+    });
+
+    await expect(strategy.generate({
+      scope: { root: "/workspace" }, changeId: "add-mfa", version: "1", contentDigest: "digest", proposal: "# Proposal", design: "# Design", tasks: "- [ ] Task",
+    }, "/tmp/staging")).rejects.toMatchObject({ name: "OpenSpecGenerationError", kind: "runner-failed" } satisfies Partial<OpenSpecGenerationError>);
   });
 
   it("materializa un Change nuevo sólo después de Apply Readiness aprobado", async () => {

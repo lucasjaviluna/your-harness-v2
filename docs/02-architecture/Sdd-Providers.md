@@ -29,7 +29,7 @@ El vertical slice actual de governance recorre `OpenSpecSddProvider → Change p
 
 `OpenSpecMaterializer` delega la generación física a `OpenSpecGenerationStrategy`. La estrategia filesystem es la implementación predeterminada; una futura estrategia podría invocar una skill o mecanismo oficial de OpenSpec sin trasladar sus detalles a Application. Los guardrails, la aprobación HITM y la verificación posterior siguen fuera de la estrategia.
 
-La estrategia futura `createOpenSpecCommandGenerationStrategy` recibe un `OpenSpecProposalCommandRunner` inyectado. El runner sólo conoce la instrucción (`/opsx:propose <change-id>`), el Change y un directorio temporal de salida; no puede saltarse el caso de uso de materialización ni escribir fuera del staging asignado. La ejecución real de procesos o asistentes sigue sin estar conectada.
+La estrategia futura `createOpenSpecCommandGenerationStrategy` recibe un `OpenSpecProposalCommandRunner` inyectado. El runner sólo conoce la instrucción (`/opsx:propose <change-id>`), el Change y un directorio temporal de salida; no puede saltarse el caso de uso de materialización ni escribir fuera del staging asignado. Declara `process.execute` y una confirmación adicional de generación externa, que el materializer valida antes de invocarla. Los fallos se normalizan como `OpenSpecGenerationError`; la ejecución real de procesos o asistentes sigue sin estar conectada.
 
 `ApproveChangeStageUseCase` concentra el registro de decisiones. Esta frontera evita que una futura CLI, skill, agente o integración de proveedor pueda saltarse la policy escribiendo aprobaciones directamente.
 

@@ -55,6 +55,12 @@ export class OpenSpecMaterializer implements SddMaterializer {
     this.options.guard.assertCapability("workspace.write");
     this.options.guard.assertWorkspacePath(changeRoot, "write");
     this.options.guard.requireConfirmation("sdd.change.write", this.options.confirmed);
+    for (const capability of this.generationStrategy.requiredCapabilities ?? []) {
+      this.options.guard.assertCapability(capability);
+    }
+    if (this.generationStrategy.confirmationRiskClass) {
+      this.options.guard.requireConfirmation(this.generationStrategy.confirmationRiskClass, this.options.confirmed);
+    }
 
     const actualDigest = openSpecChangeDigest({
       changeId: preview.changeId,
