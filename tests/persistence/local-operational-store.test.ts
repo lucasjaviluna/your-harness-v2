@@ -10,6 +10,7 @@ import {
   WorkItemStatus,
   WorkItemTitle,
 } from "@your-harness/domain";
+import { createChangeStageApproval } from "@your-harness/application";
 import { createLocalOperationalStore } from "../../src/persistence/index.js";
 
 const workspaces: string[] = [];
@@ -158,6 +159,30 @@ describe("LocalOperationalStore", () => {
       specificationId: "spec-1",
     });
     await expect(reopened.verificationReports.findByPlanId("plan-1")).resolves.toHaveLength(1);
+  });
+
+  it("persists immutable Change stage approvals across store instances", async () => {
+    const workspace = await createWorkspace();
+    const approval = createChangeStageApproval({
+      id: "approval-design-1",
+      changeId: "add-mfa",
+      stage: "design",
+      changeVersion: "3",
+      changeDigest: "digest-3",
+      decision: "approve",
+      approvedBy: "architect@example.com",
+      approvedByRole: "reviewer",
+      reason: "Diseño aprobado.",
+      approvedAt: "2026-09-14T18:00:00.000Z",
+    });
+    const store = createLocalOperationalStore({ workspace });
+
+    await store.changeStageApprovals.save(approval);
+    await expect(store.changeStageApprovals.save(approval)).rejects.toThrow("already exists and is immutable");
+
+    const reopened = createLocalOperationalStore({ workspace });
+    await expect(reopened.changeStageApprovals.findById(approval.id)).resolves.toEqual(approval);
+    await expect(reopened.changeStageApprovals.findByChangeId("add-mfa")).resolves.toEqual([approval]);
   });
 
   it("rejects identifiers that could escape the local state directory", async () => {

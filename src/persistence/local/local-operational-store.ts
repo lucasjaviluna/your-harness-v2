@@ -3,6 +3,8 @@ import path from "node:path";
 
 import type {
   Evidence,
+  ChangeStageApproval,
+  ChangeStageApprovalRepository,
   CompletionAuthorization,
   ExecutionScopeSelection,
   CompletionAuthorizationRepository,
@@ -14,7 +16,7 @@ import type {
   VerificationReportRepository,
   WorkItemRepository,
 } from "@your-harness/application";
-import { createEvidence, createVerificationPlan } from "@your-harness/application";
+import { createChangeStageApproval, createEvidence, createVerificationPlan } from "@your-harness/application";
 import {
   IntentId,
   WorkItem,
@@ -45,6 +47,7 @@ export interface LocalOperationalStore {
   readonly verificationPlans: VerificationPlanRepository;
   readonly verificationReports: VerificationReportRepository;
   readonly completionAuthorizations: CompletionAuthorizationRepository;
+  readonly changeStageApprovals: ChangeStageApprovalRepository;
   readonly executionScopeSelections: ExecutionScopeSelectionRepository;
   readonly toolInvocations: ToolInvocationRepository;
 }
@@ -220,6 +223,23 @@ const isCompletionAuthorization = (value: unknown): value is CompletionAuthoriza
   );
 };
 
+const isChangeStageApproval = (value: unknown): value is ChangeStageApproval => {
+  if (!value || typeof value !== "object") return false;
+  const approval = value as Partial<ChangeStageApproval>;
+  return (
+    typeof approval.id === "string" &&
+    typeof approval.changeId === "string" &&
+    ["proposal", "design", "task-plan", "apply-readiness", "verification-completion"].includes(approval.stage ?? "") &&
+    typeof approval.changeVersion === "string" &&
+    typeof approval.changeDigest === "string" &&
+    ["approve", "request-rework", "reject"].includes(approval.decision ?? "") &&
+    typeof approval.approvedBy === "string" &&
+    ["engineer", "reviewer", "maintainer", "owner"].includes(approval.approvedByRole ?? "") &&
+    typeof approval.reason === "string" &&
+    typeof approval.approvedAt === "string"
+  );
+};
+
 const isExecutionBinding = (value: unknown): value is WorkItemExecutionBinding => {
   if (!value || typeof value !== "object") return false;
   const binding = value as Partial<WorkItemExecutionBinding>;
@@ -251,6 +271,7 @@ export const createLocalOperationalStore = (
   const verificationPlansDirectory = path.join(root, "verification-plans");
   const verificationReportsDirectory = path.join(root, "verification-reports");
   const completionAuthorizationsDirectory = path.join(root, "completion-authorizations");
+  const changeStageApprovalsDirectory = path.join(root, "change-stage-approvals");
   const executionScopeSelectionsDirectory = path.join(root, "execution-scope-selections");
   const toolInvocationsDirectory = path.join(root, "tool-invocations");
 
@@ -425,6 +446,38 @@ export const createLocalOperationalStore = (
           const entries = await readdir(completionAuthorizationsDirectory);
           const values = await Promise.all(entries.filter((entry) => entry.endsWith(".json")).map((entry) => readJson<unknown>(path.join(completionAuthorizationsDirectory, entry))));
           return values.filter(isCompletionAuthorization).filter((authorization) => authorization.workItemId === workItemId);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+          throw error;
+        }
+      },
+    },
+    changeStageApprovals: {
+      async save(approval) {
+        const filePath = path.join(changeStageApprovalsDirectory, fileNameFor(approval.id));
+        if (await readJson<unknown>(filePath)) {
+          throw new Error(`ChangeStageApproval '${approval.id}' already exists and is immutable.`);
+        }
+        await writeJson(filePath, createChangeStageApproval(approval));
+      },
+      async findById(id) {
+        const value = await readJson<unknown>(path.join(changeStageApprovalsDirectory, fileNameFor(id)));
+        if (value === null) return null;
+        if (!isChangeStageApproval(value)) {
+          throw new Error("Persisted ChangeStageApproval has an unsupported format.");
+        }
+        return createChangeStageApproval(value);
+      },
+      async findByChangeId(changeId) {
+        try {
+          const entries = await readdir(changeStageApprovalsDirectory);
+          const values = await Promise.all(entries
+            .filter((entry) => entry.endsWith(".json"))
+            .map((entry) => readJson<unknown>(path.join(changeStageApprovalsDirectory, entry))));
+          return values
+            .filter(isChangeStageApproval)
+            .filter((approval) => approval.changeId === changeId)
+            .map(createChangeStageApproval);
         } catch (error) {
           if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
           throw error;
