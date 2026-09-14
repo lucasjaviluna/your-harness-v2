@@ -1,4 +1,5 @@
-import { createAgentSession, SessionManager } from "@earendil-works/pi-coding-agent";
+import { access, readFile } from "node:fs/promises";
+import { createAgentSession, createReadToolDefinition, SessionManager } from "@earendil-works/pi-coding-agent";
 import type { ExecutionRequest, RuntimePort, RuntimeResult } from "@your-harness/application";
 import { buildPiExecutionPrompt } from "./pi-execution-prompt.js";
 import { createExecutionEnvironmentGuard, type ExecutionEnvironment, type ExecutionEnvironmentGuard } from "../execution-environment.js";
@@ -16,10 +17,29 @@ export class PiRuntimeAdapter implements RuntimePort {
     let session: Awaited<ReturnType<typeof createAgentSession>>["session"] | undefined;
 
     try {
+      const readTool = this.executionEnvironment?.capabilities.includes("workspace.read")
+        ? createReadToolDefinition(request.workspace, {
+          operations: {
+            access: async (absolutePath) => {
+              this.guard?.assertWorkspacePath(absolutePath, "read");
+              await access(absolutePath);
+            },
+            readFile: async (absolutePath) => {
+              this.guard?.assertWorkspacePath(absolutePath, "read");
+              const content = await readFile(absolutePath);
+              if (content.byteLength > 256 * 1024) {
+                throw new Error("Pi read tool refuses files larger than 256 KiB.");
+              }
+              return content;
+            },
+          },
+        })
+        : undefined;
+
       const created = await createAgentSession({
         cwd: request.workspace,
         ...(this.executionEnvironment?.capabilities.includes("workspace.read")
-          ? { tools: ["read"] }
+          ? { tools: ["read"], customTools: readTool ? [readTool as never] : [] }
           : { noTools: "all" }),
         sessionManager: SessionManager.inMemory()
       });

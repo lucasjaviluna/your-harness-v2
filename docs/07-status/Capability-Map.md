@@ -19,7 +19,7 @@
 | Execution eligibility policy | Implemented | Requires an approved Specification, can require normalized Change provenance through `runtime.requireSddChangeTraceability`, and the CLI denies SDD snapshot drift before `RuntimePort`. |
 | Project runtime configuration | Implemented (composition-level) | `.your-harness/config.yml` configures default runtime, SDD provider, SDD traceability and execution environment policy; the CLI composes it for real operational execution. |
 | Verification and evidence | Implemented (scoped durable contracts + CLI) | ADR-009 contracts bind VerificationPlan to one ExecutionTrace and Specification digest; CLI records Evidence, creates/evaluates plans and persists reports. CompletionAuthorization gates `WorkItem.complete()` through role-based HITM decisions. |
-| Pi workspace tools | Controlled read-only | Pi enables built-in `read` only when `workspace.read` is explicitly configured; edit/write/process/network/secret tools remain disabled. |
+| Pi workspace tools | Controlled read-only | Pi enables a guarded `read` tool only when `workspace.read` is explicitly configured; every path is checked and files over 256 KiB are rejected. Edit/write/process/network/secret tools remain disabled. |
 | MCP transport | Stub | Client/server interfaces and JSON-RPC skeleton exist; real stdio/HTTP transport is pending. |
 | Agent tools | Stub | CLI ToolExecutor currently reports simulated success. |
 | Workflow command/script steps | Stub | Placeholder execution only. |

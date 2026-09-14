@@ -15,6 +15,7 @@ const { prompt, dispose, createSession } = vi.hoisted(() => {
 
 vi.mock("@earendil-works/pi-coding-agent", () => ({
   createAgentSession: createSession,
+  createReadToolDefinition: vi.fn(() => ({ name: "read" })),
   SessionManager: {
     inMemory: vi.fn(() => ({})),
   },
@@ -67,14 +68,18 @@ describe("PiRuntimeAdapter", () => {
       capabilities: ["workspace.read"],
     });
 
-    await new PiRuntimeAdapter(environment).execute({
+    const result = await new PiRuntimeAdapter(environment).execute({
       objective: "Read the project",
       workspace: "/workspace/project",
       engineeringContext: { knowledge: [], requirements: [], engineeringConstraints: [] },
       executionConstraints: [],
     });
 
-    expect(createSession).toHaveBeenCalledWith(expect.objectContaining({ tools: ["read"] }));
+    expect(result.status).toBe("completed");
+    expect(createSession).toHaveBeenCalledWith(expect.objectContaining({
+      tools: ["read"],
+      customTools: [expect.objectContaining({ name: "read" })],
+    }));
     expect(createSession).toHaveBeenCalledWith(expect.not.objectContaining({ noTools: "all" }));
   });
 });

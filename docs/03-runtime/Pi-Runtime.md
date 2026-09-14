@@ -7,8 +7,9 @@ The `RuntimeEnvironment` composition root owns a `RuntimeRegistry`, an `Executio
 ## Safety status
 
 By default the adapter creates Pi sessions with `noTools: "all"`. When the project
-explicitly grants `workspace.read`, it enables only Pi's built-in `read` tool. Edit,
-write, process, network and secret tools remain disabled.
+explicitly grants `workspace.read`, it enables only a guarded `read` tool. Each file
+access is checked against the allowed workspace paths and files larger than 256 KiB
+are rejected. Edit, write, process, network and secret tools remain disabled.
 
 Future tool enablement must consume the guard for capability, network, secret and
 confirmation checks, and add adapter-specific enforcement tests before expanding
