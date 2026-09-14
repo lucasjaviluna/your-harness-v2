@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 
-const { prompt, dispose, createSession } = vi.hoisted(() => {
+const { prompt, dispose, createSession, createReadTool } = vi.hoisted(() => {
   const prompt = vi.fn(async () => undefined);
   const dispose = vi.fn();
   const createSession = vi.fn(async () => ({
@@ -10,12 +13,13 @@ const { prompt, dispose, createSession } = vi.hoisted(() => {
       dispose,
     },
   }));
-  return { prompt, dispose, createSession };
+  const createReadTool = vi.fn((_workspace: string, options: { operations: Record<string, (...args: never[]) => Promise<unknown>> }) => ({ name: "read", operations: options.operations }));
+  return { prompt, dispose, createSession, createReadTool };
 });
 
 vi.mock("@earendil-works/pi-coding-agent", () => ({
   createAgentSession: createSession,
-  createReadToolDefinition: vi.fn(() => ({ name: "read" })),
+  createReadToolDefinition: createReadTool,
   SessionManager: {
     inMemory: vi.fn(() => ({})),
   },
@@ -29,6 +33,7 @@ describe("PiRuntimeAdapter", () => {
     prompt.mockClear();
     dispose.mockClear();
     createSession.mockClear();
+    createReadTool.mockClear();
   });
 
   it("projects an ExecutionRequest into the Pi prompt and returns the result", async () => {
@@ -81,5 +86,37 @@ describe("PiRuntimeAdapter", () => {
       customTools: [expect.objectContaining({ name: "read" })],
     }));
     expect(createSession).toHaveBeenCalledWith(expect.not.objectContaining({ noTools: "all" }));
+  });
+
+  it("correlaciona una lectura Pi con la ExecutionTrace operacional", async () => {
+    const workspace = await mkdtemp(path.join(os.tmpdir(), "yh-pi-audit-"));
+    try {
+      const filePath = path.join(workspace, "README.md");
+      await writeFile(filePath, "auditable");
+      const recorder = { record: vi.fn(async () => undefined) };
+      const environment = createExecutionEnvironment({
+        workspace: { root: workspace },
+        capabilities: ["workspace.read"],
+      });
+
+      await new PiRuntimeAdapter(environment, recorder, "trace-1").execute({
+        objective: "Read the project",
+        workspace,
+        engineeringContext: { knowledge: [], requirements: [], engineeringConstraints: [] },
+        executionConstraints: [],
+      });
+
+      const tool = createReadTool.mock.results[0]?.value as { operations: { readFile: (absolutePath: string) => Promise<Buffer> } };
+      await tool.operations.readFile(filePath);
+
+      expect(recorder.record).toHaveBeenCalledWith(expect.objectContaining({
+        executionTraceId: "trace-1",
+        toolName: "read",
+        outcome: "allowed",
+        bytesRead: 9,
+      }));
+    } finally {
+      await rm(workspace, { recursive: true, force: true });
+    }
   });
 });

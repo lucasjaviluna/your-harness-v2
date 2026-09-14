@@ -34,6 +34,7 @@ src/cli
 - `CompletionAuthorization` es la única ruta de Application que puede completar un WorkItem; la CLI exige report, actor, rol y motivo explícitos, y aplica una política HITM de decisiones permitidas por rol.
 - La CLI ya expone `work start` y `work authorize`; la autorización exige un VerificationReport y registra actor, motivo y decisión antes de completar.
 - `audit trace <execution-trace-id>` inspecciona una ejecución junto con sus `ToolInvocationTrace` correlacionadas; la auditoría sigue separada de Evidence.
+- `audit work-item <work-item-id>` permite consultar todas las ejecuciones del WorkItem; ambos comandos aceptan `--from`, `--to` y `--json`.
 
 ## Instalación y verificación
 

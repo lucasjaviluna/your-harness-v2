@@ -21,5 +21,6 @@ Local operational persistence is now wired into the CLI: `work create` and `work
 12. ~~Add a minimum HITM policy for CompletionAuthorization.~~ **Completed:** actor identity and role are explicit, roles have allowed decisions, and the immutable authorization record preserves the audit fields.
 13. ~~Enable one Pi tool under `ExecutionEnvironmentGuard`.~~ **Completed narrowly:** Pi exposes a guarded `read` tool when `workspace.read` is explicitly configured, validates every path, limits files to 256 KiB and persists invocation traces; broader tools remain gated.
 14. ~~Expose operational audit queries for executions and tool invocations.~~ **Completed:** `audit trace` correlates `ToolInvocationTrace` records with an `ExecutionTrace` without promoting them to Evidence.
+15. ~~Add WorkItem and temporal filters to operational audit queries.~~ **Completed:** `audit work-item` filters executions by WorkItem and both audit queries support inclusive ISO-8601 `--from`/`--to` ranges.
 
 Roadmap items are directional, not commitments; accepted architectural changes belong in ADRs.
