@@ -50,6 +50,7 @@ export interface LocalOperationalStore {
 export interface ToolInvocationRepository {
   record(trace: ToolInvocationTrace): Promise<void>;
   findByRuntimeId(runtimeId: string): Promise<ReadonlyArray<ToolInvocationTrace>>;
+  findByExecutionTraceId(executionTraceId: string): Promise<ReadonlyArray<ToolInvocationTrace>>;
 }
 
 export interface EvidenceRepository {
@@ -431,6 +432,16 @@ export const createLocalOperationalStore = (
           const entries = await readdir(toolInvocationsDirectory);
           const values = await Promise.all(entries.filter((entry) => entry.endsWith(".json")).map((entry) => readJson<unknown>(path.join(toolInvocationsDirectory, entry))));
           return values.filter((value): value is ToolInvocationTrace => !!value && typeof value === "object" && (value as Partial<ToolInvocationTrace>).runtimeId === runtimeId);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+          throw error;
+        }
+      },
+      async findByExecutionTraceId(executionTraceId) {
+        try {
+          const entries = await readdir(toolInvocationsDirectory);
+          const values = await Promise.all(entries.filter((entry) => entry.endsWith(".json")).map((entry) => readJson<unknown>(path.join(toolInvocationsDirectory, entry))));
+          return values.filter((value): value is ToolInvocationTrace => !!value && typeof value === "object" && (value as Partial<ToolInvocationTrace>).executionTraceId === executionTraceId);
         } catch (error) {
           if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
           throw error;

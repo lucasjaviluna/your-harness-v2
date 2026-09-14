@@ -12,6 +12,7 @@ export class PiRuntimeAdapter implements RuntimePort {
   constructor(
     private readonly executionEnvironment?: ExecutionEnvironment,
     private readonly toolInvocationRecorder?: ToolInvocationRecorder,
+    private readonly executionTraceId?: string,
   ) {
     this.guard = executionEnvironment ? createExecutionEnvironmentGuard(executionEnvironment) : undefined;
   }
@@ -28,6 +29,7 @@ export class PiRuntimeAdapter implements RuntimePort {
       await this.toolInvocationRecorder.record({
         id: randomUUID(),
         runtimeId: "pi",
+        executionTraceId: this.executionTraceId,
         sessionId: input.sessionId,
         toolName: "read",
         requestedPath: input.resolvedPath,

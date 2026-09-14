@@ -31,6 +31,7 @@ export interface ProjectRuntimeEnvironmentOptions {
   /** Sobrescribe sólo esta ejecución; si falta se usa runtime.defaultRuntime. */
   readonly runtime?: RuntimeName;
   readonly toolInvocationRecorder?: ToolInvocationRecorder;
+  readonly executionTraceId?: string;
 }
 
 const createConfiguredSddProvider = (
@@ -84,6 +85,7 @@ export const createProjectRuntimeEnvironment = (
       workspace: options.workspace,
       executionEnvironment,
       toolInvocationRecorder: options.toolInvocationRecorder,
+      executionTraceId: options.executionTraceId,
     }),
     sddProvider: createConfiguredSddProvider(options.config.runtime.sddProvider),
     executionEligibilityPolicy: createExecutionEligibilityPolicy({

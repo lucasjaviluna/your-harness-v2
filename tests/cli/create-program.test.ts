@@ -60,6 +60,7 @@ describe("createCliProgram", () => {
         "work-item",
         "evidence",
         "verification",
+        "audit",
       ]),
     );
 

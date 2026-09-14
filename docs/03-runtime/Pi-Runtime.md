@@ -12,7 +12,8 @@ access is checked against the allowed workspace paths and files larger than 256 
 are rejected. Edit, write, process, network and secret tools remain disabled.
 
 Each read operation emits a durable `ToolInvocationTrace` when the CLI supplies the
-local operational recorder. Allowed, denied and failed outcomes are recorded with
+local operational recorder. When available, it also carries the current
+`executionTraceId` for operational correlation. Allowed, denied and failed outcomes are recorded with
 the resolved path, byte count when available, session and timestamp.
 
 Future tool enablement must consume the guard for capability, network, secret and

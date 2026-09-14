@@ -68,6 +68,7 @@ export interface RuntimeEnvironmentOptions {
   readonly workspace?: string;
   readonly executionEnvironment?: ExecutionEnvironment;
   readonly toolInvocationRecorder?: ToolInvocationRecorder;
+  readonly executionTraceId?: string;
 }
 
 /** Composition root configurable para seleccionar un RuntimePort disponible. */
@@ -83,7 +84,7 @@ export const createRuntimeEnvironment = (
     registry.register("fake", new FakeRuntimeAdapter());
   }
   if (options.includePi && !registry.has("pi")) {
-    registry.register("pi", new PiRuntimeAdapter(executionEnvironment, options.toolInvocationRecorder));
+    registry.register("pi", new PiRuntimeAdapter(executionEnvironment, options.toolInvocationRecorder, options.executionTraceId));
   }
 
   const defaultRuntime = options.defaultRuntime ?? "fake";

@@ -128,11 +128,13 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
     .action(async (workItemId: string, options: { workspace: string; constraint?: string; runtime?: string }) => {
       try {
         const store = createLocalOperationalStore({ workspace: options.workspace });
+        const executionTraceId = randomUUID();
         const projectEnvironment = createProjectRuntimeEnvironment({
           config,
           workspace: options.workspace,
           runtime: options.runtime,
           toolInvocationRecorder: store.toolInvocations,
+          executionTraceId,
         });
         const { runtimeEnvironment } = projectEnvironment;
         const selectedRuntime = runtimeEnvironment.resolveName(options.runtime);
@@ -162,7 +164,7 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
           workspace: options.workspace,
           executionConstraints: options.constraint ? [options.constraint] : [],
           trace: {
-            id: randomUUID(),
+            id: executionTraceId,
             runtimeId: selectedRuntime,
             change: source.change ? { id: source.change.id, provenance: source.change.provenance } : undefined,
             taskReferences: source.taskReferences,

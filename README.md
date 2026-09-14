@@ -33,6 +33,7 @@ src/cli
 - `work bind` conserva el digest de la Specification aprobada y `work execute` rechaza drift SDD antes de invocar el runtime; un cambio exige volver a enlazar el WorkItem.
 - `CompletionAuthorization` es la única ruta de Application que puede completar un WorkItem; la CLI exige report, actor, rol y motivo explícitos, y aplica una política HITM de decisiones permitidas por rol.
 - La CLI ya expone `work start` y `work authorize`; la autorización exige un VerificationReport y registra actor, motivo y decisión antes de completar.
+- `audit trace <execution-trace-id>` inspecciona una ejecución junto con sus `ToolInvocationTrace` correlacionadas; la auditoría sigue separada de Evidence.
 
 ## Instalación y verificación
 

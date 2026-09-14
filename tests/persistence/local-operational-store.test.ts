@@ -181,6 +181,7 @@ describe("LocalOperationalStore", () => {
     await store.toolInvocations.record({
       id: "tool-read-1",
       runtimeId: "pi",
+      executionTraceId: "trace-1",
       sessionId: "session-1",
       toolName: "read",
       requestedPath: "src/index.ts",
@@ -192,5 +193,7 @@ describe("LocalOperationalStore", () => {
 
     await expect(createLocalOperationalStore({ workspace }).toolInvocations.findByRuntimeId("pi"))
       .resolves.toMatchObject([{ toolName: "read", outcome: "allowed", bytesRead: 42 }]);
+    await expect(createLocalOperationalStore({ workspace }).toolInvocations.findByExecutionTraceId("trace-1"))
+      .resolves.toMatchObject([{ id: "tool-read-1", executionTraceId: "trace-1" }]);
   });
 });

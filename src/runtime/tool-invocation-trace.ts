@@ -3,6 +3,8 @@ export type ToolInvocationOutcome = "allowed" | "denied" | "failed";
 export interface ToolInvocationTrace {
   readonly id: string;
   readonly runtimeId: string;
+  /** Correlación operacional opcional; no convierte esta traza en Evidence. */
+  readonly executionTraceId?: string;
   readonly sessionId?: string;
   readonly toolName: string;
   readonly requestedPath?: string;
