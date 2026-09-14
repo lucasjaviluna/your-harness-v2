@@ -199,6 +199,7 @@ const isCompletionAuthorization = (value: unknown): value is CompletionAuthoriza
     typeof authorization.executionTraceId === "string" &&
     typeof authorization.decision === "string" &&
     typeof authorization.authorizedBy === "string" &&
+    typeof authorization.authorizedByRole === "string" &&
     typeof authorization.reason === "string" &&
     typeof authorization.authorizedAt === "string"
   );

@@ -4,6 +4,7 @@ import { WorkItemStatus } from "@your-harness/domain";
 import type { ExecutionTraceRepository } from "../trace/execution-trace-repository.js";
 import type { VerificationReportRepository } from "../verification/verification-repositories.js";
 import { createCompletionAuthorization, type CompletionAuthorization } from "./completion-authorization.js";
+import { createCompletionAuthorizationPolicy, type CompletionAuthorizationPolicy } from "./completion-authorization-policy.js";
 import type { CompletionAuthorizationRepository } from "./completion-authorization-repository.js";
 import type { WorkItemRepository } from "../work-item/ports/work-item-repository.js";
 
@@ -19,10 +20,16 @@ export class CompleteWorkItemUseCase {
     private readonly traces: ExecutionTraceRepository,
     private readonly reports: VerificationReportRepository,
     private readonly authorizations: CompletionAuthorizationRepository,
+    private readonly authorizationPolicy: CompletionAuthorizationPolicy = createCompletionAuthorizationPolicy(),
   ) {}
 
   async execute(input: CompleteWorkItemInput): Promise<void> {
     const authorization = createCompletionAuthorization(input.authorization);
+    this.authorizationPolicy.authorize({
+      actor: authorization.authorizedBy,
+      role: authorization.authorizedByRole,
+      decision: authorization.decision,
+    });
     const workItem = await this.workItems.findById(input.workItemId);
     if (!workItem) throw new Error(`Work item '${input.workItemId.value}' not found.`);
     if (authorization.workItemId !== workItem.id.value) {

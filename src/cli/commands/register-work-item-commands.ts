@@ -91,9 +91,10 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
     .requiredOption("-r, --report <id>", "VerificationReport identifier")
     .requiredOption("-d, --decision <decision>", "authorize-completion, request-rework or require-further-review")
     .requiredOption("-b, --by <actor>", "Authorizing actor")
+    .requiredOption("--role <role>", "Actor role: engineer, reviewer, maintainer or owner")
     .requiredOption("--reason <text>", "Reason for the decision")
     .option("-w, --workspace <path>", "Workspace state location", process.cwd())
-    .action(async (workItemId: string, options: { report: string; decision: CompletionDecision; by: string; reason: string; workspace: string }) => {
+    .action(async (workItemId: string, options: { report: string; decision: CompletionDecision; by: string; role: "engineer" | "reviewer" | "maintainer" | "owner"; reason: string; workspace: string }) => {
       try {
         const store = createLocalOperationalStore({ workspace: options.workspace });
         const report = await store.verificationReports.findById(options.report);
@@ -107,6 +108,7 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
               executionTraceId: report?.executionTraceId ?? "",
               decision: options.decision,
               authorizedBy: options.by,
+              authorizedByRole: options.role,
               reason: options.reason,
               authorizedAt: new Date().toISOString(),
             },

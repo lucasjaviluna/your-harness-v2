@@ -49,9 +49,13 @@ yh work authorize login-work \
   --report report-cli \
   --decision authorize-completion \
   --by human-reviewer \
+  --role reviewer \
   --reason "Verification reviewed"
 ```
 
-`work authorize` validates the report/trace/WorkItem linkage and only then calls
-`WorkItem.complete()`. `request-rework` and `require-further-review` are recorded
-without changing WorkItem status.
+`work authorize` validates the report/trace/WorkItem linkage and applies the HITM
+policy before calling `WorkItem.complete()`. The actor identity and role are persisted
+in the immutable authorization record. By default, `engineer` may request rework or
+further review, while `reviewer`, `maintainer` and `owner` may also authorize
+completion. `request-rework` and `require-further-review` are recorded without
+changing WorkItem status.

@@ -151,6 +151,8 @@ describe("yh work execute", () => {
       "authorize-completion",
       "--by",
       "human-reviewer",
+      "--role",
+      "reviewer",
       "--reason",
       "Verification reviewed",
     );

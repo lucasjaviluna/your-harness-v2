@@ -3,6 +3,8 @@ export type CompletionAuthorizationDecision =
   | "request-rework"
   | "require-further-review";
 
+export type CompletionAuthorizationRole = "engineer" | "reviewer" | "maintainer" | "owner";
+
 /** Decisión operacional explícita; no es un estado del WorkItem. */
 export interface CompletionAuthorization {
   readonly id: string;
@@ -11,6 +13,7 @@ export interface CompletionAuthorization {
   readonly executionTraceId: string;
   readonly decision: CompletionAuthorizationDecision;
   readonly authorizedBy: string;
+  readonly authorizedByRole: CompletionAuthorizationRole;
   readonly reason: string;
   readonly authorizedAt: string;
 }
@@ -27,6 +30,7 @@ export const createCompletionAuthorization = (
   nonEmpty(input.verificationReportId, "verification report id");
   nonEmpty(input.executionTraceId, "execution trace id");
   nonEmpty(input.authorizedBy, "authorizedBy");
+  nonEmpty(input.authorizedByRole, "authorizedByRole");
   nonEmpty(input.reason, "reason");
   nonEmpty(input.authorizedAt, "authorizedAt");
   return { ...input };
