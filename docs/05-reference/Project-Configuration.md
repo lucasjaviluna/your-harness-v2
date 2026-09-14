@@ -16,7 +16,7 @@ runtime:
   # `fake` is the safe default. `pi` is enabled when selected here or by --runtime.
   defaultRuntime: fake
 
-  # Only `openspec` exists today and is read-only.
+  # Only `openspec` exists today as a read-only provider.
   sddProvider: openspec
 
   # Safe default. `external-command` is opt-in and requires an injected runner.
