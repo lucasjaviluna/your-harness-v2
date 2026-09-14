@@ -23,6 +23,8 @@ La aprobación de un Change es incremental: Proposal, Design, Task Plan y Apply 
 
 Application expone `ChangeStageApproval` y su repositorio para conservar cada decisión de forma inmutable. La aprobación queda ligada al digest y versión revisados; por eso una nueva proyección no puede reutilizar silenciosamente una aprobación anterior.
 
+`ChangeStageApprovalPolicy` impide saltar etapas y exige la cadena completa de aprobaciones compatibles con la versión y digest actuales. Una solicitud de rework bloquea el avance, pero se conserva como decisión HITM auditable.
+
 Cuando una ejecución necesita observabilidad, Application puede asociar referencias opacas de Change y tareas en un `ExecutionTrace`. La asociación se conserva fuera de los aggregates y del Runtime; ver [Operational traceability](Operational-Traceability.md).
 
 ## Spike OpenSpec
