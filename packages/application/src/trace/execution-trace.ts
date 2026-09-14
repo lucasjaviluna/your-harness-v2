@@ -24,6 +24,8 @@ export interface ExecutionTrace {
   readonly id: string;
   readonly workItemId: string;
   readonly specificationId: string;
+  readonly selectedRequirementIds?: ReadonlyArray<string>;
+  readonly selectedScenarioIds?: ReadonlyArray<string>;
   readonly specificationSnapshot?: SddSpecificationSnapshot;
   readonly change?: SddChangeReference;
   readonly taskReferences: ReadonlyArray<SddProvenance>;

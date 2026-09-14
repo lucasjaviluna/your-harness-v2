@@ -21,6 +21,7 @@
 | Verification and evidence | Implemented (scoped durable contracts + CLI) | ADR-009 contracts bind VerificationPlan to one ExecutionTrace and Specification digest; CLI records Evidence, creates/evaluates plans and persists reports. CompletionAuthorization gates `WorkItem.complete()` through role-based HITM decisions. |
 | Pi workspace tools | Controlled read-only | Pi enables a guarded `read` tool only when `workspace.read` is explicitly configured; every path is checked, files over 256 KiB are rejected and invocations are auditable. Edit/write/process/network/secret tools remain disabled. |
 | Operational audit queries | Implemented (execution trace + tool correlation) | `audit trace` shows an `ExecutionTrace` and independently persisted `ToolInvocationTrace` records correlated by `executionTraceId`; it does not promote tool traces to Evidence. |
+| HITM execution scope | Implemented (initial hybrid contract) | `work select` persists a human-confirmed Requirement/Scenario scope and `work execute` validates its Specification digest before execution. |
 | MCP transport | Stub | Client/server interfaces and JSON-RPC skeleton exist; real stdio/HTTP transport is pending. |
 | Agent tools | Stub | CLI ToolExecutor currently reports simulated success. |
 | Workflow command/script steps | Stub | Placeholder execution only. |

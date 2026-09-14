@@ -4,6 +4,7 @@ import path from "node:path";
 import type {
   Evidence,
   CompletionAuthorization,
+  ExecutionScopeSelection,
   CompletionAuthorizationRepository,
   ExecutionTrace,
   ExecutionTraceRepository,
@@ -44,6 +45,7 @@ export interface LocalOperationalStore {
   readonly verificationPlans: VerificationPlanRepository;
   readonly verificationReports: VerificationReportRepository;
   readonly completionAuthorizations: CompletionAuthorizationRepository;
+  readonly executionScopeSelections: ExecutionScopeSelectionRepository;
   readonly toolInvocations: ToolInvocationRepository;
 }
 
@@ -51,6 +53,11 @@ export interface ToolInvocationRepository {
   record(trace: ToolInvocationTrace): Promise<void>;
   findByRuntimeId(runtimeId: string): Promise<ReadonlyArray<ToolInvocationTrace>>;
   findByExecutionTraceId(executionTraceId: string): Promise<ReadonlyArray<ToolInvocationTrace>>;
+}
+
+export interface ExecutionScopeSelectionRepository {
+  save(selection: ExecutionScopeSelection): Promise<void>;
+  findByWorkItemId(workItemId: string): Promise<ExecutionScopeSelection | null>;
 }
 
 export interface EvidenceRepository {
@@ -244,6 +251,7 @@ export const createLocalOperationalStore = (
   const verificationPlansDirectory = path.join(root, "verification-plans");
   const verificationReportsDirectory = path.join(root, "verification-reports");
   const completionAuthorizationsDirectory = path.join(root, "completion-authorizations");
+  const executionScopeSelectionsDirectory = path.join(root, "execution-scope-selections");
   const toolInvocationsDirectory = path.join(root, "tool-invocations");
 
   return {
@@ -421,6 +429,17 @@ export const createLocalOperationalStore = (
           if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
           throw error;
         }
+      },
+    },
+    executionScopeSelections: {
+      async save(selection) {
+        const filePath = path.join(executionScopeSelectionsDirectory, fileNameFor(selection.workItemId));
+        await writeJson(filePath, selection);
+      },
+      async findByWorkItemId(workItemId) {
+        const value = await readJson<unknown>(path.join(executionScopeSelectionsDirectory, fileNameFor(workItemId)));
+        if (!value) return null;
+        return value as ExecutionScopeSelection;
       },
     },
     toolInvocations: {

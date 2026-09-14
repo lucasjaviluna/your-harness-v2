@@ -20,6 +20,7 @@ export interface ExecuteWorkItemInput {
   readonly knowledge?: ReadonlyArray<EngineeringKnowledge>;
   readonly engineeringConstraints?: ReadonlyArray<string>;
   readonly executionConstraints?: ReadonlyArray<string>;
+  readonly selectedRequirementIds?: ReadonlyArray<string>;
   readonly traceability?: {
     readonly change?: SddChangeReference;
   };
@@ -54,6 +55,7 @@ export class ExecuteWorkItemUseCase
         specification: input.specification,
         knowledge: input.knowledge,
         engineeringConstraints: input.engineeringConstraints,
+        selectedRequirementIds: input.selectedRequirementIds,
       }),
       executionConstraints: [...(input.executionConstraints ?? [])],
     };

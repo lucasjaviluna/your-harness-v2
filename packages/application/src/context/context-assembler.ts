@@ -10,6 +10,7 @@ export interface ContextAssemblyInput {
   readonly specification: Specification;
   readonly knowledge?: ReadonlyArray<EngineeringKnowledge>;
   readonly engineeringConstraints?: ReadonlyArray<string>;
+  readonly selectedRequirementIds?: ReadonlyArray<string>;
 }
 
 export interface ContextAssembler {
@@ -26,7 +27,7 @@ export interface ContextAssembler {
  * acoplar el runtime al modelo de dominio.
  */
 export const createContextAssembler = (): ContextAssembler => ({
-  assemble({ specification, knowledge = [], engineeringConstraints = [] }) {
+  assemble({ specification, knowledge = [], engineeringConstraints = [], selectedRequirementIds }) {
     if (specification.status !== SpecificationStatus.Approved) {
       throw new Error(
         "Solo las especificaciones aprobadas pueden convertirse en un EngineeringContext."
@@ -35,7 +36,9 @@ export const createContextAssembler = (): ContextAssembler => ({
 
     return {
       knowledge: [...knowledge],
-      requirements: specification.requirements.map((requirement) => ({
+      requirements: specification.requirements.filter((requirement) =>
+        !selectedRequirementIds || selectedRequirementIds.includes(requirement.id.value),
+      ).map((requirement) => ({
         name: requirement.name.value,
         normativeStatement: requirement.normativeStatement.value,
         scenarios: requirement.scenarios.map((scenario) => ({

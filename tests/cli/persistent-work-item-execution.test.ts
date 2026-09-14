@@ -74,6 +74,20 @@ describe("yh work execute", () => {
     await expect(boundStore.executionBindings.findByWorkItemId(new WorkItemId("login-work"))).resolves.toMatchObject({
       specificationSnapshotDigest: expect.stringMatching(/^[a-f0-9]{64}$/),
     });
+    await runYh(
+      workspace,
+      "work",
+      "select",
+      "login-work",
+      "--requirement",
+      "authenticate-users",
+      "--by",
+      "human-reviewer",
+      "--role",
+      "reviewer",
+      "--reason",
+      "Scope reviewed",
+    );
     const output = await runYh(workspace, "work", "execute", "login-work", "--runtime", "fake");
 
     expect(output).toContain("Work item completed");
@@ -92,6 +106,7 @@ describe("yh work execute", () => {
       change: { id: "add-login" },
       runtimeId: "fake",
       runtimeResult: { status: "completed" },
+      selectedRequirementIds: ["authenticate-users"],
     });
     expect(trace.specificationSnapshot.contentDigest).toMatch(/^[a-f0-9]{64}$/);
     expect(trace.taskReferences).toHaveLength(1);

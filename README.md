@@ -35,6 +35,7 @@ src/cli
 - La CLI ya expone `work start` y `work authorize`; la autorización exige un VerificationReport y registra actor, motivo y decisión antes de completar.
 - `audit trace <execution-trace-id>` inspecciona una ejecución junto con sus `ToolInvocationTrace` correlacionadas; la auditoría sigue separada de Evidence.
 - `audit work-item <work-item-id>` permite consultar todas las ejecuciones del WorkItem; ambos comandos aceptan `--from`, `--to` y `--json`.
+- `work select <work-item-id>` registra el alcance HITM confirmado de Requirements y Scenarios; `work execute` exige esa selección y rechaza su digest si quedó obsoleto.
 
 ## Instalación y verificación
 

@@ -20,10 +20,13 @@ export interface ExecuteStoredWorkItemInput {
   readonly specificationId: SpecificationId;
   readonly workspace: string;
   readonly executionConstraints?: ReadonlyArray<string>;
+  readonly selectedRequirementIds?: ReadonlyArray<string>;
   readonly trace?: {
     readonly id: string;
     readonly runtimeId: string;
     readonly specificationSnapshot?: SddSpecificationSnapshot;
+    readonly selectedRequirementIds?: ReadonlyArray<string>;
+    readonly selectedScenarioIds?: ReadonlyArray<string>;
     readonly change?: SddChangeReference;
     readonly taskReferences?: ReadonlyArray<SddProvenance>;
   };
@@ -60,6 +63,7 @@ export class ExecuteStoredWorkItemUseCase {
       specification,
       workspace: input.workspace,
       executionConstraints: input.executionConstraints,
+      selectedRequirementIds: input.selectedRequirementIds,
       traceability: input.trace ? { change: input.trace.change } : undefined,
     });
 
@@ -71,6 +75,8 @@ export class ExecuteStoredWorkItemUseCase {
         id: input.trace.id,
         workItemId: workItem.id.value,
         specificationId: specification.id.value,
+        selectedRequirementIds: input.selectedRequirementIds,
+        selectedScenarioIds: input.trace.selectedScenarioIds,
         specificationSnapshot: input.trace.specificationSnapshot,
         change: input.trace.change,
         taskReferences: [...(input.trace.taskReferences ?? [])],

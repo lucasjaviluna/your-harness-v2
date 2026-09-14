@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { Command } from "commander";
 import chalk from "chalk";
-import { CompleteWorkItemUseCase, ExecuteStoredWorkItemUseCase, InMemoryRepository } from "@your-harness/application";
+import { CompleteWorkItemUseCase, createExecutionScopeSelection, ExecuteStoredWorkItemUseCase, InMemoryRepository, type ExecutionScopeSelectionRole } from "@your-harness/application";
 import { IntentId, Specification, SpecificationId, WorkItem, WorkItemId, WorkItemTitle } from "@your-harness/domain";
 import { createLocalOperationalStore } from "../../persistence/index.js";
 import { createProjectRuntimeEnvironment } from "../../runtime/index.js";
@@ -87,6 +87,44 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
       }
     });
 
+  workItemCommand.command("select <workItemId>").description("Confirmar el alcance de Requirements y Scenarios para ejecución")
+    .requiredOption("-r, --requirement <id>", "Requirement seleccionado", (value, previous: string[] = []) => [...previous, value])
+    .option("-s, --scenario <id>", "Scenario seleccionado", (value, previous: string[] = []) => [...previous, value])
+    .requiredOption("-b, --by <actor>", "Actor que confirma el alcance")
+    .requiredOption("--role <role>", "Rol HITM: reviewer, maintainer u owner")
+    .requiredOption("--reason <text>", "Motivo de la confirmación")
+    .option("-w, --workspace <path>", "Ubicación del estado del workspace", process.cwd())
+    .action(async (workItemId: string, options: { requirement?: string[]; scenario?: string[]; by: string; role: ExecutionScopeSelectionRole; reason: string; workspace: string }) => {
+      try {
+        const store = createLocalOperationalStore({ workspace: options.workspace });
+        const binding = await store.executionBindings.findByWorkItemId(new WorkItemId(workItemId));
+        if (!binding) throw new Error(`WorkItem '${workItemId}' no tiene un binding SDD.`);
+        const environment = createProjectRuntimeEnvironment({ config, workspace: options.workspace });
+        const source = resolveExecutionSource(await environment.sddProvider.readProject({ root: options.workspace }), binding);
+        const requirementIds = options.requirement ?? [];
+        const scenarioIds = options.scenario ?? [];
+        const requirements = new Set(source.specification.requirements.map((item) => item.id.value));
+        if (requirementIds.some((id) => !requirements.has(id))) throw new Error("La selección contiene un Requirement que no pertenece a la Specification.");
+        const scenarios = new Set(source.specification.requirements.flatMap((item) => item.scenarios.map((scenario) => scenario.id.value)));
+        if (scenarioIds.some((id) => !scenarios.has(id))) throw new Error("La selección contiene un Scenario que no pertenece a la Specification.");
+        const selectedScenarioIds = new Set(source.specification.requirements
+          .filter((item) => requirementIds.includes(item.id.value))
+          .flatMap((item) => item.scenarios.map((scenario) => scenario.id.value)));
+        if (scenarioIds.some((id) => !selectedScenarioIds.has(id))) throw new Error("Cada Scenario seleccionado debe pertenecer a un Requirement seleccionado.");
+        await store.executionScopeSelections.save(createExecutionScopeSelection({
+          id: randomUUID(), workItemId, specificationId: source.specification.id.value,
+          specificationSnapshotDigest: source.specificationSnapshot.contentDigest,
+          requirementIds, scenarioIds, confirmedBy: options.by, confirmedByRole: options.role,
+          reason: options.reason, confirmedAt: new Date().toISOString(),
+        }));
+        console.log(chalk.green(`✓ Alcance confirmado para '${workItemId}' por '${options.by}' (${options.role})`));
+      } catch (error) {
+        console.log(chalk.red("✗ Confirmación de alcance fallida:"));
+        console.log(chalk.red((error as Error).message));
+        io.setExitCode(1);
+      }
+    });
+
   workItemCommand.command("authorize <workItemId>").description("Apply an explicit verification decision to a persisted WorkItem")
     .requiredOption("-r, --report <id>", "VerificationReport identifier")
     .requiredOption("-d, --decision <decision>", "authorize-completion, request-rework or require-further-review")
@@ -145,9 +183,14 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
         const workItemIdValue = new WorkItemId(workItemId);
         const binding = await store.executionBindings.findByWorkItemId(workItemIdValue);
         if (!binding) throw new Error(`Work item '${workItemId}' has no persistent SDD execution binding.`);
+        const selection = await store.executionScopeSelections.findByWorkItemId(workItemId);
+        if (!selection) throw new Error(`Work item '${workItemId}' has no HITM-confirmed execution scope; run 'work select' first.`);
         const sddProject = await projectEnvironment.sddProvider.readProject({ root: options.workspace });
         const source = resolveExecutionSource(sddProject, binding);
         assertSpecificationSnapshotMatchesBinding(binding, source.specificationSnapshot);
+        if (selection.specificationId !== source.specification.id.value || selection.specificationSnapshotDigest !== source.specificationSnapshot.contentDigest) {
+          throw new Error(`Execution scope for '${workItemId}' is stale; confirm a new scope before execution.`);
+        }
         const specifications = new InMemoryRepository<Specification, SpecificationId>();
         await specifications.save(source.specification);
         const useCase = new ExecuteStoredWorkItemUseCase(
@@ -163,12 +206,15 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
           specificationId: source.specification.id,
           workspace: options.workspace,
           executionConstraints: options.constraint ? [options.constraint] : [],
+          selectedRequirementIds: selection.requirementIds,
           trace: {
             id: executionTraceId,
             runtimeId: selectedRuntime,
             change: source.change ? { id: source.change.id, provenance: source.change.provenance } : undefined,
             taskReferences: source.taskReferences,
             specificationSnapshot: source.specificationSnapshot,
+            selectedRequirementIds: selection.requirementIds,
+            selectedScenarioIds: selection.scenarioIds,
           },
         });
         if (result.status === "completed") {
