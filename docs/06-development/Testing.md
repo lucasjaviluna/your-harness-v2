@@ -22,7 +22,7 @@ Current tests cover:
 - `ExecuteWorkItemUseCase` delegation through `FakeRuntimeAdapter`;
 - the complete repository-backed Core flow through a `FakeRuntimePort`;
 - Pi prompt projection, result mapping and session disposal;
-- CLI composition and the persistent `work` flow both in-process and as a child process;
+- CLI composition and the persistent `work` plus Evidence/Verification flow both in-process and as a child process;
 - SDD projection, durable traceability, Evidence/Verification evaluation and CompletionAuthorization.
 
 The dedicated Runtime Boundary test lives under `tests/runtime/` and validates the first executable engineering slice: approved Specification + WorkItem → `ExecuteWorkItemUseCase` → `ExecutionRequest` → fake runtime → `RuntimeResult`.

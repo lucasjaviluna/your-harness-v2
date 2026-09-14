@@ -58,6 +58,8 @@ describe("createCliProgram", () => {
         "workflow",
         "spec",
         "work-item",
+        "evidence",
+        "verification",
       ]),
     );
 

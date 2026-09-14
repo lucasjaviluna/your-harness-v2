@@ -44,3 +44,9 @@ validates report/trace/WorkItem linkage, accepts `verified` or explicit
 `requires-human-review` outcomes, and is the only path that calls `WorkItem.complete()`.
 `request-rework` and `require-further-review` are persisted decisions that leave the
 WorkItem unchanged.
+
+The durable flow is also operable from the CLI. `evidence record` registers an
+observation against an existing trace, `verification plan create` selects criteria
+using `id:subject-kind:subject-id:evidence-kind`, and `verification evaluate` loads
+the plan, trace and scoped Evidence before persisting the report. The CLI does not
+bypass the Application evaluator or authorize completion implicitly.

@@ -7,7 +7,7 @@
 3. ~~Define a neutral execution-environment policy for workspace, tools, network, secrets and confirmations before enabling runtime tools.~~ **Completed as a contract:** enforcement and tool adapters remain pending.
 4. ~~Define the first physical `SddProvider` contract and implement a read-only provider spike.~~ **Completed:** the neutral port and the local read-only OpenSpec adapter are implemented and selected through project configuration; write workflows remain pending.
 
-Local operational persistence is now wired into the CLI: `work create` and `work bind` create durable state, while `work execute` resolves current provider-owned SDD material and persists a trace. The next increment is CLI UX for Evidence/VerificationPlan/VerificationReport and an authoritative source beyond the read-only OpenSpec projection.
+Local operational persistence is now wired into the CLI: `work create` and `work bind` create durable state, `work execute` resolves current provider-owned SDD material and persists a trace, and the Evidence/VerificationPlan/VerificationReport cycle is available through CLI commands. The next increment is SDD drift protection and an authoritative source beyond the read-only OpenSpec projection.
 
 ## Later
 
@@ -17,5 +17,6 @@ Local operational persistence is now wired into the CLI: `work create` and `work
 8. ~~Introduce `ExecutionEligibilityPolicy` when a second concrete eligibility rule exists.~~ **Completed:** approved Specification is explicit and optional SDD Change traceability can be required before runtime execution.
 9. ~~Define Verification/Evidence before interpreting runtime completion as engineering completion.~~ **Scoped contracts, local durability, deterministic evaluation and explicit authorization implemented:** ADR-009 binds plans to one trace and Specification digest, filters Evidence to that execution, produces conservative reports and gates `WorkItem.complete()` through `CompletionAuthorization` and `work authorize`.
 10. Implement real MCP transport and replace simulated tools and workflow steps with guarded implementations.
+11. Add SDD snapshot/digest drift detection before execution and require rebind or reauthorization when the approved projection changes.
 
 Roadmap items are directional, not commitments; accepted architectural changes belong in ADRs.

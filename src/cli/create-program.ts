@@ -11,6 +11,7 @@ import { registerSkillCommands } from "./commands/register-skill-commands.js";
 import { registerSpecCommands } from "./commands/register-spec-commands.js";
 import { registerWorkflowCommands } from "./commands/register-workflow-commands.js";
 import { registerWorkItemCommands } from "./commands/register-work-item-commands.js";
+import { registerVerificationCommands } from "./commands/register-verification-commands.js";
 import type { CliContext } from "./cli-context.js";
 import { createCliAgentRuntime } from "./composition/create-agent-runtime.js";
 import { createPluginLoader } from "../plugins/loader.js";
@@ -54,6 +55,7 @@ export const createCliProgram = (
   registerWorkflowCommands(program, context, agentRuntime);
   registerSpecCommands(program, context);
   registerWorkItemCommands(program, context);
+  registerVerificationCommands(program, context);
 
   const pluginManager = createPluginManager(createPluginLoader());
   registerPluginCommands(program, context, pluginManager);

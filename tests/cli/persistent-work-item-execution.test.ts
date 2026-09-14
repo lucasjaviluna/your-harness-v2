@@ -92,17 +92,49 @@ describe("yh work execute", () => {
     expect(trace.specificationSnapshot.contentDigest).toMatch(/^[a-f0-9]{64}$/);
     expect(trace.taskReferences).toHaveLength(1);
 
-    const store = createLocalOperationalStore({ workspace });
-    await store.verificationReports.save({
-      id: "report-cli",
-      planId: "plan-cli",
-      executionTraceId: trace.id,
-      specificationId: trace.specificationId,
-      specificationSnapshotDigest: trace.specificationSnapshot.contentDigest,
-      outcome: "verified",
-      criteria: [],
-      createdAt: "2026-09-13T00:02:00.000Z",
-    });
+    const requirementId = trace.specificationSnapshot.requirementIds[0];
+    await runYh(
+      workspace,
+      "evidence",
+      "record",
+      "evidence-cli",
+      "--trace",
+      trace.id,
+      "--subject-kind",
+      "requirement",
+      "--subject-id",
+      requirementId,
+      "--kind",
+      "test-result",
+      "--outcome",
+      "passed",
+      "--summary",
+      "Authentication tests passed",
+    );
+    await runYh(
+      workspace,
+      "verification",
+      "plan",
+      "create",
+      "plan-cli",
+      "--trace",
+      trace.id,
+      "--specification",
+      trace.specificationId,
+      "--digest",
+      trace.specificationSnapshot.contentDigest,
+      "--criterion",
+      `authenticate:requirement:${requirementId}:test-result`,
+    );
+    const verificationOutput = await runYh(
+      workspace,
+      "verification",
+      "evaluate",
+      "plan-cli",
+      "--report",
+      "report-cli",
+    );
+    expect(verificationOutput).toContain("outcome 'verified'");
     await runYh(workspace, "work", "start", "login-work");
     const authorizationOutput = await runYh(
       workspace,
@@ -119,6 +151,7 @@ describe("yh work execute", () => {
       "Verification reviewed",
     );
     expect(authorizationOutput).toContain("Decision 'authorize-completion' recorded");
+    const store = createLocalOperationalStore({ workspace });
     await expect(store.workItems.findById(new WorkItemId("login-work"))).resolves.toMatchObject({
       status: WorkItemStatus.Done,
     });

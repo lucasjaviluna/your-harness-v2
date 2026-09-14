@@ -12,8 +12,31 @@ yh work execute login-work --runtime fake --workspace . --constraint "Run tests 
 
 `execute` loads the WorkItem and binding, reads the configured SDD provider, projects the selected Specification, evaluates `ExecutionEligibilityPolicy`, resolves the selected `RuntimePort`, and persists an `ExecutionTrace`. It does not transition the WorkItem automatically.
 
-To close the lifecycle explicitly, start the WorkItem, persist a VerificationReport,
-and authorize it:
+To collect and evaluate durable evidence before authorization:
+
+```bash
+yh evidence record evidence-cli \
+  --trace <execution-trace-id> \
+  --subject-kind requirement \
+  --subject-id <requirement-id> \
+  --kind test-result \
+  --outcome passed \
+  --summary "Authentication tests passed"
+
+yh verification plan create plan-cli \
+  --trace <execution-trace-id> \
+  --specification authentication \
+  --digest <specification-snapshot-digest> \
+  --criterion "authenticate:requirement:<requirement-id>:test-result"
+
+yh verification evaluate plan-cli --report report-cli
+```
+
+The criterion syntax is `id:requirement|scenario:subject-id:evidence-kind`, and
+`--criterion` may be repeated. Evaluation persists a `VerificationReport` with the
+conservative outcome required by ADR-009.
+
+To close the lifecycle explicitly, start the WorkItem and authorize the report:
 
 ```bash
 yh work start login-work
