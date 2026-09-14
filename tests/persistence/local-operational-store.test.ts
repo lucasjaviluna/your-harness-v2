@@ -10,7 +10,7 @@ import {
   WorkItemStatus,
   WorkItemTitle,
 } from "@your-harness/domain";
-import { createChangeStageApproval } from "@your-harness/application";
+import { createChangeStageApproval, GovernedChangeStatus } from "@your-harness/application";
 import { createLocalOperationalStore } from "../../src/persistence/index.js";
 
 const workspaces: string[] = [];
@@ -220,5 +220,34 @@ describe("LocalOperationalStore", () => {
       .resolves.toMatchObject([{ toolName: "read", outcome: "allowed", bytesRead: 42 }]);
     await expect(createLocalOperationalStore({ workspace }).toolInvocations.findByExecutionTraceId("trace-1"))
       .resolves.toMatchObject([{ id: "tool-read-1", executionTraceId: "trace-1" }]);
+  });
+
+  it("persists the governed Change lifecycle and restores its current state", async () => {
+    const workspace = await createWorkspace();
+    const store = createLocalOperationalStore({ workspace });
+    const base = {
+      changeId: "persisted-change",
+      changeVersion: "1",
+      changeDigest: "digest-1",
+      provenance: { providerId: "openspec", reference: "openspec/changes/persisted-change" },
+      changedBy: "reviewer@example.com",
+      changedByRole: "reviewer",
+      reason: "Transition approved.",
+    };
+    await store.governedChanges.save({
+      ...base, id: "governed-1", status: GovernedChangeStatus.Proposed, changedAt: "2026-09-14T23:00:00.000Z",
+    });
+    await store.governedChanges.save({
+      ...base, id: "governed-2", status: GovernedChangeStatus.Approved, previousStatus: GovernedChangeStatus.Proposed, changedAt: "2026-09-14T23:01:00.000Z",
+    });
+
+    const reopened = createLocalOperationalStore({ workspace });
+    await expect(reopened.governedChanges.findByChangeId("persisted-change")).resolves.toHaveLength(2);
+    await expect(reopened.governedChanges.findCurrentByChangeId("persisted-change")).resolves.toMatchObject({
+      id: "governed-2", status: GovernedChangeStatus.Approved,
+    });
+    await expect(reopened.governedChanges.save({
+      ...base, id: "governed-2", status: GovernedChangeStatus.Approved, previousStatus: GovernedChangeStatus.Proposed, changedAt: "2026-09-14T23:01:00.000Z",
+    })).rejects.toThrow("already exists and is immutable");
   });
 });

@@ -3,6 +3,8 @@ import path from "node:path";
 
 import type {
   Evidence,
+  GovernedChangeRecord,
+  GovernedChangeRepository,
   ChangeStageApproval,
   ChangeStageApprovalRepository,
   CompletionAuthorization,
@@ -16,7 +18,7 @@ import type {
   VerificationReportRepository,
   WorkItemRepository,
 } from "@your-harness/application";
-import { createChangeStageApproval, createEvidence, createVerificationPlan } from "@your-harness/application";
+import { createChangeStageApproval, createEvidence, createGovernedChangeRecord, createVerificationPlan, GovernedChangeStatus } from "@your-harness/application";
 import {
   IntentId,
   WorkItem,
@@ -48,6 +50,7 @@ export interface LocalOperationalStore {
   readonly verificationReports: VerificationReportRepository;
   readonly completionAuthorizations: CompletionAuthorizationRepository;
   readonly changeStageApprovals: ChangeStageApprovalRepository;
+  readonly governedChanges: GovernedChangeRepository;
   readonly executionScopeSelections: ExecutionScopeSelectionRepository;
   readonly toolInvocations: ToolInvocationRepository;
 }
@@ -240,6 +243,27 @@ const isChangeStageApproval = (value: unknown): value is ChangeStageApproval => 
   );
 };
 
+const isGovernedChangeRecord = (value: unknown): value is GovernedChangeRecord => {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Partial<GovernedChangeRecord>;
+  return (
+    typeof record.id === "string" &&
+    typeof record.changeId === "string" &&
+    Object.values(GovernedChangeStatus).includes(record.status as GovernedChangeStatus) &&
+    (record.previousStatus === undefined || Object.values(GovernedChangeStatus).includes(record.previousStatus)) &&
+    typeof record.changeVersion === "string" &&
+    typeof record.changeDigest === "string" &&
+    !!record.provenance &&
+    typeof record.provenance.providerId === "string" &&
+    typeof record.provenance.reference === "string" &&
+    typeof record.changedBy === "string" &&
+    typeof record.changedByRole === "string" &&
+    typeof record.reason === "string" &&
+    typeof record.changedAt === "string" &&
+    (record.completionAuthorized === undefined || typeof record.completionAuthorized === "boolean")
+  );
+};
+
 const isExecutionBinding = (value: unknown): value is WorkItemExecutionBinding => {
   if (!value || typeof value !== "object") return false;
   const binding = value as Partial<WorkItemExecutionBinding>;
@@ -272,6 +296,7 @@ export const createLocalOperationalStore = (
   const verificationReportsDirectory = path.join(root, "verification-reports");
   const completionAuthorizationsDirectory = path.join(root, "completion-authorizations");
   const changeStageApprovalsDirectory = path.join(root, "change-stage-approvals");
+  const governedChangesDirectory = path.join(root, "governed-changes");
   const executionScopeSelectionsDirectory = path.join(root, "execution-scope-selections");
   const toolInvocationsDirectory = path.join(root, "tool-invocations");
 
@@ -480,6 +505,48 @@ export const createLocalOperationalStore = (
             .map(createChangeStageApproval);
         } catch (error) {
           if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+          throw error;
+        }
+      },
+    },
+    governedChanges: {
+      async save(record) {
+        const filePath = path.join(governedChangesDirectory, fileNameFor(record.id));
+        if (await readJson<unknown>(filePath)) {
+          throw new Error(`Governed Change record '${record.id}' already exists and is immutable.`);
+        }
+        await writeJson(filePath, createGovernedChangeRecord(record));
+      },
+      async findByChangeId(changeId) {
+        try {
+          const entries = await readdir(governedChangesDirectory);
+          const values = await Promise.all(entries
+            .filter((entry) => entry.endsWith(".json"))
+            .map((entry) => readJson<unknown>(path.join(governedChangesDirectory, entry))));
+          return values
+            .filter(isGovernedChangeRecord)
+            .filter((record) => record.changeId === changeId)
+            .map(createGovernedChangeRecord)
+            .sort((left, right) => left.changedAt.localeCompare(right.changedAt));
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+          throw error;
+        }
+      },
+      async findCurrentByChangeId(changeId) {
+        try {
+          const entries = await readdir(governedChangesDirectory);
+          const values = await Promise.all(entries
+            .filter((entry) => entry.endsWith(".json"))
+            .map((entry) => readJson<unknown>(path.join(governedChangesDirectory, entry))));
+          const records = values
+            .filter(isGovernedChangeRecord)
+            .filter((record) => record.changeId === changeId)
+            .map(createGovernedChangeRecord)
+            .sort((left, right) => left.changedAt.localeCompare(right.changedAt));
+          return records.at(-1);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
           throw error;
         }
       },

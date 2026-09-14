@@ -23,7 +23,7 @@ Local operational persistence is now wired into the CLI: `work create` and `work
 14. ~~Enable one Pi tool under `ExecutionEnvironmentGuard`.~~ **Completed narrowly:** Pi exposes a guarded `read` tool when `workspace.read` is explicitly configured, validates every path, limits files to 256 KiB and persists invocation traces; broader tools remain gated.
 15. ~~Expose operational audit queries for executions and tool invocations.~~ **Completed:** `audit trace` correlates `ToolInvocationTrace` records with an `ExecutionTrace` without promoting them to Evidence.
 16. ~~Add WorkItem and temporal filters to operational audit queries.~~ **Completed:** `audit work-item` filters executions by WorkItem and both audit queries support inclusive ISO-8601 `--from`/`--to` ranges.
-17. Complete the SDD Change operational lifecycle: **initial transition policy and in-memory history implemented**; pending durable status persistence, integration with HITM approvals, invalidation after edits and updates to existing Changes.
+17. Complete the SDD Change operational lifecycle: **transition policy and durable history implemented**; pending integration with HITM approvals, invalidation after edits and updates to existing Changes.
 18. Validate and optionally connect an official OpenSpec skill/command runner with capability discovery, output contract and failure recovery.
 19. Implement the high-level TaskOrchestrator as a consumer of SDD, HITM, materialization, execution and verification contracts.
 
