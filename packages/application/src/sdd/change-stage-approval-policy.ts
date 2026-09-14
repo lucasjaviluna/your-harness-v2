@@ -25,13 +25,15 @@ export interface ChangeStageApprovalPolicy {
   }): ChangeStageApprovalEvaluation;
 }
 
-const approvalFor = (
+const approvalsFor = (
   approvals: ReadonlyArray<ChangeStageApproval>,
+  changeId: string,
   stage: ChangeStage,
   version: string,
   digest: string,
-): ChangeStageApproval | undefined => approvals.find(
-  (approval) => approval.stage === stage
+): ReadonlyArray<ChangeStageApproval> => approvals.filter(
+  (approval) => approval.changeId === changeId
+    && approval.stage === stage
     && approval.decision === "approve"
     && approval.changeVersion === version
     && approval.changeDigest === digest,
@@ -48,13 +50,27 @@ export const createChangeStageApprovalPolicy = (): ChangeStageApprovalPolicy => 
 
     const requiredStages = currentIndex === -1 ? [] : stageOrder.slice(0, currentIndex + 1);
     for (const requiredStage of requiredStages) {
-      const approval = approvalFor(
-        input.approvals.filter((entry) => entry.changeId === input.changeId),
+      const stageApprovals = input.approvals.filter((entry) => entry.changeId === input.changeId
+        && entry.stage === requiredStage
+        && entry.changeVersion === input.changeVersion
+        && entry.changeDigest === input.changeDigest);
+      const blockingDecision = stageApprovals.find(
+        (approval) => approval.decision === "request-rework" || approval.decision === "reject",
+      );
+      if (blockingDecision) {
+        reasons.push(
+          `Change stage '${requiredStage}' has a blocking '${blockingDecision.decision}' decision.`,
+        );
+        continue;
+      }
+      const approvals = approvalsFor(
+        input.approvals,
+        input.changeId,
         requiredStage,
         input.changeVersion,
         input.changeDigest,
       );
-      if (!approval) {
+      if (approvals.length === 0) {
         reasons.push(
           `Change stage '${requiredStage}' has no approval for version '${input.changeVersion}' and digest '${input.changeDigest}'.`,
         );

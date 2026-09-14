@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   createChangeStageApproval,
   createChangeStageApprovalPolicy,
+  ApproveChangeStageUseCase,
+  InMemoryChangeStageApprovalRepository,
 } from "@your-harness/application";
 
 const base = {
@@ -69,5 +71,16 @@ describe("ChangeStageApprovalPolicy", () => {
 
     expect(decision.allowed).toBe(false);
     expect(decision.reasons).toEqual(expect.arrayContaining([expect.stringContaining("design")]));
+  });
+
+  it("records rework but rejects a later approval for the same version and digest", async () => {
+    const repository = new InMemoryChangeStageApprovalRepository();
+    const useCase = new ApproveChangeStageUseCase(repository);
+
+    await useCase.execute({ ...approval("proposal") });
+    await useCase.execute({ ...approval("design"), id: "rework", decision: "request-rework" });
+
+    await expect(useCase.execute({ ...approval("design"), id: "approve-after-rework" }))
+      .rejects.toThrow("blocking 'request-rework'");
   });
 });

@@ -5,3 +5,4 @@ export * from "./change-stage-approval.js";
 export * from "./change-stage-approval-repository.js";
 export * from "./in-memory-change-stage-approval-repository.js";
 export * from "./change-stage-approval-policy.js";
+export * from "./approve-change-stage.js";
