@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Node.js 20 or newer.
+- Node.js 22.19 or newer.
 - npm.
 
 ## Install and verify

@@ -39,4 +39,4 @@ Before merging a runtime or contract change, run the full build and tests plus t
 
 ## CI
 
-El workflow de GitHub Actions ejecuta sobre Node 20 y 22: `npm ci`, build, suite Vitest con un único fork, lint, validación documental y `npm pack --dry-run`. La instalación usa exclusivamente `package-lock.json`; si el lockfile no coincide con `package.json`, `npm ci` falla. `check:docs` valida la presencia de la documentación mínima y del contrato CLI publicado.
+El workflow de GitHub Actions ejecuta sobre Node 22.19 y 24: `npm ci`, build, suite Vitest con un único fork, lint, validación documental y `npm pack --dry-run`. El mínimo Node 22.19 se debe a `@earendil-works/pi-coding-agent`, que usa APIs no disponibles en Node 20. La instalación usa exclusivamente `package-lock.json`; si el lockfile no coincide con `package.json`, `npm ci` falla. `check:docs` valida la presencia de la documentación mínima y del contrato CLI publicado.
