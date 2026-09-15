@@ -16,7 +16,7 @@ This is the living technical documentation for `your-harness` (`yh`). It describ
 | Run the CLI | [Getting started](04-guides/Getting-Started.md) and [work item execution](04-guides/Work-Item-Execution.md) |
 | Configure a project | [Project configuration](05-reference/Project-Configuration.md) |
 | Change the codebase | [Boundaries](02-architecture/Boundaries.md) and [Testing](06-development/Testing.md) |
-| Check maturity | [Capability map](07-status/Capability-Map.md) and [Roadmap](07-status/Roadmap.md) |
+| Check maturity | [Capability map](07-status/Capability-Map.md), [Roadmap](07-status/Roadmap.md) and [Security review](07-status/Security-Review.md) |
 
 ## Documentation map
 
