@@ -23,6 +23,7 @@ npm run test         # vitest
 npm run verify:core  # build/test Engineering Core and Application without Pi
 npm run verify:pi    # build full graph and test Pi adapter separately
 npm run lint         # eslint src/ — see Known Gaps
+npm run check:docs   # valida documentación mínima y contrato CLI
 npm run format       # prettier --write src/ — see Known Gaps
 ```
 
@@ -83,9 +84,9 @@ Shared, Domain and Application are composite TypeScript projects connected with 
 - **MCP client/server** are skeleton JSON-RPC with no real transport.
 - **Workflow `command`/`script` steps** are placeholders.
 - **`saveConfig`** writes YAML to the configured `.yml` path; provider/runtime configuration remains intentionally minimal.
-- **No explicit eslint/prettier config files** — lint/format behavior still needs consolidation.
+- **ESLint mínimo configurado** — `.eslintrc.cjs` valida el parseo TypeScript de `src/`; la política de estilo y Prettier aún requieren consolidación.
 - **Tests are focused, not broad** — eighty-six tests cover configuration, context, Core smoke flows, runtime composition/boundary, execution environment, read-only OpenSpec projection, SDD drift, operational bindings, governed Change lifecycle, in-process and process-level CLI execution, Evidence/Verification contracts/evaluator, HITM authorization, eligibility, guarded Pi tool integration and Apply recovery.
-- **No CI/CD** — no `.github/workflows/`.
+- **CI/CD mínimo implementado** — `.github/workflows/ci.yml` ejecuta instalación limpia, build, tests, lint, validación documental y empaquetado en Node 20/22; aún falta observar la primera ejecución remota.
 - **Runtime selection is explicit and project-configured** — `createProjectRuntimeEnvironment` resolves `runtime.defaultRuntime` from `.your-harness/config.yml`, composes `RuntimeRegistry`, `SddProvider`, eligibility policy and execution environment; `fake` remains the safe built-in default and Pi is registered only when resolved.
 - **Execution environment enforcement is active at the runtime boundary** — `runtime.executionEnvironment` maps workspace, capabilities, network, secrets and confirmations with deny-by-default values; resolved runtimes reject workspace escape and the guard exposes checks for capabilities, network, secrets and confirmations. Pi enables only the guarded read tool when `workspace.read` is explicitly configured; each path is checked and reads are capped at 256 KiB, while write/process/network/secret tools remain disabled.
 - **Operational persistence is implemented** — local JSON repositories persist WorkItems, execution bindings, approved SDD snapshot digests, ExecutionTraces, ChangeStageApprovals, ChangeDraftHandoffs, ChangeMaterializationAudits, ChangeApplyTransitionRecords, GovernedChangeRecords and Pi tool-invocation traces under `.your-harness/state`; new records use a `formatVersion: 1` envelope, legacy root-level records remain readable, future formats are rejected and migrations are explicit in `state-versioning.ts`; the CLI resolves current configured SDD material and denies drift before runtime invocation.

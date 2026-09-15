@@ -21,7 +21,8 @@
     "verify:core": "npm run build:core && npm run test:core",
     "verify:pi": "npm run build && npm run test:pi",
     "test:watch": "vitest watch",
-    "lint": "eslint src/",
+    "lint": "eslint \"src/**/*.ts\"",
+    "check:docs": "node scripts/verify-docs.mjs",
     "format": "prettier --write src/"
   },
   "keywords": [

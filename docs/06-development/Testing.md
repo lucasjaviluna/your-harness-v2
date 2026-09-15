@@ -36,3 +36,7 @@ Los tests del Core y del Runtime consumen las APIs públicas `@your-harness/doma
 Tests use English `describe` and `it` descriptions. Code comments remain Spanish by project convention.
 
 Before merging a runtime or contract change, run the full build and tests plus the relevant separated verification. Update architecture, capability and roadmap documents whenever their described state changes.
+
+## CI
+
+El workflow de GitHub Actions ejecuta sobre Node 20 y 22: `npm ci`, build, suite Vitest con un único fork, lint, validación documental y `npm pack --dry-run`. La instalación usa exclusivamente `package-lock.json`; si el lockfile no coincide con `package.json`, `npm ci` falla. `check:docs` valida la presencia de la documentación mínima y del contrato CLI publicado.
