@@ -186,13 +186,17 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
     .requiredOption("--confirm", "Confirmación HITM explícita para escribir OpenSpec")
     .requiredOption("-b, --by <actor>", "Usuario que ejecuta la materialización")
     .requiredOption("--role <role>", "Rol del usuario que ejecuta la materialización")
+    .option("--idempotency-key <key>", "Clave estable para no repetir la misma solicitud lógica")
+    .option("--retry-of <attemptId>", "Intento anterior que se desea reejecutar con una nueva clave")
     .option("-w, --workspace <path>", "Workspace del proyecto", process.cwd())
     .option("--json", "Imprimir el resultado de materialización como JSON")
-    .action(async (changeId: string, options: { confirm?: boolean; by: string; role: string; workspace: string; json?: boolean }) => {
+    .action(async (changeId: string, options: { confirm?: boolean; by: string; role: string; workspace: string; idempotencyKey?: string; retryOf?: string; json?: boolean }) => {
       try {
         const store = createLocalOperationalStore({ workspace: options.workspace });
         const handoff = await store.changeDraftHandoffs.findCurrentByChangeId(changeId);
         if (!handoff) throw new Error(`No existe un handoff para el Change '${changeId}'.`);
+        const attemptId = randomUUID();
+        const idempotencyKey = options.idempotencyKey ?? `${handoff.id}:${handoff.proposedContentDigest}:${options.by}`;
         const environment = createProjectRuntimeEnvironment({
           config,
           workspace: options.workspace,
@@ -215,7 +219,7 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
           result = await new MaterializeApprovedChangeUseCase(environment.sddMaterializer).execute(preview, approvals);
         } catch (error) {
           await new RecordChangeMaterializationAuditUseCase(store.changeMaterializationAudits).execute({
-            id: randomUUID(), handoffId: handoff.id, changeId, providerId: handoff.providerId,
+            id: randomUUID(), attemptId, idempotencyKey, retryOfAttemptId: options.retryOf, handoffId: handoff.id, changeId, providerId: handoff.providerId,
             provenance: handoff.provenance, strategy: environment.sddMaterializerMode ?? "filesystem",
             baseVersion: handoff.baseVersion, baseContentDigest: handoff.baseContentDigest,
             materializedVersion: handoff.proposedVersion, materializedContentDigest: handoff.proposedContentDigest,
@@ -225,7 +229,7 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
           throw error;
         }
         const audit = await new RecordChangeMaterializationAuditUseCase(store.changeMaterializationAudits).execute({
-          id: randomUUID(), handoffId: handoff.id, changeId, providerId: handoff.providerId,
+          id: randomUUID(), attemptId, idempotencyKey, retryOfAttemptId: options.retryOf, handoffId: handoff.id, changeId, providerId: handoff.providerId,
           provenance: handoff.provenance, strategy: environment.sddMaterializerMode ?? "filesystem",
           baseVersion: handoff.baseVersion, baseContentDigest: handoff.baseContentDigest,
           materializedVersion: result.version, materializedContentDigest: result.contentDigest,

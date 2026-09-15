@@ -11,6 +11,8 @@ import type {
   ChangeDraftHandoffRepository,
   ChangeMaterializationAudit,
   ChangeMaterializationAuditRepository,
+  ChangeApplyTransitionRecord,
+  ChangeApplyTransitionRepository,
   CompletionAuthorization,
   ExecutionScopeSelection,
   CompletionAuthorizationRepository,
@@ -22,7 +24,7 @@ import type {
   VerificationReportRepository,
   WorkItemRepository,
 } from "@your-harness/application";
-import { createChangeDraftHandoff, createChangeMaterializationAudit, createChangeStageApproval, createEvidence, createGovernedChangeRecord, createVerificationPlan, GovernedChangeStatus } from "@your-harness/application";
+import { createChangeApplyTransitionRecord, createChangeDraftHandoff, createChangeMaterializationAudit, createChangeStageApproval, createEvidence, createGovernedChangeRecord, createVerificationPlan, GovernedChangeStatus } from "@your-harness/application";
 import {
   IntentId,
   WorkItem,
@@ -33,6 +35,7 @@ import {
 import type { ToolInvocationTrace } from "../../runtime/tool-invocation-trace.js";
 import { changeDraftHandoffSchema } from "./schemas/change-draft-handoff-schema.js";
 import { changeMaterializationAuditSchema } from "./schemas/change-materialization-audit-schema.js";
+import { changeApplyTransitionSchema } from "./schemas/change-apply-transition-schema.js";
 
 interface StoredWorkItem {
   readonly version: 1;
@@ -59,6 +62,7 @@ export interface LocalOperationalStore {
   readonly governedChanges: GovernedChangeRepository;
   readonly changeDraftHandoffs: ChangeDraftHandoffRepository;
   readonly changeMaterializationAudits: ChangeMaterializationAuditRepository;
+  readonly changeApplyTransitions: ChangeApplyTransitionRepository;
   readonly executionScopeSelections: ExecutionScopeSelectionRepository;
   readonly toolInvocations: ToolInvocationRepository;
 }
@@ -278,6 +282,9 @@ const isChangeDraftHandoff = (value: unknown): value is ChangeDraftHandoff =>
 const isChangeMaterializationAudit = (value: unknown): value is ChangeMaterializationAudit =>
   changeMaterializationAuditSchema.safeParse(value).success;
 
+const isChangeApplyTransition = (value: unknown): value is ChangeApplyTransitionRecord =>
+  changeApplyTransitionSchema.safeParse(value).success;
+
 const isExecutionBinding = (value: unknown): value is WorkItemExecutionBinding => {
   if (!value || typeof value !== "object") return false;
   const binding = value as Partial<WorkItemExecutionBinding>;
@@ -313,6 +320,7 @@ export const createLocalOperationalStore = (
   const governedChangesDirectory = path.join(root, "governed-changes");
   const changeDraftHandoffsDirectory = path.join(root, "change-draft-handoffs");
   const changeMaterializationAuditsDirectory = path.join(root, "change-materialization-audits");
+  const changeApplyTransitionsDirectory = path.join(root, "change-apply-transitions");
   const executionScopeSelectionsDirectory = path.join(root, "execution-scope-selections");
   const toolInvocationsDirectory = path.join(root, "tool-invocations");
 
@@ -619,7 +627,31 @@ export const createLocalOperationalStore = (
       async save(audit) {
         const filePath = path.join(changeMaterializationAuditsDirectory, fileNameFor(audit.id));
         if (await readJson<unknown>(filePath)) throw new Error(`ChangeMaterializationAudit '${audit.id}' already exists and is immutable.`);
+        const existing = await this.findByAttemptId(audit.attemptId);
+        if (existing) throw new Error(`Materialization attempt '${audit.attemptId}' already exists and is immutable.`);
+        const existingKey = await this.findByIdempotencyKey(audit.idempotencyKey);
+        if (existingKey) throw new Error(`Idempotency key '${audit.idempotencyKey}' already exists and is immutable.`);
         await writeJson(filePath, createChangeMaterializationAudit(audit));
+      },
+      async findByIdempotencyKey(idempotencyKey) {
+        try {
+          const entries = await readdir(changeMaterializationAuditsDirectory);
+          const values = await Promise.all(entries.filter((entry) => entry.endsWith(".json")).map((entry) => readJson<unknown>(path.join(changeMaterializationAuditsDirectory, entry))));
+          return values.filter(isChangeMaterializationAudit).find((audit) => audit.idempotencyKey === idempotencyKey);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
+          throw error;
+        }
+      },
+      async findByAttemptId(attemptId) {
+        try {
+          const entries = await readdir(changeMaterializationAuditsDirectory);
+          const values = await Promise.all(entries.filter((entry) => entry.endsWith(".json")).map((entry) => readJson<unknown>(path.join(changeMaterializationAuditsDirectory, entry))));
+          return values.filter(isChangeMaterializationAudit).find((audit) => audit.attemptId === attemptId);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
+          throw error;
+        }
       },
       async findByHandoffId(handoffId) {
         try {
@@ -638,6 +670,38 @@ export const createLocalOperationalStore = (
           return values.filter(isChangeMaterializationAudit).filter((audit) => audit.changeId === changeId).map(createChangeMaterializationAudit).sort((left, right) => left.occurredAt.localeCompare(right.occurredAt)).at(-1);
         } catch (error) {
           if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
+          throw error;
+        }
+      },
+    },
+    changeApplyTransitions: {
+      async save(record) {
+        const filePath = path.join(changeApplyTransitionsDirectory, fileNameFor(record.id));
+        if (await readJson<unknown>(filePath)) throw new Error(`Change Apply transition '${record.id}' already exists and is immutable.`);
+        const existingAttempt = await this.findByAttemptId(record.attemptId);
+        if (existingAttempt.length > 0) throw new Error(`Change Apply attempt '${record.attemptId}' already has transitions.`);
+        await writeJson(filePath, createChangeApplyTransitionRecord(record));
+      },
+      async findByChangeId(changeId) {
+        try {
+          const entries = await readdir(changeApplyTransitionsDirectory);
+          const values = await Promise.all(entries.filter((entry) => entry.endsWith(".json")).map((entry) => readJson<unknown>(path.join(changeApplyTransitionsDirectory, entry))));
+          return values.filter(isChangeApplyTransition).filter((record) => record.changeId === changeId).sort((left, right) => left.changedAt.localeCompare(right.changedAt));
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+          throw error;
+        }
+      },
+      async findCurrentByChangeId(changeId) {
+        return (await this.findByChangeId(changeId)).at(-1);
+      },
+      async findByAttemptId(attemptId) {
+        try {
+          const entries = await readdir(changeApplyTransitionsDirectory);
+          const values = await Promise.all(entries.filter((entry) => entry.endsWith(".json")).map((entry) => readJson<unknown>(path.join(changeApplyTransitionsDirectory, entry))));
+          return values.filter(isChangeApplyTransition).filter((record) => record.attemptId === attemptId).sort((left, right) => left.changedAt.localeCompare(right.changedAt));
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
           throw error;
         }
       },

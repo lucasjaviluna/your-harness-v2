@@ -6,7 +6,17 @@ export class InMemoryChangeMaterializationAuditRepository implements ChangeMater
 
   async save(audit: ChangeMaterializationAudit): Promise<void> {
     if (this.#entries.has(audit.id)) throw new Error(`ChangeMaterializationAudit '${audit.id}' already exists and is immutable.`);
+    if ([...this.#entries.values()].some((entry) => entry.attemptId === audit.attemptId)) throw new Error(`Materialization attempt '${audit.attemptId}' already exists and is immutable.`);
+    if ([...this.#entries.values()].some((entry) => entry.idempotencyKey === audit.idempotencyKey)) throw new Error(`Idempotency key '${audit.idempotencyKey}' already exists and is immutable.`);
     this.#entries.set(audit.id, audit);
+  }
+
+  async findByIdempotencyKey(idempotencyKey: string): Promise<ChangeMaterializationAudit | undefined> {
+    return [...this.#entries.values()].find((entry) => entry.idempotencyKey === idempotencyKey);
+  }
+
+  async findByAttemptId(attemptId: string): Promise<ChangeMaterializationAudit | undefined> {
+    return [...this.#entries.values()].find((entry) => entry.attemptId === attemptId);
   }
 
   async findByHandoffId(handoffId: string): Promise<ReadonlyArray<ChangeMaterializationAudit>> {

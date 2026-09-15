@@ -5,6 +5,12 @@ export type ChangeMaterializationOutcome = "succeeded" | "failed";
 /** Evento inmutable de una operación apply sobre un handoff concreto. */
 export interface ChangeMaterializationAudit {
   readonly id: string;
+  /** Identificador operacional del intento; normalmente coincide con la operación iniciada por el usuario. */
+  readonly attemptId: string;
+  /** Clave estable para evitar ejecutar dos veces la misma solicitud lógica. */
+  readonly idempotencyKey: string;
+  /** Intento anterior que se está reejecutando, si corresponde. */
+  readonly retryOfAttemptId?: string;
   readonly handoffId: string;
   readonly changeId: string;
   readonly providerId: string;
@@ -27,6 +33,8 @@ const nonEmpty = (value: string, field: string): void => {
 
 export const createChangeMaterializationAudit = (input: ChangeMaterializationAudit): ChangeMaterializationAudit => {
   nonEmpty(input.id, "id");
+  nonEmpty(input.attemptId, "attempt id");
+  nonEmpty(input.idempotencyKey, "idempotency key");
   nonEmpty(input.handoffId, "handoff id");
   nonEmpty(input.changeId, "change id");
   nonEmpty(input.providerId, "provider id");
@@ -38,5 +46,6 @@ export const createChangeMaterializationAudit = (input: ChangeMaterializationAud
   nonEmpty(input.actorRole, "actor role");
   nonEmpty(input.occurredAt, "occurredAt");
   if (input.outcome === "failed" && !input.error?.trim()) throw new Error("Failed materialization audit requires an error.");
+  if (input.retryOfAttemptId === input.attemptId) throw new Error("A materialization attempt cannot retry itself.");
   return { ...input, provenance: { ...input.provenance } };
 };
