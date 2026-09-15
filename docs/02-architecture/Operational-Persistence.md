@@ -33,7 +33,7 @@ Esta base no persiste copias de Specifications ni artefactos de OpenSpec. Las Sp
 - No hay locking multiproceso, índices secundarios ni migraciones entre versiones.
 - No hay persistencia local de Specifications ni artefactos SDD; las decisiones operativas se persisten localmente.
 - Un `ChangeDraftHandoff` conserva el snapshot completo de Proposal/Design/Tasks revisado; no reemplaza la fuente de verdad OpenSpec.
-- Un `ChangeMaterializationAudit` registra el resultado de `apply` sin mutar el handoff; el evento de éxito permite derivar que ese snapshot fue materializado.
+- Un `ChangeMaterializationAudit` registra cada intento de `apply` sin mutar el handoff. Los eventos `succeeded` y `failed` son inmutables; un reintento crea otro evento y conserva el error del intento anterior.
 
 El binding operacional conserva el digest de la proyección de Specification aprobada.
 Antes de ejecutar, la CLI vuelve a proyectar el proveedor SDD y niega la ejecución si

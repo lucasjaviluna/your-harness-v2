@@ -27,8 +27,8 @@ Local operational persistence is now wired into the CLI: `work create` and `work
 18. Validate and optionally connect an official OpenSpec skill/command runner with capability discovery, output contract and failure recovery.
 19. Implement the high-level TaskOrchestrator as a consumer of SDD, HITM, materialization, execution and verification contracts.
 
-Current UX increment: `yh change inspect`, `yh change status`, `yh change propose`, `yh change review`, `yh change approve` and guarded `yh change apply` are available; apply requires the full HITM chain, explicit confirmation and base-digest revalidation, then records a durable materialization audit event. Next UX increment: define richer governed state transitions and failure/retry semantics.
+Current UX increment: `yh change inspect`, `yh change status`, `yh change propose`, `yh change review`, `yh change approve` and guarded `yh change apply` are available; apply requires the full HITM chain, explicit confirmation and base-digest revalidation, then records a durable success or failure materialization audit event. Next UX increment: define richer governed state transitions and retry/idempotency semantics.
 
-Handoff contract increment: `ChangeDraftHandoff`, its Application use case, local immutable repository, CLI propose/review/approve/apply integration and `ChangeMaterializationAudit` are implemented. The next step is a richer governed transition model without mutating the reviewed snapshot.
+Handoff contract increment: `ChangeDraftHandoff`, its Application use case, local immutable repository, CLI propose/review/approve/apply integration and `ChangeMaterializationAudit` are implemented. The next step is a richer governed transition model and explicit retry/idempotency semantics without mutating the reviewed snapshot.
 
 Roadmap items are directional, not commitments; accepted architectural changes belong in ADRs.

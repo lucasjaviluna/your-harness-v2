@@ -210,7 +210,20 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
           contentDigest: handoff.proposedContentDigest,
         };
         const approvals = await store.changeStageApprovals.findByChangeId(changeId);
-        const result = await new MaterializeApprovedChangeUseCase(environment.sddMaterializer).execute(preview, approvals);
+        let result;
+        try {
+          result = await new MaterializeApprovedChangeUseCase(environment.sddMaterializer).execute(preview, approvals);
+        } catch (error) {
+          await new RecordChangeMaterializationAuditUseCase(store.changeMaterializationAudits).execute({
+            id: randomUUID(), handoffId: handoff.id, changeId, providerId: handoff.providerId,
+            provenance: handoff.provenance, strategy: environment.sddMaterializerMode ?? "filesystem",
+            baseVersion: handoff.baseVersion, baseContentDigest: handoff.baseContentDigest,
+            materializedVersion: handoff.proposedVersion, materializedContentDigest: handoff.proposedContentDigest,
+            outcome: "failed", actor: options.by, actorRole: options.role,
+            error: error instanceof Error ? error.message : String(error), occurredAt: new Date().toISOString(),
+          }).catch(() => undefined);
+          throw error;
+        }
         const audit = await new RecordChangeMaterializationAuditUseCase(store.changeMaterializationAudits).execute({
           id: randomUUID(), handoffId: handoff.id, changeId, providerId: handoff.providerId,
           provenance: handoff.provenance, strategy: environment.sddMaterializerMode ?? "filesystem",
