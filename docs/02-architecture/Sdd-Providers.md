@@ -21,7 +21,7 @@ Las proyecciones de Changes y tareas incluyen estados normalizados. `SddChangeSt
 
 La aprobación de un Change es incremental: Proposal, Design, Task Plan y Apply Readiness requieren checkpoints HITM independientes. Design es el gate arquitectónico obligatorio antes de aplicar efectos o iniciar la implementación; si se modifica, las aprobaciones posteriores deben invalidarse.
 
-El lifecycle gobernado ya cuenta con `GovernedChangeRecord`, `GovernedChangeRepository`, `evaluateGovernedChangeTransition` y `TransitionGovernedChangeUseCase` en Application. El historial se conserva en memoria o en `.your-harness/state/governed-changes`. Las transiciones a `approved`/`executing` exigen HITM hasta Apply Readiness; `completed` exige Verification/Completion y autorización explícita, con coincidencia exacta de versión y digest. La invalidación automática por edición y la integración CLI siguen pendientes.
+El lifecycle gobernado ya cuenta con `GovernedChangeRecord`, `GovernedChangeRepository`, `evaluateGovernedChangeTransition` y `TransitionGovernedChangeUseCase` en Application. El historial se conserva en memoria o en `.your-harness/state/governed-changes`. Las transiciones a `approved`/`executing` exigen HITM hasta Apply Readiness; `completed` exige Verification/Completion y autorización explícita, con coincidencia exacta de versión y digest. La edición materializada exige un digest base vigente, por lo que las aprobaciones anteriores quedan obsoletas al cambiar el contenido; la integración CLI sigue pendiente.
 
 Las aprobaciones históricas no se modifican ni eliminan. `findInvalidatedChangeStageApprovals` proyecta cuáles quedaron obsoletas por `version-mismatch` o `digest-mismatch`, y la policy devuelve una razón `stale` en lugar de reutilizarlas. Una nueva versión debe obtener aprobaciones nuevas para poder avanzar.
 
@@ -29,7 +29,7 @@ Application expone `ChangeStageApproval` y su repositorio para conservar cada de
 
 `ChangeStageApprovalPolicy` impide saltar etapas y exige la cadena completa de aprobaciones compatibles con la versión y digest actuales. Una solicitud de rework bloquea el avance, pero se conserva como decisión HITM auditable.
 
-El vertical slice actual de governance recorre `OpenSpecSddProvider → Change projection/version/digest → Proposal → Design → Task Plan → Apply Readiness → durable ChangeStageApproval → SddMaterializer`. El materializer sólo crea Changes nuevos con `proposal.md`, `design.md` y `tasks.md`, usando workspace write, capability, confirmación humana, escritura atómica y verificación posterior del digest. No modifica Changes existentes ni `openspec/specs/**`.
+El vertical slice actual de governance recorre `OpenSpecSddProvider → Change projection/version/digest → Proposal → Design → Task Plan → Apply Readiness → durable ChangeStageApproval → SddMaterializer`. El materializer crea o reemplaza Changes con `proposal.md`, `design.md` y `tasks.md`, usando workspace write, capability, confirmación humana, staging atómico y verificación posterior del digest. Para reemplazar un Change exige el `baseContentDigest` vigente. El digest identifica el contenido; la versión de revisión pertenece a la línea de aprobaciones de your-harness porque OpenSpec no persiste una versión nativa. No modifica `openspec/specs/**`.
 
 `OpenSpecMaterializer` delega la generación física a `OpenSpecGenerationStrategy`. La estrategia filesystem es la implementación predeterminada; una futura estrategia podría invocar una skill o mecanismo oficial de OpenSpec sin trasladar sus detalles a Application. Los guardrails, la aprobación HITM y la verificación posterior siguen fuera de la estrategia.
 
@@ -63,4 +63,4 @@ La configuración local puede declarar `runtime.sddProvider: openspec` y `runtim
 
 ## Límites actuales
 
-El slice todavía no añade planificación desde tareas, actualización de Changes existentes, invocación de `/opsx:propose` ni aplicación de deltas sobre `openspec/specs/**`. `yh work execute` sí lee el proveedor configurado y proyecta el material actual en Application para construir la solicitud de ejecución; no construye aggregates de Domain desde tipos OpenSpec ni pasa tipos del proveedor al Runtime.
+El slice todavía no añade planificación desde tareas, invocación real de `/opsx:propose`, sincronización de checklists ni aplicación de deltas sobre `openspec/specs/**`. `yh work execute` sí lee el proveedor configurado y proyecta el material actual en Application para construir la solicitud de ejecución; no construye aggregates de Domain desde tipos OpenSpec ni pasa tipos del proveedor al Runtime.

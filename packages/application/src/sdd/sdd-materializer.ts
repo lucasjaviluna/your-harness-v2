@@ -6,6 +6,9 @@ export interface SddDraftChangeInput {
   readonly proposal: string;
   readonly design: string;
   readonly tasks: string;
+  /** Snapshot requerido para actualizar un Change existente. */
+  readonly baseVersion?: string;
+  readonly baseContentDigest?: string;
 }
 
 export interface SddDraftChangePreview extends SddDraftChangeInput {

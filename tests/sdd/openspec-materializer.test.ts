@@ -190,4 +190,33 @@ describe("OpenSpecMaterializer", () => {
 
     await expect(new MaterializeApprovedChangeUseCase(materializer).execute(preview, [])).rejects.toThrow("cannot be materialized");
   });
+
+  it("actualiza un Change existente sólo con el snapshot base vigente", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "yh-materializer-"));
+    roots.push(root);
+    const changeRoot = path.join(root, "openspec", "changes", "add-mfa");
+    const { mkdir, writeFile } = await import("node:fs/promises");
+    await mkdir(changeRoot, { recursive: true });
+    await writeFile(path.join(changeRoot, "proposal.md"), "# Old proposal", "utf8");
+    await writeFile(path.join(changeRoot, "design.md"), "# Old design", "utf8");
+    await writeFile(path.join(changeRoot, "tasks.md"), "- [ ] Old task", "utf8");
+
+    const provider = new OpenSpecSddProvider();
+    const current = (await provider.readProject({ root })).changes[0];
+    const environment = createExecutionEnvironment({ workspace: { root, mode: "read-write" }, capabilities: ["workspace.write"] });
+    const materializer = new OpenSpecMaterializer({ guard: createExecutionEnvironmentGuard(environment), confirmed: true });
+    const preview = await materializer.previewDraftChange({
+      scope: { root }, changeId: "add-mfa", baseVersion: current.version, baseContentDigest: current.contentDigest,
+      proposal: "# New proposal", design: "# New design", tasks: "- [ ] New task",
+    });
+
+    const result = await materializer.materializeApprovedChange(preview);
+    expect(result.version).toBe("2");
+    const updated = (await provider.readProject({ root })).changes[0];
+    expect(updated).toMatchObject({ version: "1", contentDigest: preview.contentDigest });
+    await expect(materializer.previewDraftChange({
+      scope: { root }, changeId: "add-mfa", baseVersion: current.version, baseContentDigest: current.contentDigest,
+      proposal: "# Another proposal", design: "# New design", tasks: "- [ ] New task",
+    })).rejects.toThrow("base digest is stale");
+  });
 });
