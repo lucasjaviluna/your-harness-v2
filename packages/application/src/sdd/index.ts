@@ -20,6 +20,7 @@ export * from "./change-apply-transition.js";
 export * from "./change-apply-transition-repository.js";
 export * from "./in-memory-change-apply-transition-repository.js";
 export * from "./transition-change-apply.js";
+export * from "./reconcile-interrupted-change-apply.js";
 export * from "./governed-change.js";
 export * from "./governed-change-repository.js";
 export * from "./in-memory-governed-change-repository.js";

@@ -1,5 +1,5 @@
 /** Estados operativos del intento de materialización, separados del lifecycle SDD. */
-export type ChangeApplyStatus = "approved" | "apply-ready" | "applying" | "materialized" | "apply-failed";
+export type ChangeApplyStatus = "approved" | "apply-ready" | "applying" | "materialized" | "apply-failed" | "recovery-required";
 
 export interface ChangeApplyTransitionInput {
   readonly currentStatus?: ChangeApplyStatus;
@@ -14,9 +14,10 @@ export interface ChangeApplyTransitionEvaluation {
 const transitions: Record<ChangeApplyStatus, ReadonlyArray<ChangeApplyStatus>> = {
   approved: ["apply-ready"],
   "apply-ready": ["applying"],
-  applying: ["materialized", "apply-failed"],
+  applying: ["materialized", "apply-failed", "recovery-required"],
   materialized: [],
   "apply-failed": ["applying"],
+  "recovery-required": ["materialized", "apply-failed"],
 };
 
 /**
