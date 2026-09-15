@@ -97,6 +97,30 @@ describe("createCliProgram", () => {
     expect(output.flat().join(" ")).toContain("Current mode: custom");
   });
 
+  it("mantiene stdout JSON puro y códigos de uso en comandos administrativos", async () => {
+    const output: unknown[][] = [];
+    let exitCode: number | undefined;
+    const { program } = createCliProgram({
+      context: {
+        config,
+        logger: createLogger("fatal"),
+        io: {
+          write: (...values) => output.push([...values]),
+          setExitCode: (code) => { exitCode = code; },
+        },
+      },
+    });
+
+    await program.parseAsync(["node", "yh", "provider", "list", "--json"]);
+    expect(output).toHaveLength(1);
+    expect(JSON.parse(String(output[0]?.[0]))).toEqual(expect.any(Array));
+
+    output.length = 0;
+    await program.parseAsync(["node", "yh", "mode", "invalid"]);
+    expect(output.flat().join(" ")).toContain("Valid modes:");
+    expect(exitCode).toBe(2);
+  });
+
   it("expone inspect y status como fachada read-only de un Change", async () => {
     const workspace = await mkdtemp(path.join(os.tmpdir(), "yh-change-cli-"));
     try {

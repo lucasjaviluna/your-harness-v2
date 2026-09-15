@@ -23,8 +23,6 @@ export const registerProviderCommands = (
     .description("List configured AI providers")
     .option("--json", "Imprimir proveedores como JSON")
     .action((options: { json?: boolean }) => {
-      console.log(chalk.cyan("Configured AI providers:\n"));
-
       const factory = createConnectorFactory();
       const connectors = factory.createAll(config);
       const defaultProvider = config.defaultProvider;
@@ -74,8 +72,11 @@ export const registerProviderCommands = (
           writeCliError(io, new Error(`Invalid provider: ${name}`), { json: true, code: "PROVIDER_INVALID", exitCode: CliExitCode.Usage, title: "" });
           return;
         }
-        console.log(chalk.red(`Invalid provider: ${name}`));
-        console.log(chalk.gray(`Valid providers: ${validProviders.join(", ")}`));
+        writeCliError(io, new Error(`${name}. Valid providers: ${validProviders.join(", ")}`), {
+          code: "PROVIDER_INVALID",
+          exitCode: CliExitCode.Usage,
+          title: chalk.red("✗ Invalid provider:"),
+        });
         return;
       }
 
@@ -107,7 +108,11 @@ export const registerProviderCommands = (
             writeCliError(io, new Error(`Provider '${providerName}' is not enabled.`), { json: true, code: "PROVIDER_NOT_ENABLED", exitCode: CliExitCode.Conflict, title: "" });
             return;
           }
-          console.log(chalk.yellow(`Provider '${providerName}' is not enabled.`));
+          writeCliError(io, new Error(`Provider '${providerName}' is not enabled.`), {
+            code: "PROVIDER_NOT_ENABLED",
+            exitCode: CliExitCode.Conflict,
+            title: chalk.yellow("⚠ Provider unavailable:"),
+          });
           return;
         }
 

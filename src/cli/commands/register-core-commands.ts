@@ -62,8 +62,11 @@ export const registerCoreCommands = (
             writeCliError(io, new Error(`Invalid mode: ${mode}`), { json: true, code: "CORE_MODE_INVALID", exitCode: CliExitCode.Usage, title: "" });
             return;
           }
-          console.log(chalk.red(`Invalid mode: ${mode}`));
-          console.log(chalk.gray(`Valid modes: ${validModes.join(", ")}`));
+          writeCliError(io, new Error(`${mode}. Valid modes: ${validModes.join(", ")}`), {
+            code: "CORE_MODE_INVALID",
+            exitCode: CliExitCode.Usage,
+            title: chalk.red("✗ Invalid mode:"),
+          });
           return;
         }
         if (options.json) console.log(JSON.stringify({ mode, changed: true }, null, 2));
