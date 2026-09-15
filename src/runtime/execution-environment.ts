@@ -116,7 +116,7 @@ export const createExecutionEnvironment = (
 ): ExecutionEnvironment => {
   const root = path.resolve(input.workspace.root);
   const allowedPaths = (input.workspace.allowedPaths ?? [root]).map((candidate) =>
-    path.resolve(candidate),
+    path.resolve(root, candidate),
   );
 
   if (!input.workspace.root.trim()) {

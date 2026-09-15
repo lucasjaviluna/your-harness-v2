@@ -60,7 +60,7 @@ The policy is deny-by-default. To enable a capability, its corresponding boundar
 - `workspace.write` requires `workspace.mode: read-write`.
 - `network.access` requires `network.mode: allowlist` and at least one host.
 - `secrets.read` requires `secrets.mode: allowlist` and at least one secret name.
-- Every `allowedPaths` entry must remain inside the execution workspace.
+- Every `allowedPaths` entry must remain inside the execution workspace and relative entries are resolved against that workspace root by the runtime boundary.
 
 These checks fail before runtime execution. The runtime boundary now enforces the
 workspace boundary for every resolved `RuntimePort` and exposes guard methods for

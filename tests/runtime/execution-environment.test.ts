@@ -55,6 +55,16 @@ describe("ExecutionEnvironment", () => {
     expect(() => guard.requireConfirmation("workspace.write", true)).not.toThrow();
   });
 
+  it("resuelve allowedPaths relativos contra la raíz del workspace", () => {
+    const environment = createExecutionEnvironment({
+      workspace: { root: "C:/workspace", allowedPaths: ["src"] },
+    });
+    const guard = createExecutionEnvironmentGuard(environment);
+
+    expect(() => guard.assertWorkspacePath("C:/workspace/src/index.ts", "read")).not.toThrow();
+    expect(() => guard.assertWorkspacePath("C:/workspace/packages/index.ts", "read")).toThrow("outside");
+  });
+
   it("rejects a write when the capability is missing even in read-write mode", () => {
     const environment = createExecutionEnvironment({
       workspace: { root: "C:/workspace", mode: "read-write" },

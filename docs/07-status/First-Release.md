@@ -36,7 +36,7 @@ La propuesta es tratarlo como un **v0.1.0 Governed Change Foundation**: una vers
 4. Agregar CI/CD mínimo: build, tests, lint, validación documental y empaquetado — completado; GitHub Actions pasó en runner limpio con Node 22.19/24.
 5. Reemplazar o aislar explícitamente los mocks/stubs que queden visibles en la superficie soportada — ToolExecutor y steps `command`/`script` ahora fallan cerrados; MCP y otras familias experimentales siguen fuera del alcance estable.
 6. Probar instalación limpia y ejecución desde un workspace externo al repositorio.
-7. Cerrar la revisión de seguridad de paths, capabilities y confirmaciones en todos los comandos que escriben.
+7. Cerrar la revisión de seguridad de paths, capabilities y confirmaciones en todos los comandos que escriben — boundary revisado y paths relativos corregidos; queda completar la matriz de comandos y escenarios de escritura.
 8. Publicar una matriz de capabilities y limitaciones para evitar prometer orquestación aún no implementada — matriz inicial publicada; queda mantenerla sincronizada con cada capability nueva.
 
 ## Estado estimado
