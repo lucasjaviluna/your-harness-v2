@@ -49,6 +49,9 @@ export const createCliProgram = (
       context.logger.debug(`Executing: yh ${thisCommand.args.join(" ")}`);
     });
 
+  // El entrypoint transforma los errores de parseo en el contrato CLI común.
+  program.exitOverride();
+
   registerCoreCommands(program, context);
   registerMcpCommands(program, context);
   registerProviderCommands(program, context);

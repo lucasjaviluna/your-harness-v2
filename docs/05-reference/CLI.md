@@ -33,4 +33,6 @@ Los errores de comandos finalizan con exit code `1`; el código textual `error.c
 
 La taxonomía reservada de exit codes es: `0` éxito, `1` error inesperado, `2` uso o validación, `3` guardrail/HITM, `4` recurso inexistente, `5` conflicto o estado obsoleto y `6` proveedor/runtime externo. La adopción es progresiva: los comandos aún no clasificados usan `1`; los errores JSON ya incluyen el `exitCode` efectivo.
 
+Los errores de parseo de Commander —comando desconocido, opción desconocida u opción obligatoria ausente— se normalizan como `CLI_USAGE_ERROR` con exit code `2`. El entrypoint captura estos errores antes de que Commander termine el proceso, manteniendo la posibilidad de consumir JSON desde un agente o script.
+
 En los flujos críticos ya se clasifican explícitamente los casos conocidos: Change/WorkItem/binding inexistente usa `4`; argumentos inválidos o retry mal formado usa `2`; HITM/scope/recovery requerido usa `3`; duplicados, materialización ya realizada, estado Apply incompatible o scope obsoleto usa `5`.

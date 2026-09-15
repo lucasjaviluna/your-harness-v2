@@ -20,6 +20,8 @@ La taxonomía de proceso ya está definida (`0` éxito, `1` inesperado, `2` uso,
 
 Los casos críticos de `change` y `work` ya usan clasificación explícita para not-found, uso, guardrails HITM y conflictos de estado; los errores no clasificados permanecen en `1` hasta tener semántica inequívoca.
 
+El entrypoint también normaliza los errores de parseo de Commander como `CLI_USAGE_ERROR` (exit code `2`).
+
 ## Later
 
 6. ~~Connect `yh work-item execute` to persistent operational state and an authoritative Specification source.~~ **Completed:** the CLI reads persistent WorkItems/bindings, projects the configured SDD source, and writes traces. It intentionally does not mirror Specifications locally.
