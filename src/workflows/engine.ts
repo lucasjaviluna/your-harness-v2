@@ -142,17 +142,13 @@ const executeWithTimeout = async (
       case 'command': {
         const config = step.config;
         const command = replaceVariables(config.command, context.variables);
-        // En producción usar child_process.exec
-        console.log(`[Workflow] Executing command: ${command}`);
-        return { command, output: 'Command executed (placeholder)' };
+        throw new Error(`Workflow command steps are not supported yet: '${command}'.`);
       }
 
       case 'script': {
         const config = step.config;
         const code = replaceVariables(config.code, context.variables);
-        console.log(`[Workflow] Executing ${config.language} script`);
-        // En producción usar vm2 o child_process
-        return { result: 'Script executed (placeholder)' };
+        throw new Error(`Workflow script steps are not supported yet for language '${config.language}'.`);
       }
 
       case 'parallel': {

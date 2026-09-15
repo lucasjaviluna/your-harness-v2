@@ -80,9 +80,9 @@ Shared, Domain and Application are composite TypeScript projects connected with 
 
 ## Known Gaps
 
-- **ToolExecutor** is a stub — logs calls, returns mock results. The CLI agent adapter wires it in `src/cli/commands/register-agent-commands.ts`.
+- **ToolExecutor** is experimental and fail-closed — the CLI agent adapter logs attempted calls and returns `isError: true`; it never reports simulated tool execution as successful.
 - **MCP client/server** are skeleton JSON-RPC with no real transport.
-- **Workflow `command`/`script` steps** are placeholders.
+- **Workflow `command`/`script` steps** are explicitly unsupported — they fail with an error instead of returning placeholder success.
 - **`saveConfig`** writes YAML to the configured `.yml` path; provider/runtime configuration remains intentionally minimal.
 - **ESLint mínimo configurado** — `.eslintrc.cjs` valida el parseo TypeScript de `src/`; la política de estilo y Prettier aún requieren consolidación.
 - **Tests are focused, not broad** — eighty-six tests cover configuration, context, Core smoke flows, runtime composition/boundary, execution environment, read-only OpenSpec projection, SDD drift, operational bindings, governed Change lifecycle, in-process and process-level CLI execution, Evidence/Verification contracts/evaluator, HITM authorization, eligibility, guarded Pi tool integration and Apply recovery.

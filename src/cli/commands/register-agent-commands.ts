@@ -75,7 +75,8 @@ export const registerAgentCommands = (
             console.log(chalk.blue(`  🔧 Tool: ${name}`), chalk.gray(JSON.stringify(args)));
             return {
               toolCallId: name,
-              content: `Tool '${name}' executed successfully with args: ${JSON.stringify(args)}`,
+              content: `Tool '${name}' no está implementada en la CLI experimental; no se ejecutó ninguna operación.`,
+              isError: true,
             };
           },
           listTools: () => agent.tools ?? [],

@@ -33,8 +33,8 @@ La propuesta es tratarlo como un **v0.1.0 Governed Change Foundation**: una vers
 1. Completar la matriz E2E con una interrupción real de proceso y replay idempotente en todos los resultados de `change recover`; ya existe cobertura E2E sobre estado persistido.
 2. Definir versionado/migración de los JSON bajo `.your-harness/state` — contrato v1 implementado; quedan migraciones futuras sólo cuando cambie el formato.
 3. Consolidar el contrato de configuración, errores CLI, códigos de salida y salida JSON — envelope y taxonomía definidos; implementado para `version`, `config`, `mode`, `provider`, `change`, `work`, `audit` y `verification`, con clasificación fina en los flujos críticos y errores de parseo Commander normalizados. Falta completar casos secundarios y extenderlo a comandos experimentales.
-4. Agregar CI/CD mínimo: build, tests, lint, validación documental y empaquetado — workflow implementado para Node 22.19/24 y alineado con el runtime requerido por Pi; queda observar la primera ejecución remota.
-5. Reemplazar o aislar explícitamente los mocks/stubs que queden visibles en la superficie soportada.
+4. Agregar CI/CD mínimo: build, tests, lint, validación documental y empaquetado — completado; GitHub Actions pasó en runner limpio con Node 22.19/24.
+5. Reemplazar o aislar explícitamente los mocks/stubs que queden visibles en la superficie soportada — ToolExecutor y steps `command`/`script` ahora fallan cerrados; MCP y otras familias experimentales siguen fuera del alcance estable.
 6. Probar instalación limpia y ejecución desde un workspace externo al repositorio.
 7. Cerrar la revisión de seguridad de paths, capabilities y confirmaciones en todos los comandos que escriben.
 8. Publicar una matriz de capabilities y limitaciones para evitar prometer orquestación aún no implementada.
@@ -58,6 +58,6 @@ El release estable debe optimizar por confiabilidad del flujo gobernado, no por 
 1. Cerrar E2E y contrato final de `recover`.
 2. Definir formato versionado y estrategia de migración de persistencia local.
 3. Consolidar CLI/JSON/errores y matriz de capabilities.
-4. Incorporar CI/CD y prueba de instalación limpia.
+4. ~~Incorporar CI/CD y prueba de instalación limpia.~~ **Completado:** GitHub Actions ejecuta `npm ci`, build, tests, lint, documentación y empaquetado en Node 22.19/24.
 5. Ejecutar una revisión de release con checklist y congelar el alcance v0.1.0.
 6. Recién después iniciar el diseño de `TaskOrchestrator` como consumidor de estos contratos.
