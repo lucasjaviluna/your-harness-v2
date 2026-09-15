@@ -94,7 +94,9 @@ describe("yh work execute", () => {
     const tracesDirectory = path.join(workspace, ".your-harness/state/execution-traces");
     const traceFile = (await readdir(tracesDirectory)).find((file) => file.endsWith(".json"));
     expect(traceFile).toBeDefined();
-    const trace = JSON.parse(await readFile(path.join(tracesDirectory, traceFile!), "utf8"));
+    const persistedTrace = JSON.parse(await readFile(path.join(tracesDirectory, traceFile!), "utf8"));
+    expect(persistedTrace.formatVersion).toBe(1);
+    const trace = persistedTrace.payload;
     expect(trace).toMatchObject({
       workItemId: "login-work",
       specificationId: "authentication",
