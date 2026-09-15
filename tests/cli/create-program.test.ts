@@ -181,7 +181,7 @@ describe("createCliProgram", () => {
           io: { write: (...values) => applyOutput.push([...values]), setExitCode: () => undefined },
         },
       });
-      await applyProgram.parseAsync(["node", "yh", "change", "apply", "add-mfa", "--confirm", "--workspace", workspace, "--json"]);
+      await applyProgram.parseAsync(["node", "yh", "change", "apply", "add-mfa", "--confirm", "--by", "architect@example.com", "--role", "maintainer", "--workspace", workspace, "--json"]);
       expect(JSON.parse(String(applyOutput.flat()[0]))).toMatchObject({ result: { changeId: "add-mfa" } });
       await expect(readFile(path.join(workspace, "openspec/changes/add-mfa/proposal.md"), "utf8"))
         .resolves.toBe("# New proposal");

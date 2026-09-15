@@ -7,6 +7,7 @@ import {
   ApproveChangeStageUseCase,
   CreateChangeDraftHandoffUseCase,
   MaterializeApprovedChangeUseCase,
+  RecordChangeMaterializationAuditUseCase,
   findInvalidatedChangeStageApprovals,
   type ChangeStage,
   type ChangeStageApprovalDecision,
@@ -183,9 +184,11 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
   changeCommand.command("apply <changeId>")
     .description("Materializar el handoff vigente después de Apply Readiness aprobada")
     .requiredOption("--confirm", "Confirmación HITM explícita para escribir OpenSpec")
+    .requiredOption("-b, --by <actor>", "Usuario que ejecuta la materialización")
+    .requiredOption("--role <role>", "Rol del usuario que ejecuta la materialización")
     .option("-w, --workspace <path>", "Workspace del proyecto", process.cwd())
     .option("--json", "Imprimir el resultado de materialización como JSON")
-    .action(async (changeId: string, options: { confirm?: boolean; workspace: string; json?: boolean }) => {
+    .action(async (changeId: string, options: { confirm?: boolean; by: string; role: string; workspace: string; json?: boolean }) => {
       try {
         const store = createLocalOperationalStore({ workspace: options.workspace });
         const handoff = await store.changeDraftHandoffs.findCurrentByChangeId(changeId);
@@ -208,14 +211,22 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
         };
         const approvals = await store.changeStageApprovals.findByChangeId(changeId);
         const result = await new MaterializeApprovedChangeUseCase(environment.sddMaterializer).execute(preview, approvals);
+        const audit = await new RecordChangeMaterializationAuditUseCase(store.changeMaterializationAudits).execute({
+          id: randomUUID(), handoffId: handoff.id, changeId, providerId: handoff.providerId,
+          provenance: handoff.provenance, strategy: environment.sddMaterializerMode ?? "filesystem",
+          baseVersion: handoff.baseVersion, baseContentDigest: handoff.baseContentDigest,
+          materializedVersion: result.version, materializedContentDigest: result.contentDigest,
+          outcome: "succeeded", actor: options.by, actorRole: options.role, occurredAt: new Date().toISOString(),
+        });
         if (options.json) {
-          console.log(JSON.stringify({ handoffId: handoff.id, result }, null, 2));
+          console.log(JSON.stringify({ handoffId: handoff.id, result, audit }, null, 2));
           return;
         }
         console.log(chalk.green(`✓ Change '${changeId}' materializado`));
         console.log(`Handoff: ${handoff.id}`);
         console.log(`Versión: ${result.version}`);
         console.log(`Digest: ${result.contentDigest}`);
+        console.log(`Auditoría: ${audit.id}`);
       } catch (error) {
         console.log(chalk.red("✗ No se pudo aplicar el Change:"));
         console.log(chalk.red((error as Error).message));
@@ -262,6 +273,7 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
         const store = createLocalOperationalStore({ workspace: options.workspace });
         const approvals = await store.changeStageApprovals.findByChangeId(changeId);
         const lifecycle = await store.governedChanges.findCurrentByChangeId(changeId);
+        const materialization = await store.changeMaterializationAudits.findCurrentByChangeId(changeId);
         const invalidatedApprovals = findInvalidatedChangeStageApprovals({
           changeId,
           changeVersion: change.version,
@@ -274,6 +286,7 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
           lifecycle,
           approvals,
           invalidatedApprovals,
+          materialization,
         };
         if (options.json) {
           console.log(JSON.stringify(status, null, 2));
@@ -284,6 +297,7 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
         console.log(`Lifecycle HITM: ${lifecycle?.status ?? "sin estado gobernado"}`);
         console.log(`Aprobaciones registradas: ${approvals.length}`);
         console.log(`Aprobaciones obsoletas: ${invalidatedApprovals.length}`);
+        if (materialization) console.log(`Última materialización: ${materialization.outcome} (${materialization.occurredAt})`);
         for (const invalidated of invalidatedApprovals) {
           console.log(chalk.yellow(`- ${invalidated.stage}: ${invalidated.reason} (${invalidated.approvalId})`));
         }

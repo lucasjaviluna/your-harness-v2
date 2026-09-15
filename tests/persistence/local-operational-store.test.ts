@@ -10,7 +10,7 @@ import {
   WorkItemStatus,
   WorkItemTitle,
 } from "@your-harness/domain";
-import { createChangeDraftHandoff, createChangeStageApproval, GovernedChangeStatus } from "@your-harness/application";
+import { createChangeDraftHandoff, createChangeMaterializationAudit, createChangeStageApproval, GovernedChangeStatus } from "@your-harness/application";
 import { createLocalOperationalStore } from "../../src/persistence/index.js";
 
 const workspaces: string[] = [];
@@ -283,5 +283,21 @@ describe("LocalOperationalStore", () => {
       design: "# Design",
       tasks: "- [ ] Implement",
     });
+  });
+
+  it("persists immutable Change materialization audit events", async () => {
+    const workspace = await createWorkspace();
+    const audit = createChangeMaterializationAudit({
+      id: "materialization-audit-1", handoffId: "handoff-1", changeId: "add-mfa", providerId: "openspec",
+      provenance: { providerId: "openspec", reference: "openspec/changes/add-mfa" }, strategy: "filesystem",
+      baseVersion: "1", baseContentDigest: "base-digest", materializedVersion: "2",
+      materializedContentDigest: "new-digest", outcome: "succeeded", actor: "maintainer@example.com",
+      actorRole: "maintainer", occurredAt: "2026-09-15T02:00:00.000Z",
+    });
+    const store = createLocalOperationalStore({ workspace });
+    await store.changeMaterializationAudits.save(audit);
+    await expect(store.changeMaterializationAudits.save(audit)).rejects.toThrow("already exists and is immutable");
+    await expect(createLocalOperationalStore({ workspace }).changeMaterializationAudits.findCurrentByChangeId("add-mfa"))
+      .resolves.toEqual(audit);
   });
 });

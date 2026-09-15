@@ -9,6 +9,8 @@ import type {
   ChangeStageApprovalRepository,
   ChangeDraftHandoff,
   ChangeDraftHandoffRepository,
+  ChangeMaterializationAudit,
+  ChangeMaterializationAuditRepository,
   CompletionAuthorization,
   ExecutionScopeSelection,
   CompletionAuthorizationRepository,
@@ -20,7 +22,7 @@ import type {
   VerificationReportRepository,
   WorkItemRepository,
 } from "@your-harness/application";
-import { createChangeDraftHandoff, createChangeStageApproval, createEvidence, createGovernedChangeRecord, createVerificationPlan, GovernedChangeStatus } from "@your-harness/application";
+import { createChangeDraftHandoff, createChangeMaterializationAudit, createChangeStageApproval, createEvidence, createGovernedChangeRecord, createVerificationPlan, GovernedChangeStatus } from "@your-harness/application";
 import {
   IntentId,
   WorkItem,
@@ -30,6 +32,7 @@ import {
 } from "@your-harness/domain";
 import type { ToolInvocationTrace } from "../../runtime/tool-invocation-trace.js";
 import { changeDraftHandoffSchema } from "./schemas/change-draft-handoff-schema.js";
+import { changeMaterializationAuditSchema } from "./schemas/change-materialization-audit-schema.js";
 
 interface StoredWorkItem {
   readonly version: 1;
@@ -55,6 +58,7 @@ export interface LocalOperationalStore {
   readonly changeStageApprovals: ChangeStageApprovalRepository;
   readonly governedChanges: GovernedChangeRepository;
   readonly changeDraftHandoffs: ChangeDraftHandoffRepository;
+  readonly changeMaterializationAudits: ChangeMaterializationAuditRepository;
   readonly executionScopeSelections: ExecutionScopeSelectionRepository;
   readonly toolInvocations: ToolInvocationRepository;
 }
@@ -271,6 +275,9 @@ const isGovernedChangeRecord = (value: unknown): value is GovernedChangeRecord =
 const isChangeDraftHandoff = (value: unknown): value is ChangeDraftHandoff =>
   changeDraftHandoffSchema.safeParse(value).success;
 
+const isChangeMaterializationAudit = (value: unknown): value is ChangeMaterializationAudit =>
+  changeMaterializationAuditSchema.safeParse(value).success;
+
 const isExecutionBinding = (value: unknown): value is WorkItemExecutionBinding => {
   if (!value || typeof value !== "object") return false;
   const binding = value as Partial<WorkItemExecutionBinding>;
@@ -305,6 +312,7 @@ export const createLocalOperationalStore = (
   const changeStageApprovalsDirectory = path.join(root, "change-stage-approvals");
   const governedChangesDirectory = path.join(root, "governed-changes");
   const changeDraftHandoffsDirectory = path.join(root, "change-draft-handoffs");
+  const changeMaterializationAuditsDirectory = path.join(root, "change-materialization-audits");
   const executionScopeSelectionsDirectory = path.join(root, "execution-scope-selections");
   const toolInvocationsDirectory = path.join(root, "tool-invocations");
 
@@ -601,6 +609,33 @@ export const createLocalOperationalStore = (
             .map(createChangeDraftHandoff)
             .sort((left, right) => left.createdAt.localeCompare(right.createdAt))
             .at(-1);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
+          throw error;
+        }
+      },
+    },
+    changeMaterializationAudits: {
+      async save(audit) {
+        const filePath = path.join(changeMaterializationAuditsDirectory, fileNameFor(audit.id));
+        if (await readJson<unknown>(filePath)) throw new Error(`ChangeMaterializationAudit '${audit.id}' already exists and is immutable.`);
+        await writeJson(filePath, createChangeMaterializationAudit(audit));
+      },
+      async findByHandoffId(handoffId) {
+        try {
+          const entries = await readdir(changeMaterializationAuditsDirectory);
+          const values = await Promise.all(entries.filter((entry) => entry.endsWith(".json")).map((entry) => readJson<unknown>(path.join(changeMaterializationAuditsDirectory, entry))));
+          return values.filter(isChangeMaterializationAudit).filter((audit) => audit.handoffId === handoffId).map(createChangeMaterializationAudit);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+          throw error;
+        }
+      },
+      async findCurrentByChangeId(changeId) {
+        try {
+          const entries = await readdir(changeMaterializationAuditsDirectory);
+          const values = await Promise.all(entries.filter((entry) => entry.endsWith(".json")).map((entry) => readJson<unknown>(path.join(changeMaterializationAuditsDirectory, entry))));
+          return values.filter(isChangeMaterializationAudit).filter((audit) => audit.changeId === changeId).map(createChangeMaterializationAudit).sort((left, right) => left.occurredAt.localeCompare(right.occurredAt)).at(-1);
         } catch (error) {
           if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
           throw error;
