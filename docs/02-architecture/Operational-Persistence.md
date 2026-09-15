@@ -13,14 +13,15 @@ YH persiste estado operacional propio por workspace bajo un directorio local ign
     ├── verification-reports/<id>.json
     ├── completion-authorizations/<id>.json
     ├── change-stage-approvals/<id>.json
+    ├── change-draft-handoffs/<id>.json
     └── tool-invocations/<id>.json
 ```
 
 ## Alcance
 
-`createLocalOperationalStore({ workspace })` expone repositorios para `WorkItem`, bindings de ejecución, `ExecutionTrace`, `Evidence`, `VerificationPlan`, `VerificationReport`, `CompletionAuthorization`, `ChangeStageApproval`, `GovernedChangeRecord` y `ToolInvocationTrace`. Los WorkItems se serializan con una versión de formato y se rehidratan como aggregates de Domain. Un binding selecciona una Specification SDD, Change/tareas opcionales y una autorización explícita de ejecución. Las trazas conservan Change/task provenance, WorkItem, runtime, RuntimeResult y un snapshot de Specification con provenance y digest. Las aprobaciones de etapas y las transiciones gobernadas conservan actor, rol, decisión/estado, versión y digest del Change; las invocaciones de tools conservan runtime, sesión, ruta, resultado, tamaño y motivo de denegación para auditoría.
+`createLocalOperationalStore({ workspace })` expone repositorios para `WorkItem`, bindings de ejecución, `ExecutionTrace`, `Evidence`, `VerificationPlan`, `VerificationReport`, `CompletionAuthorization`, `ChangeStageApproval`, `ChangeDraftHandoff`, `GovernedChangeRecord` y `ToolInvocationTrace`. Los WorkItems se serializan con una versión de formato y se rehidratan como aggregates de Domain. Un binding selecciona una Specification SDD, Change/tareas opcionales y una autorización explícita de ejecución. Las trazas conservan Change/task provenance, WorkItem, runtime, RuntimeResult y un snapshot de Specification con provenance y digest. Las aprobaciones de etapas, los handoffs y las transiciones gobernadas conservan actor, rol, decisión/estado, versión y digest del Change; las invocaciones de tools conservan runtime, sesión, ruta, resultado, tamaño y motivo de denegación para auditoría.
 
-Las escrituras usan un archivo temporal seguido de `rename`, y los IDs persistidos aceptan sólo caracteres seguros para evitar escapes del directorio de estado.
+Las escrituras usan un archivo temporal seguido de `rename`, y los IDs persistidos aceptan sólo caracteres seguros para evitar escapes del directorio de estado. Los JSON rehidratados se validan en el límite del adapter; el schema Zod del `ChangeDraftHandoff` valida la forma persistida y `createChangeDraftHandoff` conserva las invariantes del contrato.
 
 ## Fuente de verdad
 
@@ -30,6 +31,7 @@ Esta base no persiste copias de Specifications ni artefactos de OpenSpec. Las Sp
 
 - No hay locking multiproceso, índices secundarios ni migraciones entre versiones.
 - No hay persistencia local de Specifications ni artefactos SDD; las decisiones operativas se persisten localmente.
+- Un `ChangeDraftHandoff` conserva el snapshot completo de Proposal/Design/Tasks revisado; no reemplaza la fuente de verdad OpenSpec.
 
 El binding operacional conserva el digest de la proyección de Specification aprobada.
 Antes de ejecutar, la CLI vuelve a proyectar el proveedor SDD y niega la ejecución si

@@ -7,6 +7,8 @@ import type {
   GovernedChangeRepository,
   ChangeStageApproval,
   ChangeStageApprovalRepository,
+  ChangeDraftHandoff,
+  ChangeDraftHandoffRepository,
   CompletionAuthorization,
   ExecutionScopeSelection,
   CompletionAuthorizationRepository,
@@ -18,7 +20,7 @@ import type {
   VerificationReportRepository,
   WorkItemRepository,
 } from "@your-harness/application";
-import { createChangeStageApproval, createEvidence, createGovernedChangeRecord, createVerificationPlan, GovernedChangeStatus } from "@your-harness/application";
+import { createChangeDraftHandoff, createChangeStageApproval, createEvidence, createGovernedChangeRecord, createVerificationPlan, GovernedChangeStatus } from "@your-harness/application";
 import {
   IntentId,
   WorkItem,
@@ -27,6 +29,7 @@ import {
   WorkItemTitle,
 } from "@your-harness/domain";
 import type { ToolInvocationTrace } from "../../runtime/tool-invocation-trace.js";
+import { changeDraftHandoffSchema } from "./schemas/change-draft-handoff-schema.js";
 
 interface StoredWorkItem {
   readonly version: 1;
@@ -51,6 +54,7 @@ export interface LocalOperationalStore {
   readonly completionAuthorizations: CompletionAuthorizationRepository;
   readonly changeStageApprovals: ChangeStageApprovalRepository;
   readonly governedChanges: GovernedChangeRepository;
+  readonly changeDraftHandoffs: ChangeDraftHandoffRepository;
   readonly executionScopeSelections: ExecutionScopeSelectionRepository;
   readonly toolInvocations: ToolInvocationRepository;
 }
@@ -264,6 +268,9 @@ const isGovernedChangeRecord = (value: unknown): value is GovernedChangeRecord =
   );
 };
 
+const isChangeDraftHandoff = (value: unknown): value is ChangeDraftHandoff =>
+  changeDraftHandoffSchema.safeParse(value).success;
+
 const isExecutionBinding = (value: unknown): value is WorkItemExecutionBinding => {
   if (!value || typeof value !== "object") return false;
   const binding = value as Partial<WorkItemExecutionBinding>;
@@ -297,6 +304,7 @@ export const createLocalOperationalStore = (
   const completionAuthorizationsDirectory = path.join(root, "completion-authorizations");
   const changeStageApprovalsDirectory = path.join(root, "change-stage-approvals");
   const governedChangesDirectory = path.join(root, "governed-changes");
+  const changeDraftHandoffsDirectory = path.join(root, "change-draft-handoffs");
   const executionScopeSelectionsDirectory = path.join(root, "execution-scope-selections");
   const toolInvocationsDirectory = path.join(root, "tool-invocations");
 
@@ -545,6 +553,54 @@ export const createLocalOperationalStore = (
             .map(createGovernedChangeRecord)
             .sort((left, right) => left.changedAt.localeCompare(right.changedAt));
           return records.at(-1);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
+          throw error;
+        }
+      },
+    },
+    changeDraftHandoffs: {
+      async save(handoff) {
+        const filePath = path.join(changeDraftHandoffsDirectory, fileNameFor(handoff.id));
+        if (await readJson<unknown>(filePath)) {
+          throw new Error(`ChangeDraftHandoff '${handoff.id}' already exists and is immutable.`);
+        }
+        await writeJson(filePath, createChangeDraftHandoff(handoff));
+      },
+      async findById(id) {
+        const value = await readJson<unknown>(path.join(changeDraftHandoffsDirectory, fileNameFor(id)));
+        if (value === null) return null;
+        if (!isChangeDraftHandoff(value)) throw new Error("Persisted ChangeDraftHandoff has an unsupported format.");
+        return createChangeDraftHandoff(value);
+      },
+      async findByChangeId(changeId) {
+        try {
+          const entries = await readdir(changeDraftHandoffsDirectory);
+          const values = await Promise.all(entries
+            .filter((entry) => entry.endsWith(".json"))
+            .map((entry) => readJson<unknown>(path.join(changeDraftHandoffsDirectory, entry))));
+          return values
+            .filter(isChangeDraftHandoff)
+            .filter((handoff) => handoff.changeId === changeId)
+            .map(createChangeDraftHandoff)
+            .sort((left, right) => left.createdAt.localeCompare(right.createdAt));
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+          throw error;
+        }
+      },
+      async findCurrentByChangeId(changeId) {
+        try {
+          const entries = await readdir(changeDraftHandoffsDirectory);
+          const values = await Promise.all(entries
+            .filter((entry) => entry.endsWith(".json"))
+            .map((entry) => readJson<unknown>(path.join(changeDraftHandoffsDirectory, entry))));
+          return values
+            .filter(isChangeDraftHandoff)
+            .filter((handoff) => handoff.changeId === changeId)
+            .map(createChangeDraftHandoff)
+            .sort((left, right) => left.createdAt.localeCompare(right.createdAt))
+            .at(-1);
         } catch (error) {
           if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
           throw error;

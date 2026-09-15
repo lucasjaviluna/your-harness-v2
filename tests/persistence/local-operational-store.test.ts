@@ -10,7 +10,7 @@ import {
   WorkItemStatus,
   WorkItemTitle,
 } from "@your-harness/domain";
-import { createChangeStageApproval, GovernedChangeStatus } from "@your-harness/application";
+import { createChangeDraftHandoff, createChangeStageApproval, GovernedChangeStatus } from "@your-harness/application";
 import { createLocalOperationalStore } from "../../src/persistence/index.js";
 
 const workspaces: string[] = [];
@@ -249,5 +249,39 @@ describe("LocalOperationalStore", () => {
     await expect(reopened.governedChanges.save({
       ...base, id: "governed-2", status: GovernedChangeStatus.Approved, previousStatus: GovernedChangeStatus.Proposed, changedAt: "2026-09-14T23:01:00.000Z",
     })).rejects.toThrow("already exists and is immutable");
+  });
+
+  it("persists immutable Change draft handoffs with their complete review snapshot", async () => {
+    const workspace = await createWorkspace();
+    const handoff = createChangeDraftHandoff({
+      id: "handoff-persisted-1",
+      changeId: "add-mfa",
+      status: "ready-for-review",
+      providerId: "openspec",
+      provenance: { providerId: "openspec", reference: "openspec/changes/add-mfa" },
+      origin: "agent",
+      baseVersion: "1",
+      baseContentDigest: "base-digest",
+      proposedVersion: "2",
+      proposedContentDigest: "proposed-digest",
+      proposal: "# Proposal",
+      design: "# Design",
+      tasks: "- [ ] Implement",
+      createdBy: "agent",
+      createdByRole: "engineer",
+      createdAt: "2026-09-15T01:40:00.000Z",
+    });
+    const store = createLocalOperationalStore({ workspace });
+
+    await store.changeDraftHandoffs.save(handoff);
+    await expect(store.changeDraftHandoffs.save(handoff)).rejects.toThrow("already exists and is immutable");
+    const reopened = createLocalOperationalStore({ workspace });
+    await expect(reopened.changeDraftHandoffs.findById(handoff.id)).resolves.toEqual(handoff);
+    await expect(reopened.changeDraftHandoffs.findCurrentByChangeId("add-mfa")).resolves.toMatchObject({
+      id: handoff.id,
+      proposal: "# Proposal",
+      design: "# Design",
+      tasks: "- [ ] Implement",
+    });
   });
 });

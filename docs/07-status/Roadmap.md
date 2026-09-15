@@ -29,4 +29,6 @@ Local operational persistence is now wired into the CLI: `work create` and `work
 
 Current UX increment: `yh change inspect` and `yh change status` are available as read-only high-level views. Next UX increment: define the persisted draft/review handoff for `propose` and `review` before exposing approvals and apply.
 
+Handoff contract increment: `ChangeDraftHandoff`, its Application use case and local immutable repository are implemented. The next step is to connect `change propose`/`change review` to this snapshot without allowing agents to approve or apply it.
+
 Roadmap items are directional, not commitments; accepted architectural changes belong in ADRs.
