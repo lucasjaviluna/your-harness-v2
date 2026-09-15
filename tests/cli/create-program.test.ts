@@ -106,6 +106,47 @@ describe("createCliProgram", () => {
     }
   });
 
+  it("crea y revisa un handoff sin escribir sobre OpenSpec", async () => {
+    const workspace = await mkdtemp(path.join(os.tmpdir(), "yh-change-handoff-cli-"));
+    const proposalFile = path.join(workspace, "proposal.md");
+    const designFile = path.join(workspace, "design.md");
+    const tasksFile = path.join(workspace, "tasks.md");
+    try {
+      const { mkdir, writeFile, readFile } = await import("node:fs/promises");
+      await mkdir(path.join(workspace, "openspec/changes/add-mfa"), { recursive: true });
+      await writeFile(path.join(workspace, "openspec/changes/add-mfa/proposal.md"), "# Old proposal", "utf8");
+      await writeFile(path.join(workspace, "openspec/changes/add-mfa/design.md"), "# Old design", "utf8");
+      await writeFile(path.join(workspace, "openspec/changes/add-mfa/tasks.md"), "- [ ] Old task", "utf8");
+      await writeFile(proposalFile, "# New proposal", "utf8");
+      await writeFile(designFile, "# New design", "utf8");
+      await writeFile(tasksFile, "- [ ] New task", "utf8");
+      const output: unknown[][] = [];
+      const { program } = createCliProgram({
+        context: {
+          config,
+          logger: createLogger("fatal"),
+          io: { write: (...values) => output.push([...values]), setExitCode: () => undefined },
+        },
+      });
+
+      await program.parseAsync(["node", "yh", "change", "propose", "add-mfa", "--workspace", workspace,
+        "--proposal-file", proposalFile, "--design-file", designFile, "--tasks-file", tasksFile,
+        "--by", "user@example.com", "--role", "reviewer", "--json"]);
+      const handoff = JSON.parse(String(output.flat()[0]));
+      expect(handoff.status).toBe("ready-for-review");
+      expect(handoff.proposal).toBe("# New proposal");
+      expect(handoff.origin).toBe("user");
+      await expect(readFile(path.join(workspace, "openspec/changes/add-mfa/proposal.md"), "utf8"))
+        .resolves.toBe("# Old proposal");
+
+      output.length = 0;
+      await program.parseAsync(["node", "yh", "change", "review", "add-mfa", "--workspace", workspace, "--json"]);
+      expect(JSON.parse(String(output.flat()[0]))).toMatchObject({ id: handoff.id, design: "# New design" });
+    } finally {
+      await rm(workspace, { recursive: true, force: true });
+    }
+  });
+
   it("consulta la auditoría de un WorkItem y aplica el rango temporal", async () => {
     const workspace = await mkdtemp(path.join(os.tmpdir(), "yh-audit-cli-"));
     try {

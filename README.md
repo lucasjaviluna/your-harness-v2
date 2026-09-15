@@ -27,6 +27,7 @@ src/cli
 - `src/runtime/project-runtime-environment.ts` resuelve desde `config.yml` el runtime por defecto, proveedor SDD, trazabilidad requerida y política de entorno; Pi sólo habilita la tool `read` cuando `workspace.read` está explícitamente configurado.
 - `src/runtime/project-runtime-environment.ts` compone el materializer SDD configurado: filesystem por defecto o external-command sólo con runner inyectado.
 - `yh change inspect/status` ofrece la primera fachada read-only de alto nivel para Changes, provenance, digest, lifecycle HITM y aprobaciones obsoletas.
+- `yh change propose/review` crea y muestra un handoff durable con el snapshot completo de Proposal/Design/Tasks, sin escribir OpenSpec ni aprobar etapas.
 - `src/sdd/openspec` adapta material local de OpenSpec al port neutral `SddProvider`, sólo mediante lectura.
 - `src/sdd/openspec` también expone un `SddMaterializer` gobernado para crear o reemplazar Changes. Las actualizaciones exigen `baseContentDigest`; no modifica `openspec/specs/**`.
 - `packages/application` aplica `ExecutionEligibilityPolicy` antes de ejecutar: Specification aprobada y, opcionalmente, trazabilidad SDD.
