@@ -19,13 +19,13 @@ import { createLocalOperationalStore } from "../../persistence/index.js";
 import { createProjectRuntimeEnvironment } from "../../runtime/index.js";
 import type { CliContext } from "../cli-context.js";
 import { createCliConsole } from "../presentation/cli-io.js";
-import { writeCliError } from "../presentation/cli-errors.js";
+import { CliCommandError, CliExitCode, writeCliError } from "../presentation/cli-errors.js";
 
 const readChange = async (workspace: string, changeId: string, config: CliContext["config"]) => {
   const environment = createProjectRuntimeEnvironment({ config, workspace });
   const project = await environment.sddProvider.readProject({ root: workspace });
   const change = project.changes.find((item) => item.id === changeId);
-  if (!change) throw new Error(`No se encontró el Change '${changeId}' en el proveedor SDD.`);
+  if (!change) throw new CliCommandError(`No se encontró el Change '${changeId}' en el proveedor SDD.`, "CHANGE_NOT_FOUND", CliExitCode.NotFound);
   return { change, providerId: project.providerId };
 };
 
@@ -109,7 +109,7 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
       try {
         const store = createLocalOperationalStore({ workspace: options.workspace });
         const handoff = await store.changeDraftHandoffs.findCurrentByChangeId(changeId);
-        if (!handoff) throw new Error(`No existe un handoff para el Change '${changeId}'.`);
+        if (!handoff) throw new CliCommandError(`No existe un handoff para el Change '${changeId}'.`, "CHANGE_HANDOFF_NOT_FOUND", CliExitCode.NotFound);
         if (options.json) {
           console.log(JSON.stringify(handoff, null, 2));
           return;
@@ -144,7 +144,7 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
       try {
         const store = createLocalOperationalStore({ workspace: options.workspace });
         const handoff = await store.changeDraftHandoffs.findCurrentByChangeId(changeId);
-        if (!handoff) throw new Error(`No existe un handoff para el Change '${changeId}'.`);
+        if (!handoff) throw new CliCommandError(`No existe un handoff para el Change '${changeId}'.`, "CHANGE_HANDOFF_NOT_FOUND", CliExitCode.NotFound);
         if (!["proposal", "design", "task-plan", "apply-readiness", "verification-completion"].includes(options.stage)) {
           throw new Error(`Etapa inválida: '${options.stage}'.`);
         }
@@ -196,7 +196,7 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
         const existingAudit = await store.changeMaterializationAudits.findByIdempotencyKey(idempotencyKey);
         if (existingAudit) {
           if (existingAudit.handoffId !== handoff.id || existingAudit.changeId !== changeId) {
-            throw new Error(`La idempotencyKey '${idempotencyKey}' ya fue usada para otra materialización.`);
+          throw new CliCommandError(`La idempotencyKey '${idempotencyKey}' ya fue usada para otra materialización.`, "CHANGE_IDEMPOTENCY_CONFLICT", CliExitCode.Conflict);
           }
           if (options.json) {
             console.log(JSON.stringify({ handoffId: handoff.id, idempotentReplay: true, audit: existingAudit }, null, 2));
@@ -220,12 +220,12 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
           await transition.execute({ ...transitionInput, id: randomUUID(), requestedStatus: "apply-ready", reason: "Solicitud lista para materializar.", changedAt: new Date().toISOString() });
         } else if (currentApply.toStatus === "apply-failed") {
           if (options.retryOf !== currentApply.attemptId) {
-            throw new Error(`El retry debe indicar --retry-of ${currentApply.attemptId}.`);
+            throw new CliCommandError(`El retry debe indicar --retry-of ${currentApply.attemptId}.`, "CHANGE_RETRY_ARGUMENT_INVALID", CliExitCode.Usage);
           }
         } else if (currentApply.toStatus === "materialized") {
-          throw new Error(`El Change '${changeId}' ya está materializado.`);
+          throw new CliCommandError(`El Change '${changeId}' ya está materializado.`, "CHANGE_ALREADY_MATERIALIZED", CliExitCode.Conflict);
         } else {
-          throw new Error(`El Change '${changeId}' tiene una operación Apply en estado '${currentApply.toStatus}'.`);
+          throw new CliCommandError(`El Change '${changeId}' tiene una operación Apply en estado '${currentApply.toStatus}'.`, "CHANGE_APPLY_STATE_CONFLICT", CliExitCode.Conflict);
         }
         await transition.execute({ ...transitionInput, id: randomUUID(), requestedStatus: "applying", reason: options.retryOf ? `Retry de ${options.retryOf}.` : "Inicio de materialización.", changedAt: new Date().toISOString() });
         const environment = createProjectRuntimeEnvironment({
@@ -372,14 +372,14 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
         const { change, providerId } = await readChange(options.workspace, changeId, config);
         const store = createLocalOperationalStore({ workspace: options.workspace });
         const handoff = await store.changeDraftHandoffs.findCurrentByChangeId(changeId);
-        if (!handoff) throw new Error(`No existe un handoff para el Change '${changeId}'.`);
+        if (!handoff) throw new CliCommandError(`No existe un handoff para el Change '${changeId}'.`, "CHANGE_HANDOFF_NOT_FOUND", CliExitCode.NotFound);
         const currentApply = await store.changeApplyTransitions.findCurrentByChangeId(changeId);
-        if (!currentApply) throw new Error(`No existe un historial Apply para el Change '${changeId}'.`);
+        if (!currentApply) throw new CliCommandError(`No existe un historial Apply para el Change '${changeId}'.`, "CHANGE_APPLY_HISTORY_NOT_FOUND", CliExitCode.NotFound);
         if (options.idempotencyKey) {
           const existingRecovery = await store.changeMaterializationAudits.findByIdempotencyKey(options.idempotencyKey);
           if (existingRecovery) {
             if (existingRecovery.changeId !== changeId || existingRecovery.handoffId !== handoff.id || existingRecovery.strategy !== "recovery") {
-              throw new Error(`La idempotencyKey '${options.idempotencyKey}' ya fue usada para otra operación.`);
+              throw new CliCommandError(`La idempotencyKey '${options.idempotencyKey}' ya fue usada para otra operación.`, "CHANGE_RECOVERY_IDEMPOTENCY_CONFLICT", CliExitCode.Conflict);
             }
             const replay = { changeId, providerId, idempotentReplay: true, hitmRequired: false, persisted: true, audit: existingRecovery };
             if (options.json) console.log(JSON.stringify(replay, null, 2));
@@ -397,12 +397,12 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
         let resolution;
         if (options.confirm || options.decision || options.by || options.role || options.reason) {
           if (!options.confirm || !options.decision || !options.by || !options.role || !options.reason) {
-            throw new Error("La resolución requiere --confirm, --decision, --by, --role y --reason.");
+            throw new CliCommandError("La resolución requiere --confirm, --decision, --by, --role y --reason.", "CHANGE_RECOVERY_ARGUMENTS_INVALID", CliExitCode.Usage);
           }
-          if (!['materialized', 'apply-failed'].includes(options.decision)) throw new Error("--decision debe ser materialized o apply-failed.");
+          if (!['materialized', 'apply-failed'].includes(options.decision)) throw new CliCommandError("--decision debe ser materialized o apply-failed.", "CHANGE_RECOVERY_DECISION_INVALID", CliExitCode.Usage);
           const expectedDecision = reconciliation.recommendedStatus;
           if (reconciliation.observation === "inconsistent" || options.decision !== expectedDecision) {
-            throw new Error(`La decisión '${options.decision}' no coincide con la evidencia observable ('${reconciliation.observation}').`);
+            throw new CliCommandError(`La decisión '${options.decision}' no coincide con la evidencia observable ('${reconciliation.observation}').`, "CHANGE_RECOVERY_HITM_REQUIRED", CliExitCode.Guardrail);
           }
           const transition = new TransitionChangeApplyUseCase(store.changeApplyTransitions);
           await transition.execute({

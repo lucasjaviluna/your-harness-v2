@@ -8,7 +8,7 @@ import { createProjectRuntimeEnvironment } from "../../runtime/index.js";
 import { assertSpecificationSnapshotMatchesBinding, resolveExecutionSource } from "../../sdd/index.js";
 import type { CliContext } from "../cli-context.js";
 import { createCliConsole } from "../presentation/cli-io.js";
-import { writeCliError } from "../presentation/cli-errors.js";
+import { CliCommandError, CliExitCode, writeCliError } from "../presentation/cli-errors.js";
 
 type CompletionDecision = "authorize-completion" | "request-rework" | "require-further-review";
 
@@ -26,7 +26,7 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
       try {
         const store = createLocalOperationalStore({ workspace: options.workspace });
         const id = new WorkItemId(workItemId);
-        if (await store.workItems.findById(id)) throw new Error(`Work item '${workItemId}' already exists.`);
+        if (await store.workItems.findById(id)) throw new CliCommandError(`Work item '${workItemId}' already exists.`, "WORK_ITEM_ALREADY_EXISTS", CliExitCode.Conflict);
         await store.workItems.save(new WorkItem(id, new IntentId(options.intent), new WorkItemTitle(options.title)));
         if (options.json) console.log(JSON.stringify({ workItemId, status: "created" }, null, 2));
         else console.log(chalk.green(`✓ Work item '${workItemId}' persisted`));
@@ -47,7 +47,7 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
         const projectEnvironment = createProjectRuntimeEnvironment({ config, workspace: options.workspace });
         const store = createLocalOperationalStore({ workspace: options.workspace });
         const id = new WorkItemId(workItemId);
-        if (!(await store.workItems.findById(id))) throw new Error(`Work item '${workItemId}' was not found in local operational state.`);
+        if (!(await store.workItems.findById(id))) throw new CliCommandError(`Work item '${workItemId}' was not found in local operational state.`, "WORK_ITEM_NOT_FOUND", CliExitCode.NotFound);
         const sddProject = await projectEnvironment.sddProvider.readProject({ root: options.workspace });
         const source = resolveExecutionSource(sddProject, {
           workItemId,
@@ -79,7 +79,7 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
         const store = createLocalOperationalStore({ workspace: options.workspace });
         const id = new WorkItemId(workItemId);
         const workItem = await store.workItems.findById(id);
-        if (!workItem) throw new Error(`Work item '${workItemId}' not found.`);
+        if (!workItem) throw new CliCommandError(`Work item '${workItemId}' not found.`, "WORK_ITEM_NOT_FOUND", CliExitCode.NotFound);
         await store.workItems.save(workItem.start());
         if (options.json) console.log(JSON.stringify({ workItemId, status: "in-progress" }, null, 2));
         else console.log(chalk.green(`✓ Work item '${workItemId}' started`));
@@ -100,7 +100,7 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
       try {
         const store = createLocalOperationalStore({ workspace: options.workspace });
         const binding = await store.executionBindings.findByWorkItemId(new WorkItemId(workItemId));
-        if (!binding) throw new Error(`WorkItem '${workItemId}' no tiene un binding SDD.`);
+        if (!binding) throw new CliCommandError(`WorkItem '${workItemId}' no tiene un binding SDD.`, "WORK_ITEM_BINDING_NOT_FOUND", CliExitCode.NotFound);
         const environment = createProjectRuntimeEnvironment({ config, workspace: options.workspace });
         const source = resolveExecutionSource(await environment.sddProvider.readProject({ root: options.workspace }), binding);
         const requirementIds = options.requirement ?? [];
@@ -188,12 +188,12 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
         const binding = await store.executionBindings.findByWorkItemId(workItemIdValue);
         if (!binding) throw new Error(`Work item '${workItemId}' has no persistent SDD execution binding.`);
         const selection = await store.executionScopeSelections.findByWorkItemId(workItemId);
-        if (!selection) throw new Error(`Work item '${workItemId}' has no HITM-confirmed execution scope; run 'work select' first.`);
+        if (!selection) throw new CliCommandError(`Work item '${workItemId}' has no HITM-confirmed execution scope; run 'work select' first.`, "WORK_ITEM_SCOPE_REQUIRED", CliExitCode.Guardrail);
         const sddProject = await projectEnvironment.sddProvider.readProject({ root: options.workspace });
         const source = resolveExecutionSource(sddProject, binding);
         assertSpecificationSnapshotMatchesBinding(binding, source.specificationSnapshot);
         if (selection.specificationId !== source.specification.id.value || selection.specificationSnapshotDigest !== source.specificationSnapshot.contentDigest) {
-          throw new Error(`Execution scope for '${workItemId}' is stale; confirm a new scope before execution.`);
+          throw new CliCommandError(`Execution scope for '${workItemId}' is stale; confirm a new scope before execution.`, "WORK_ITEM_SCOPE_STALE", CliExitCode.Conflict);
         }
         const specifications = new InMemoryRepository<Specification, SpecificationId>();
         await specifications.save(source.specification);

@@ -18,6 +18,8 @@ La CLI de `version`, `config`, `mode`, `provider`, `change`, `work`, `audit` y `
 
 La taxonomía de proceso ya está definida (`0` éxito, `1` inesperado, `2` uso, `3` guardrail/HITM, `4` no encontrado, `5` conflicto, `6` externo); la migración de errores genéricos a códigos finos continúa por operación.
 
+Los casos críticos de `change` y `work` ya usan clasificación explícita para not-found, uso, guardrails HITM y conflictos de estado; los errores no clasificados permanecen en `1` hasta tener semántica inequívoca.
+
 ## Later
 
 6. ~~Connect `yh work-item execute` to persistent operational state and an authoritative Specification source.~~ **Completed:** the CLI reads persistent WorkItems/bindings, projects the configured SDD source, and writes traces. It intentionally does not mirror Specifications locally.

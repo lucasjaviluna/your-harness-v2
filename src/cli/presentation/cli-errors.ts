@@ -20,6 +20,17 @@ export const CliExitCode = {
   External: 6,
 } as const;
 
+export class CliCommandError extends Error {
+  constructor(
+    message: string,
+    readonly code: string,
+    readonly exitCode: number,
+  ) {
+    super(message);
+    this.name = "CliCommandError";
+  }
+}
+
 const messageFor = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
 
@@ -30,11 +41,13 @@ export const writeCliError = (
   options: { readonly json?: boolean; readonly code?: string; readonly title: string; readonly exitCode?: number },
 ): void => {
   const message = messageFor(error);
-  const exitCode = options.exitCode ?? CliExitCode.Unexpected;
+  const typedError = error instanceof CliCommandError ? error : undefined;
+  const exitCode = typedError?.exitCode ?? options.exitCode ?? CliExitCode.Unexpected;
+  const code = typedError?.code ?? options.code ?? "CLI_COMMAND_FAILED";
   if (options.json) {
     io.write(JSON.stringify({
       ok: false,
-      error: { code: options.code ?? "CLI_COMMAND_FAILED", message, exitCode },
+      error: { code, message, exitCode },
     } satisfies CliErrorPayload, null, 2));
   } else {
     io.write(options.title);

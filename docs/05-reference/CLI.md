@@ -32,3 +32,5 @@ Los comandos soportados de `version`, `config`, `mode`, `provider`, `change`, `w
 Los errores de comandos finalizan con exit code `1`; el código textual `error.code` permite distinguir la operación fallida sin analizar el texto humano. La salida humana continúa usando mensajes legibles. La CLI no mezcla logs de diagnóstico con stdout JSON; los consumidores deben tratar stdout como contrato de datos cuando usan `--json`.
 
 La taxonomía reservada de exit codes es: `0` éxito, `1` error inesperado, `2` uso o validación, `3` guardrail/HITM, `4` recurso inexistente, `5` conflicto o estado obsoleto y `6` proveedor/runtime externo. La adopción es progresiva: los comandos aún no clasificados usan `1`; los errores JSON ya incluyen el `exitCode` efectivo.
+
+En los flujos críticos ya se clasifican explícitamente los casos conocidos: Change/WorkItem/binding inexistente usa `4`; argumentos inválidos o retry mal formado usa `2`; HITM/scope/recovery requerido usa `3`; duplicados, materialización ya realizada, estado Apply incompatible o scope obsoleto usa `5`.
