@@ -11,6 +11,8 @@ export interface ChangeMaterializationAudit {
   readonly idempotencyKey: string;
   /** Intento anterior que se está reejecutando, si corresponde. */
   readonly retryOfAttemptId?: string;
+  /** Intento cuyo resultado se resolvió mediante reconciliación HITM. */
+  readonly recoveryOfAttemptId?: string;
   readonly handoffId: string;
   readonly changeId: string;
   readonly providerId: string;

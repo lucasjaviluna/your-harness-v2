@@ -370,9 +370,15 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
 
   changeCommand.command("recover <changeId>")
     .description("Reconciliar de forma read-only un Apply interrumpido")
+    .option("--confirm", "Confirmación HITM explícita para resolver la recuperación")
+    .option("--decision <decision>", "Decisión HITM: materialized o apply-failed")
+    .option("-b, --by <actor>", "Usuario que resuelve la recuperación")
+    .option("--role <role>", "Rol del usuario que resuelve la recuperación")
+    .option("--reason <reason>", "Motivo de la decisión HITM")
+    .option("--idempotency-key <key>", "Clave estable para la resolución")
     .option("-w, --workspace <path>", "Workspace del proyecto", process.cwd())
     .option("--json", "Imprimir la reconciliación como JSON")
-    .action(async (changeId: string, options: { workspace: string; json?: boolean }) => {
+    .action(async (changeId: string, options: { confirm?: boolean; decision?: string; by?: string; role?: string; reason?: string; idempotencyKey?: string; workspace: string; json?: boolean }) => {
       try {
         const { change, providerId } = await readChange(options.workspace, changeId, config);
         const store = createLocalOperationalStore({ workspace: options.workspace });
@@ -386,6 +392,45 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
           baseContentDigest: handoff.baseContentDigest,
           expectedContentDigest: handoff.proposedContentDigest,
         });
+        let resolution;
+        if (options.confirm || options.decision || options.by || options.role || options.reason) {
+          if (!options.confirm || !options.decision || !options.by || !options.role || !options.reason) {
+            throw new Error("La resolución requiere --confirm, --decision, --by, --role y --reason.");
+          }
+          if (!['materialized', 'apply-failed'].includes(options.decision)) throw new Error("--decision debe ser materialized o apply-failed.");
+          const expectedDecision = reconciliation.recommendedStatus;
+          if (reconciliation.observation === "inconsistent" || options.decision !== expectedDecision) {
+            throw new Error(`La decisión '${options.decision}' no coincide con la evidencia observable ('${reconciliation.observation}').`);
+          }
+          const transition = new TransitionChangeApplyUseCase(store.changeApplyTransitions);
+          await transition.execute({
+            id: randomUUID(), changeId, handoffId: handoff.id, attemptId: currentApply.attemptId,
+            idempotencyKey: currentApply.idempotencyKey, changeVersion: handoff.proposedVersion,
+            changeDigest: handoff.proposedContentDigest, provenance: handoff.provenance,
+            changedBy: options.by, changedByRole: options.role, reason: "Apply interrumpido; requiere reconciliación HITM.",
+            changedAt: new Date().toISOString(), requestedStatus: "recovery-required",
+          });
+          const recoveryAttemptId = randomUUID();
+          const recoveryKey = options.idempotencyKey ?? `recovery:${currentApply.attemptId}:${options.decision}`;
+          const audit = await new RecordChangeMaterializationAuditUseCase(store.changeMaterializationAudits).execute({
+            id: randomUUID(), attemptId: recoveryAttemptId, idempotencyKey: recoveryKey,
+            recoveryOfAttemptId: currentApply.attemptId, handoffId: handoff.id, changeId,
+            providerId: handoff.providerId, provenance: handoff.provenance, strategy: "recovery",
+            baseVersion: handoff.baseVersion, baseContentDigest: handoff.baseContentDigest,
+            materializedVersion: change.version, materializedContentDigest: change.contentDigest,
+            outcome: options.decision === "materialized" ? "succeeded" : "failed", actor: options.by, actorRole: options.role,
+            error: options.decision === "apply-failed" ? "La materialización no se observó en el proveedor; resolución HITM." : undefined,
+            occurredAt: new Date().toISOString(),
+          });
+          const resolved = await transition.execute({
+            id: randomUUID(), changeId, handoffId: handoff.id, attemptId: recoveryAttemptId,
+            idempotencyKey: recoveryKey, changeVersion: handoff.proposedVersion,
+            changeDigest: handoff.proposedContentDigest, provenance: handoff.provenance,
+            changedBy: options.by, changedByRole: options.role, reason: options.reason,
+            changedAt: new Date().toISOString(), requestedStatus: options.decision, humanConfirmed: true,
+          });
+          resolution = { transition: resolved, audit };
+        }
         const result = {
           changeId, providerId, attemptId: currentApply.attemptId,
           currentStatus: currentApply.toStatus,
@@ -394,7 +439,8 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
           expectedContentDigest: handoff.proposedContentDigest,
           ...reconciliation,
           hitmRequired: true,
-          persisted: false,
+          persisted: resolution !== undefined,
+          resolution,
         };
         if (options.json) {
           console.log(JSON.stringify(result, null, 2));
