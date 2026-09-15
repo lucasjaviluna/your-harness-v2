@@ -6,6 +6,7 @@ import { createLogger } from "../../src/core/logger.js";
 import { createCliProgram } from "../../src/cli/create-program.js";
 import type { ValidatedConfig } from "../../src/core/config.js";
 import { createLocalOperationalStore } from "../../src/persistence/index.js";
+import { TransitionChangeApplyUseCase } from "@your-harness/application";
 
 const config: ValidatedConfig = {
   version: "test-version",
@@ -219,6 +220,50 @@ describe("createCliProgram", () => {
       expect(record.workItemId).toBe("work-audit");
       expect(record.executions).toHaveLength(1);
       expect(record.executions[0].executionTrace.id).toBe("trace-audit");
+    } finally {
+      await rm(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it("reconcilia un Apply interrumpido y repite la resolución de forma idempotente", async () => {
+    const workspace = await mkdtemp(path.join(os.tmpdir(), "yh-change-recover-e2e-"));
+    try {
+      const { mkdir, writeFile } = await import("node:fs/promises");
+      await mkdir(path.join(workspace, "openspec/changes/add-mfa"), { recursive: true });
+      await writeFile(path.join(workspace, "openspec/changes/add-mfa/proposal.md"), "# Existing proposal\n", "utf8");
+      await writeFile(path.join(workspace, "openspec/changes/add-mfa/design.md"), "# Existing design\n", "utf8");
+      await writeFile(path.join(workspace, "openspec/changes/add-mfa/tasks.md"), "- [ ] Existing task\n", "utf8");
+      const proposalFile = path.join(workspace, "proposal.md");
+      const designFile = path.join(workspace, "design.md");
+      const tasksFile = path.join(workspace, "tasks.md");
+      await writeFile(proposalFile, "# New proposal\n", "utf8");
+      await writeFile(designFile, "# New design\n", "utf8");
+      await writeFile(tasksFile, "- [ ] New task\n", "utf8");
+      const output: unknown[][] = [];
+      const context = { config, logger: createLogger("fatal"), io: { write: (...values: unknown[]) => output.push([...values]), setExitCode: () => undefined } };
+      const { program } = createCliProgram({ context });
+      await program.parseAsync(["node", "yh", "change", "propose", "add-mfa", "--workspace", workspace, "--proposal-file", proposalFile, "--design-file", designFile, "--tasks-file", tasksFile, "--by", "user@example.com", "--role", "reviewer", "--json"]);
+      const handoff = JSON.parse(String(output.flat()[0]));
+      const store = createLocalOperationalStore({ workspace });
+      const transition = new TransitionChangeApplyUseCase(store.changeApplyTransitions);
+      const base = {
+        changeId: "add-mfa", handoffId: handoff.id, attemptId: "attempt-interrupted", idempotencyKey: "apply-request-1",
+        changeVersion: handoff.proposedVersion, changeDigest: handoff.proposedContentDigest,
+        provenance: handoff.provenance, changedBy: "architect@example.com", changedByRole: "maintainer",
+      };
+      await transition.execute({ ...base, id: "apply-transition-1", requestedStatus: "approved", reason: "Approved.", changedAt: "2026-09-15T04:00:00.000Z" });
+      await transition.execute({ ...base, id: "apply-transition-2", requestedStatus: "apply-ready", reason: "Ready.", changedAt: "2026-09-15T04:00:01.000Z" });
+      await transition.execute({ ...base, id: "apply-transition-3", requestedStatus: "applying", reason: "Started.", changedAt: "2026-09-15T04:00:02.000Z" });
+      output.length = 0;
+      await program.parseAsync(["node", "yh", "change", "recover", "add-mfa", "--workspace", workspace, "--json"]);
+      expect(JSON.parse(String(output.flat()[0]))).toMatchObject({ observation: "not-materialized", recommendedStatus: "apply-failed", persisted: false });
+      output.length = 0;
+      await program.parseAsync(["node", "yh", "change", "recover", "add-mfa", "--workspace", workspace, "--confirm", "--decision", "apply-failed", "--by", "architect@example.com", "--role", "maintainer", "--reason", "El provider conserva el digest base.", "--idempotency-key", "recovery-request-1", "--json"]);
+      const resolved = JSON.parse(String(output.flat()[0]));
+      expect(resolved).toMatchObject({ persisted: true, resolution: { audit: { outcome: "failed" }, transition: { toStatus: "apply-failed" } } });
+      output.length = 0;
+      await program.parseAsync(["node", "yh", "change", "recover", "add-mfa", "--workspace", workspace, "--idempotency-key", "recovery-request-1", "--json"]);
+      expect(JSON.parse(String(output.flat()[0]))).toMatchObject({ idempotentReplay: true, audit: { outcome: "failed" } });
     } finally {
       await rm(workspace, { recursive: true, force: true });
     }

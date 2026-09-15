@@ -30,7 +30,7 @@ La propuesta es tratarlo como un **v0.1.0 Governed Change Foundation**: una vers
 
 ## Gaps para declarar el release estable
 
-1. Completar pruebas E2E de `change recover`, incluidos replay idempotente y recuperación desde un proceso interrumpido.
+1. Completar la matriz E2E con una interrupción real de proceso y replay idempotente en todos los resultados de `change recover`; ya existe cobertura E2E sobre estado persistido.
 2. Definir versionado/migración de los JSON bajo `.your-harness/state`.
 3. Consolidar el contrato de configuración, errores CLI, códigos de salida y salida JSON.
 4. Agregar CI/CD mínimo: build, tests, lint, validación documental y empaquetado.
