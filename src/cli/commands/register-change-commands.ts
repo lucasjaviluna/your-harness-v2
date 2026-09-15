@@ -8,6 +8,7 @@ import {
   CreateChangeDraftHandoffUseCase,
   MaterializeApprovedChangeUseCase,
   RecordChangeMaterializationAuditUseCase,
+  TransitionChangeApplyUseCase,
   findInvalidatedChangeStageApprovals,
   type ChangeStage,
   type ChangeStageApprovalDecision,
@@ -195,8 +196,42 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
         const store = createLocalOperationalStore({ workspace: options.workspace });
         const handoff = await store.changeDraftHandoffs.findCurrentByChangeId(changeId);
         if (!handoff) throw new Error(`No existe un handoff para el Change '${changeId}'.`);
-        const attemptId = randomUUID();
         const idempotencyKey = options.idempotencyKey ?? `${handoff.id}:${handoff.proposedContentDigest}:${options.by}`;
+        const existingAudit = await store.changeMaterializationAudits.findByIdempotencyKey(idempotencyKey);
+        if (existingAudit) {
+          if (existingAudit.handoffId !== handoff.id || existingAudit.changeId !== changeId) {
+            throw new Error(`La idempotencyKey '${idempotencyKey}' ya fue usada para otra materialización.`);
+          }
+          if (options.json) {
+            console.log(JSON.stringify({ handoffId: handoff.id, idempotentReplay: true, audit: existingAudit }, null, 2));
+          } else {
+            console.log(chalk.yellow(`↺ Solicitud ya procesada: ${existingAudit.outcome}`));
+            console.log(`Intento: ${existingAudit.attemptId}`);
+            console.log(`Auditoría: ${existingAudit.id}`);
+          }
+          return;
+        }
+        const attemptId = randomUUID();
+        const transition = new TransitionChangeApplyUseCase(store.changeApplyTransitions);
+        const transitionInput = {
+          changeId, handoffId: handoff.id, attemptId, idempotencyKey,
+          changeVersion: handoff.proposedVersion, changeDigest: handoff.proposedContentDigest,
+          provenance: handoff.provenance, changedBy: options.by, changedByRole: options.role,
+        };
+        const currentApply = await store.changeApplyTransitions.findCurrentByChangeId(changeId);
+        if (!currentApply) {
+          await transition.execute({ ...transitionInput, id: randomUUID(), requestedStatus: "approved", reason: "Apply Readiness aprobada.", changedAt: new Date().toISOString() });
+          await transition.execute({ ...transitionInput, id: randomUUID(), requestedStatus: "apply-ready", reason: "Solicitud lista para materializar.", changedAt: new Date().toISOString() });
+        } else if (currentApply.toStatus === "apply-failed") {
+          if (options.retryOf !== currentApply.attemptId) {
+            throw new Error(`El retry debe indicar --retry-of ${currentApply.attemptId}.`);
+          }
+        } else if (currentApply.toStatus === "materialized") {
+          throw new Error(`El Change '${changeId}' ya está materializado.`);
+        } else {
+          throw new Error(`El Change '${changeId}' tiene una operación Apply en estado '${currentApply.toStatus}'.`);
+        }
+        await transition.execute({ ...transitionInput, id: randomUUID(), requestedStatus: "applying", reason: options.retryOf ? `Retry de ${options.retryOf}.` : "Inicio de materialización.", changedAt: new Date().toISOString() });
         const environment = createProjectRuntimeEnvironment({
           config,
           workspace: options.workspace,
@@ -226,6 +261,7 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
             outcome: "failed", actor: options.by, actorRole: options.role,
             error: error instanceof Error ? error.message : String(error), occurredAt: new Date().toISOString(),
           }).catch(() => undefined);
+          await transition.execute({ ...transitionInput, id: randomUUID(), requestedStatus: "apply-failed", reason: "La materialización falló.", changedAt: new Date().toISOString() }).catch(() => undefined);
           throw error;
         }
         const audit = await new RecordChangeMaterializationAuditUseCase(store.changeMaterializationAudits).execute({
@@ -235,6 +271,7 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
           materializedVersion: result.version, materializedContentDigest: result.contentDigest,
           outcome: "succeeded", actor: options.by, actorRole: options.role, occurredAt: new Date().toISOString(),
         });
+        await transition.execute({ ...transitionInput, id: randomUUID(), requestedStatus: "materialized", reason: "La materialización finalizó correctamente.", changedAt: new Date().toISOString() });
         if (options.json) {
           console.log(JSON.stringify({ handoffId: handoff.id, result, audit }, null, 2));
           return;

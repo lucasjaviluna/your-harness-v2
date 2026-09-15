@@ -678,8 +678,6 @@ export const createLocalOperationalStore = (
       async save(record) {
         const filePath = path.join(changeApplyTransitionsDirectory, fileNameFor(record.id));
         if (await readJson<unknown>(filePath)) throw new Error(`Change Apply transition '${record.id}' already exists and is immutable.`);
-        const existingAttempt = await this.findByAttemptId(record.attemptId);
-        if (existingAttempt.length > 0) throw new Error(`Change Apply attempt '${record.attemptId}' already has transitions.`);
         await writeJson(filePath, createChangeApplyTransitionRecord(record));
       },
       async findByChangeId(changeId) {
