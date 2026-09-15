@@ -386,6 +386,19 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
         if (!handoff) throw new Error(`No existe un handoff para el Change '${changeId}'.`);
         const currentApply = await store.changeApplyTransitions.findCurrentByChangeId(changeId);
         if (!currentApply) throw new Error(`No existe un historial Apply para el Change '${changeId}'.`);
+        if (options.idempotencyKey) {
+          const existingRecovery = await store.changeMaterializationAudits.findByIdempotencyKey(options.idempotencyKey);
+          if (existingRecovery) {
+            if (existingRecovery.changeId !== changeId || existingRecovery.handoffId !== handoff.id || existingRecovery.strategy !== "recovery") {
+              throw new Error(`La idempotencyKey '${options.idempotencyKey}' ya fue usada para otra operación.`);
+            }
+            const replay = { changeId, providerId, idempotentReplay: true, hitmRequired: false, persisted: true, audit: existingRecovery };
+            if (options.json) console.log(JSON.stringify(replay, null, 2));
+            else console.log(chalk.yellow(`↺ Resolución ya registrada: ${existingRecovery.outcome} (${existingRecovery.id})`));
+            return;
+          }
+        }
+        const applyTransitions = await store.changeApplyTransitions.findByChangeId(changeId);
         const reconciliation = reconcileInterruptedChangeApply({
           currentStatus: currentApply.toStatus,
           currentContentDigest: change.contentDigest,
@@ -441,6 +454,12 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
           hitmRequired: true,
           persisted: resolution !== undefined,
           resolution,
+          diagnostics: {
+            interruptedAt: currentApply.changedAt,
+            lastTransitionAt: applyTransitions.at(-1)?.changedAt,
+            transitionCount: applyTransitions.length,
+            recoveryRequired: currentApply.toStatus === "applying",
+          },
         };
         if (options.json) {
           console.log(JSON.stringify(result, null, 2));
