@@ -18,6 +18,9 @@ const runYh = async (workspace: string, ...arguments_: string[]): Promise<string
   return stdout;
 };
 
+const runYhResult = async (workspace: string, ...arguments_: string[]) =>
+  executeFile(process.execPath, [cli, ...arguments_], { cwd: workspace });
+
 const createWorkspace = async (): Promise<string> => {
   const workspace = await mkdtemp(path.join(os.tmpdir(), "yh-cli-persistence-"));
   workspaces.push(workspace);
@@ -177,6 +180,23 @@ describe("yh work execute", () => {
     const store = createLocalOperationalStore({ workspace });
     await expect(store.workItems.findById(new WorkItemId("login-work"))).resolves.toMatchObject({
       status: WorkItemStatus.Done,
+    });
+  }, 60_000);
+
+  it("rechaza la ejecución de proceso si falta el alcance HITM confirmado", async () => {
+    const workspace = await createWorkspace();
+    await runYh(workspace, "work", "create", "unselected-work", "--title", "Requires scope");
+    await runYh(
+      workspace, "work", "bind", "unselected-work", "--specification", "authentication",
+      "--approve-specification", "--change", "add-login",
+    );
+
+    const result = await runYhResult(workspace, "work", "execute", "unselected-work", "--runtime", "fake", "--json")
+      .catch((error: unknown) => error as { stdout: string; code: number });
+    expect(result.code).toBe(3);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      ok: false,
+      error: { code: "WORK_ITEM_SCOPE_REQUIRED", exitCode: 3 },
     });
   }, 60_000);
 });

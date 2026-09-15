@@ -25,7 +25,7 @@ La superficie estable puede declararse gobernada para operaciones locales porque
 
 - No hay lock multiproceso: dos procesos concurrentes podrían competir por el mismo Change. La mitigación actual es la revalidación de digest, la atomicidad y la recuperación explícita; el lock queda para hardening posterior.
 - Un runner externo no está sandboxeado por el sistema operativo. Sólo se habilita mediante capability, confirmación, `cwd` explícito, `shell: false` y timeout; no debe considerarse aislamiento contra un proceso malicioso.
-- La matriz completa de comandos y escenarios de escritura todavía debe convertirse en una checklist E2E antes de etiquetar el release.
+- La matriz de comandos está documentada y sus flujos críticos tienen cobertura E2E; queda verificar la instalación empaquetada y los últimos escenarios secundarios antes de etiquetar el release.
 - MCP, `ToolExecutor` general y steps `command`/`script` permanecen fuera de la superficie estable; sus rutas experimentales fallan cerrado o requieren integración explícita.
 
 La matriz de comandos y efectos persistentes está en `Write-Command-Matrix.md`.

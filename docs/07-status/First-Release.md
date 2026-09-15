@@ -30,13 +30,13 @@ La propuesta es tratarlo como un **v0.1.0 Governed Change Foundation**: una vers
 
 ## Gaps para declarar el release estable
 
-1. Completar la matriz E2E con una interrupción real de proceso y replay idempotente en todos los resultados de `change recover`; ya existe cobertura E2E sobre estado persistido.
+1. Completar la matriz E2E con todos los resultados de `change recover` — `apply-failed`, replay idempotente, `materialized`, `recovery-required` y retry explícito ya están cubiertos desde proceso CLI; queda consolidar el escenario de fallo de escritura completo.
 2. Definir versionado/migración de los JSON bajo `.your-harness/state` — contrato v1 implementado; quedan migraciones futuras sólo cuando cambie el formato.
 3. Consolidar el contrato de configuración, errores CLI, códigos de salida y salida JSON — envelope y taxonomía definidos; implementado para `version`, `config`, `mode`, `provider`, `change`, `work`, `audit` y `verification`, con clasificación fina en los flujos críticos y errores de parseo Commander normalizados. La matriz de capabilities ya está publicada; faltan casos secundarios y comandos experimentales.
 4. Agregar CI/CD mínimo: build, tests, lint, validación documental y empaquetado — completado; GitHub Actions pasó en runner limpio con Node 22.19/24.
 5. Reemplazar o aislar explícitamente los mocks/stubs que queden visibles en la superficie soportada — ToolExecutor y steps `command`/`script` ahora fallan cerrados; MCP y otras familias experimentales siguen fuera del alcance estable.
 6. Probar instalación limpia y ejecución desde un workspace externo al repositorio.
-7. Cerrar la revisión de seguridad de paths, capabilities y confirmaciones en todos los comandos que escriben — boundary y materializer revisados; la evidencia está en `Security-Review.md` y la matriz de efectos en `Write-Command-Matrix.md`; queda ejecutar la matriz desde procesos CLI limpios.
+7. Cerrar la revisión de seguridad de paths, capabilities y confirmaciones en todos los comandos que escriben — boundary y materializer revisados; la evidencia está en `Security-Review.md` y la matriz de efectos en `Write-Command-Matrix.md`; los flujos principales ya tienen E2E de proceso, queda la verificación final desde instalación empaquetada.
 8. Publicar una matriz de capabilities y limitaciones para evitar prometer orquestación aún no implementada — matriz inicial publicada; queda mantenerla sincronizada con cada capability nueva.
 
 ## Estado estimado
@@ -44,7 +44,7 @@ La propuesta es tratarlo como un **v0.1.0 Governed Change Foundation**: una vers
 La estimación es cualitativa y depende de mantener este alcance:
 
 - **Base gobernada/CLI:** avanzada; la mayor parte del flujo está implementada.
-- **Hardening de release:** incompleto; faltan CI, migraciones, E2E y contrato de distribución.
+- **Hardening de release:** avanzado pero incompleto; CI, versionado, seguridad y E2E críticos están cubiertos; falta instalación empaquetada, escenarios secundarios y decisión final sobre lock multiproceso.
 - **Visión completa de your-harness:** temprana; TaskOrchestrator, agente de ejecución, MCP y workflows reales aún son fases posteriores.
 
 Como orientación de planificación, el proyecto está aproximadamente en **65–75% del v0.1.0 acotado** y en **35–45% de la visión completa**. Son rangos de trabajo, no una métrica de calidad ni una promesa de calendario.
