@@ -156,6 +156,35 @@ describe("createCliProgram", () => {
         "--decision", "approve", "--by", "architect@example.com", "--role", "reviewer",
         "--reason", "Design revisado", "--workspace", workspace, "--json"]);
       expect(JSON.parse(String(output.flat()[0]))).toMatchObject({ stage: "design", decision: "approve" });
+
+      for (const [stage, reason] of [["task-plan", "Tasks revisadas"], ["apply-readiness", "Apply autorizado"]] as const) {
+        await program.parseAsync(["node", "yh", "change", "approve", "add-mfa", "--stage", stage,
+          "--decision", "approve", "--by", "architect@example.com", "--role", "reviewer",
+          "--reason", reason, "--workspace", workspace, "--json"]);
+      }
+      const applyConfig: ValidatedConfig = {
+        ...config,
+        runtime: {
+          ...config.runtime,
+          executionEnvironment: {
+            ...config.runtime.executionEnvironment,
+            workspace: { mode: "read-write" },
+            capabilities: ["workspace.write"],
+          },
+        },
+      };
+      const applyOutput: unknown[][] = [];
+      const { program: applyProgram } = createCliProgram({
+        context: {
+          config: applyConfig,
+          logger: createLogger("fatal"),
+          io: { write: (...values) => applyOutput.push([...values]), setExitCode: () => undefined },
+        },
+      });
+      await applyProgram.parseAsync(["node", "yh", "change", "apply", "add-mfa", "--confirm", "--workspace", workspace, "--json"]);
+      expect(JSON.parse(String(applyOutput.flat()[0]))).toMatchObject({ result: { changeId: "add-mfa" } });
+      await expect(readFile(path.join(workspace, "openspec/changes/add-mfa/proposal.md"), "utf8"))
+        .resolves.toBe("# New proposal");
     } finally {
       await rm(workspace, { recursive: true, force: true });
     }

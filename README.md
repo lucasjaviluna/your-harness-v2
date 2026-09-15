@@ -29,6 +29,7 @@ src/cli
 - `yh change inspect/status` ofrece la primera fachada read-only de alto nivel para Changes, provenance, digest, lifecycle HITM y aprobaciones obsoletas.
 - `yh change propose/review` crea y muestra un handoff durable con el snapshot completo de Proposal/Design/Tasks, sin escribir OpenSpec ni aprobar etapas.
 - `yh change approve` registra decisiones HITM inmutables ligadas al handoff, versión y digest exactos; no materializa cambios.
+- `yh change apply` materializa sólo un handoff con Apply Readiness aprobada, confirmación explícita y base digest vigente; la transición durable a `materialized` queda pendiente de auditoría de operación.
 - `src/sdd/openspec` adapta material local de OpenSpec al port neutral `SddProvider`, sólo mediante lectura.
 - `src/sdd/openspec` también expone un `SddMaterializer` gobernado para crear o reemplazar Changes. Las actualizaciones exigen `baseContentDigest`; no modifica `openspec/specs/**`.
 - `packages/application` aplica `ExecutionEligibilityPolicy` antes de ejecutar: Specification aprobada y, opcionalmente, trazabilidad SDD.

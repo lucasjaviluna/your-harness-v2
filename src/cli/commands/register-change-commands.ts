@@ -6,6 +6,7 @@ import chalk from "chalk";
 import {
   ApproveChangeStageUseCase,
   CreateChangeDraftHandoffUseCase,
+  MaterializeApprovedChangeUseCase,
   findInvalidatedChangeStageApprovals,
   type ChangeStage,
   type ChangeStageApprovalDecision,
@@ -174,6 +175,49 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
         console.log(`Versión: ${approval.changeVersion} | Digest: ${approval.changeDigest}`);
       } catch (error) {
         console.log(chalk.red("✗ No se pudo registrar la decisión HITM:"));
+        console.log(chalk.red((error as Error).message));
+        io.setExitCode(1);
+      }
+    });
+
+  changeCommand.command("apply <changeId>")
+    .description("Materializar el handoff vigente después de Apply Readiness aprobada")
+    .requiredOption("--confirm", "Confirmación HITM explícita para escribir OpenSpec")
+    .option("-w, --workspace <path>", "Workspace del proyecto", process.cwd())
+    .option("--json", "Imprimir el resultado de materialización como JSON")
+    .action(async (changeId: string, options: { confirm?: boolean; workspace: string; json?: boolean }) => {
+      try {
+        const store = createLocalOperationalStore({ workspace: options.workspace });
+        const handoff = await store.changeDraftHandoffs.findCurrentByChangeId(changeId);
+        if (!handoff) throw new Error(`No existe un handoff para el Change '${changeId}'.`);
+        const environment = createProjectRuntimeEnvironment({
+          config,
+          workspace: options.workspace,
+          sddMaterializerConfirmed: options.confirm === true,
+        });
+        const preview = {
+          scope: { root: options.workspace },
+          changeId: handoff.changeId,
+          baseVersion: handoff.baseVersion,
+          baseContentDigest: handoff.baseContentDigest,
+          proposal: handoff.proposal,
+          design: handoff.design,
+          tasks: handoff.tasks,
+          version: handoff.proposedVersion,
+          contentDigest: handoff.proposedContentDigest,
+        };
+        const approvals = await store.changeStageApprovals.findByChangeId(changeId);
+        const result = await new MaterializeApprovedChangeUseCase(environment.sddMaterializer).execute(preview, approvals);
+        if (options.json) {
+          console.log(JSON.stringify({ handoffId: handoff.id, result }, null, 2));
+          return;
+        }
+        console.log(chalk.green(`✓ Change '${changeId}' materializado`));
+        console.log(`Handoff: ${handoff.id}`);
+        console.log(`Versión: ${result.version}`);
+        console.log(`Digest: ${result.contentDigest}`);
+      } catch (error) {
+        console.log(chalk.red("✗ No se pudo aplicar el Change:"));
         console.log(chalk.red((error as Error).message));
         io.setExitCode(1);
       }
