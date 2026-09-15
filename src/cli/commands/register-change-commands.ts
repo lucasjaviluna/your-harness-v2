@@ -318,7 +318,7 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
     });
 
   changeCommand.command("status <changeId>")
-    .description("Mostrar estado SDD, lifecycle HITM y aprobaciones obsoletas")
+    .description("Mostrar estado SDD, lifecycle HITM, Apply y aprobaciones obsoletas")
     .option("-w, --workspace <path>", "Workspace del proyecto", process.cwd())
     .option("--json", "Imprimir el estado como JSON")
     .action(async (changeId: string, options: { workspace: string; json?: boolean }) => {
@@ -327,6 +327,7 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
         const store = createLocalOperationalStore({ workspace: options.workspace });
         const approvals = await store.changeStageApprovals.findByChangeId(changeId);
         const lifecycle = await store.governedChanges.findCurrentByChangeId(changeId);
+        const applyTransitions = await store.changeApplyTransitions.findByChangeId(changeId);
         const materialization = await store.changeMaterializationAudits.findCurrentByChangeId(changeId);
         const invalidatedApprovals = findInvalidatedChangeStageApprovals({
           changeId,
@@ -340,6 +341,8 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
           lifecycle,
           approvals,
           invalidatedApprovals,
+          applyTransitions,
+          applyStatus: applyTransitions.at(-1)?.toStatus,
           materialization,
         };
         if (options.json) {
@@ -351,6 +354,8 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
         console.log(`Lifecycle HITM: ${lifecycle?.status ?? "sin estado gobernado"}`);
         console.log(`Aprobaciones registradas: ${approvals.length}`);
         console.log(`Aprobaciones obsoletas: ${invalidatedApprovals.length}`);
+        console.log(`Estado Apply: ${applyTransitions.at(-1)?.toStatus ?? "sin estado"}`);
+        console.log(`Transiciones Apply: ${applyTransitions.length}`);
         if (materialization) console.log(`Última materialización: ${materialization.outcome} (${materialization.occurredAt})`);
         for (const invalidated of invalidatedApprovals) {
           console.log(chalk.yellow(`- ${invalidated.stage}: ${invalidated.reason} (${invalidated.approvalId})`));

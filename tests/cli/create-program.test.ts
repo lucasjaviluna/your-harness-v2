@@ -101,6 +101,7 @@ describe("createCliProgram", () => {
       expect(status.change.contentDigest).toMatch(/^[a-f0-9]{64}$/);
       expect(status.lifecycle).toBeUndefined();
       expect(status.invalidatedApprovals).toEqual([]);
+      expect(status.applyTransitions).toEqual([]);
     } finally {
       await rm(workspace, { recursive: true, force: true });
     }
