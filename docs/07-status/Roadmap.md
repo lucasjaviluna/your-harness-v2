@@ -14,7 +14,9 @@ Local operational persistence is now wired into the CLI: `work create` and `work
 
 El estado operacional local ya utiliza un envelope `formatVersion: 1`, conserva lectura de registros legacy y rechaza formatos futuros. Las migraciones se agregan mediante un registro explícito y con pruebas de compatibilidad; no se reescribe estado existente automáticamente.
 
-La CLI de `version`, `config`, `mode`, `provider`, `change`, `work`, `audit` y `verification` normaliza errores JSON mediante `{ ok: false, error: { code, message } }` y exit code `1`, preservando los payloads exitosos existentes. Las familias experimentales (`plugin`, `skill`, `agent`, `workflow`, `spec`, `mcp`) quedan pendientes de una revisión de estabilidad y de sus mocks/stubs.
+La CLI de `version`, `config`, `mode`, `provider`, `change`, `work`, `audit` y `verification` normaliza errores JSON mediante `{ ok: false, error: { code, message, exitCode } }`, preservando los payloads exitosos existentes. Las familias experimentales (`plugin`, `skill`, `agent`, `workflow`, `spec`, `mcp`) quedan pendientes de una revisión de estabilidad y de sus mocks/stubs.
+
+La taxonomía de proceso ya está definida (`0` éxito, `1` inesperado, `2` uso, `3` guardrail/HITM, `4` no encontrado, `5` conflicto, `6` externo); la migración de errores genéricos a códigos finos continúa por operación.
 
 ## Later
 

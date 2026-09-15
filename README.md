@@ -44,6 +44,7 @@ src/cli
 - Los comandos `change` soportados mantienen payloads JSON de éxito y emiten errores JSON con `{ ok: false, error: { code, message } }` y exit code `1` cuando se usa `--json`.
 - Las operaciones `work` y `verification` también aceptan `--json`; `audit` ya ofrece payloads JSON y ahora normaliza sus errores con el mismo contrato.
 - `version`, `config`, `mode` y `provider` ofrecen JSON para consultas y validaciones básicas; los comandos experimentales de extensiones, agentes, workflows y MCP aún requieren una revisión de estabilidad independiente.
+- Los errores JSON incluyen `error.exitCode`; la taxonomía reservada es `1` inesperado, `2` uso, `3` guardrail/HITM, `4` no encontrado, `5` conflicto y `6` proveedor externo. La clasificación fina se incorpora progresivamente.
 - `work select <work-item-id>` registra el alcance HITM confirmado de Requirements y Scenarios; `work execute` exige esa selección y rechaza su digest si quedó obsoleto.
 
 ## Instalación y verificación

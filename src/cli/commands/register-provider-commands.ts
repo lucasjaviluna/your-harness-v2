@@ -6,7 +6,7 @@ import { createAIRegistry } from "../../core/ai/registry.js";
 import type { ProviderType } from "../../types/index.js";
 import type { CliContext } from "../cli-context.js";
 import { createCliConsole } from "../presentation/cli-io.js";
-import { writeCliError } from "../presentation/cli-errors.js";
+import { CliExitCode, writeCliError } from "../presentation/cli-errors.js";
 
 /** Registra los comandos de consulta y diagnóstico de proveedores de IA. */
 export const registerProviderCommands = (
@@ -71,7 +71,7 @@ export const registerProviderCommands = (
 
       if (!validProviders.includes(name as ProviderType)) {
         if (options.json) {
-          writeCliError(io, new Error(`Invalid provider: ${name}`), { json: true, code: "PROVIDER_INVALID", title: "" });
+          writeCliError(io, new Error(`Invalid provider: ${name}`), { json: true, code: "PROVIDER_INVALID", exitCode: CliExitCode.Usage, title: "" });
           return;
         }
         console.log(chalk.red(`Invalid provider: ${name}`));
@@ -104,7 +104,7 @@ export const registerProviderCommands = (
 
         if (!providerConfig || !providerConfig.enabled) {
           if (options?.json) {
-            writeCliError(io, new Error(`Provider '${providerName}' is not enabled.`), { json: true, code: "PROVIDER_NOT_ENABLED", title: "" });
+            writeCliError(io, new Error(`Provider '${providerName}' is not enabled.`), { json: true, code: "PROVIDER_NOT_ENABLED", exitCode: CliExitCode.Conflict, title: "" });
             return;
           }
           console.log(chalk.yellow(`Provider '${providerName}' is not enabled.`));

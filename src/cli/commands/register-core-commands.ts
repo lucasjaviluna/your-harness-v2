@@ -2,7 +2,7 @@ import type { Command } from "commander";
 import chalk from "chalk";
 import type { CliContext } from "../cli-context.js";
 import { createCliConsole } from "../presentation/cli-io.js";
-import { writeCliError } from "../presentation/cli-errors.js";
+import { CliExitCode, writeCliError } from "../presentation/cli-errors.js";
 
 /** Registra comandos que sólo consultan la configuración de la herramienta. */
 export const registerCoreCommands = (
@@ -59,7 +59,7 @@ export const registerCoreCommands = (
       if (mode) {
         if (!validModes.includes(mode)) {
           if (options.json) {
-            writeCliError(io, new Error(`Invalid mode: ${mode}`), { json: true, code: "CORE_MODE_INVALID", title: "" });
+            writeCliError(io, new Error(`Invalid mode: ${mode}`), { json: true, code: "CORE_MODE_INVALID", exitCode: CliExitCode.Usage, title: "" });
             return;
           }
           console.log(chalk.red(`Invalid mode: ${mode}`));

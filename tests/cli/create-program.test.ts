@@ -53,7 +53,7 @@ describe("createCliProgram", () => {
 
     expect(JSON.parse(String(output.flat()[0]))).toEqual({
       ok: false,
-      error: { code: "CHANGE_INSPECT_FAILED", message: expect.any(String) },
+      error: { code: "CHANGE_INSPECT_FAILED", message: expect.any(String), exitCode: 1 },
     });
     expect(exitCode).toBe(1);
   });
