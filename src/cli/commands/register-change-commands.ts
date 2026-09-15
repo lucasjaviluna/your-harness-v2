@@ -9,6 +9,7 @@ import {
   MaterializeApprovedChangeUseCase,
   RecordChangeMaterializationAuditUseCase,
   TransitionChangeApplyUseCase,
+  reconcileInterruptedChangeApply,
   findInvalidatedChangeStageApprovals,
   type ChangeStage,
   type ChangeStageApprovalDecision,
@@ -362,6 +363,52 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
         }
       } catch (error) {
         console.log(chalk.red("✗ No se pudo consultar el estado del Change:"));
+        console.log(chalk.red((error as Error).message));
+        io.setExitCode(1);
+      }
+    });
+
+  changeCommand.command("recover <changeId>")
+    .description("Reconciliar de forma read-only un Apply interrumpido")
+    .option("-w, --workspace <path>", "Workspace del proyecto", process.cwd())
+    .option("--json", "Imprimir la reconciliación como JSON")
+    .action(async (changeId: string, options: { workspace: string; json?: boolean }) => {
+      try {
+        const { change, providerId } = await readChange(options.workspace, changeId, config);
+        const store = createLocalOperationalStore({ workspace: options.workspace });
+        const handoff = await store.changeDraftHandoffs.findCurrentByChangeId(changeId);
+        if (!handoff) throw new Error(`No existe un handoff para el Change '${changeId}'.`);
+        const currentApply = await store.changeApplyTransitions.findCurrentByChangeId(changeId);
+        if (!currentApply) throw new Error(`No existe un historial Apply para el Change '${changeId}'.`);
+        const reconciliation = reconcileInterruptedChangeApply({
+          currentStatus: currentApply.toStatus,
+          currentContentDigest: change.contentDigest,
+          baseContentDigest: handoff.baseContentDigest,
+          expectedContentDigest: handoff.proposedContentDigest,
+        });
+        const result = {
+          changeId, providerId, attemptId: currentApply.attemptId,
+          currentStatus: currentApply.toStatus,
+          observedContentDigest: change.contentDigest,
+          baseContentDigest: handoff.baseContentDigest,
+          expectedContentDigest: handoff.proposedContentDigest,
+          ...reconciliation,
+          hitmRequired: true,
+          persisted: false,
+        };
+        if (options.json) {
+          console.log(JSON.stringify(result, null, 2));
+          return;
+        }
+        console.log(chalk.cyan(`Reconciliación del Apply: ${change.id}`));
+        console.log(`Estado actual: ${currentApply.toStatus}`);
+        console.log(`Observación: ${reconciliation.observation}`);
+        console.log(`Recomendación: ${reconciliation.recommendedStatus}`);
+        console.log(`Digest observado: ${change.contentDigest}`);
+        console.log(`Digest esperado: ${handoff.proposedContentDigest}`);
+        console.log("Resolución persistente: requiere decisión HITM explícita.");
+      } catch (error) {
+        console.log(chalk.red("✗ No se pudo reconciliar el Apply:"));
         console.log(chalk.red((error as Error).message));
         io.setExitCode(1);
       }
