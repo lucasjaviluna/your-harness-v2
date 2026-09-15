@@ -31,7 +31,7 @@ Los comandos soportados de `version`, `config`, `mode`, `provider`, `change`, `w
 
 Los errores de comandos finalizan con exit code `1`; el código textual `error.code` permite distinguir la operación fallida sin analizar el texto humano. La salida humana continúa usando mensajes legibles. La CLI no mezcla logs de diagnóstico con stdout JSON; los consumidores deben tratar stdout como contrato de datos cuando usan `--json`.
 
-La taxonomía reservada de exit codes es: `0` éxito, `1` error inesperado, `2` uso o validación, `3` guardrail/HITM, `4` recurso inexistente, `5` conflicto o estado obsoleto y `6` proveedor/runtime externo. La adopción es progresiva: los comandos aún no clasificados usan `1`; los errores JSON ya incluyen el `exitCode` efectivo.
+La taxonomía reservada de exit codes es: `0` éxito, `1` error inesperado, `2` uso o validación, `3` guardrail/HITM, `4` recurso inexistente, `5` conflicto o estado obsoleto y `6` proveedor/runtime externo. La adopción es progresiva: los comandos aún no clasificados usan `1`; los errores JSON ya incluyen el `exitCode` efectivo. Por ejemplo, un Apply bloqueado por policy usa `CHANGE_APPLY_GUARDRAIL` con exit code `3`.
 
 Los errores de parseo de Commander —comando desconocido, opción desconocida u opción obligatoria ausente— se normalizan como `CLI_USAGE_ERROR` con exit code `2`. El entrypoint captura estos errores antes de que Commander termine el proceso, manteniendo la posibilidad de consumir JSON desde un agente o script.
 

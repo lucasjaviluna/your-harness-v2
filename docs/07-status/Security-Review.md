@@ -28,11 +28,14 @@ La superficie estable puede declararse gobernada para operaciones locales porque
 - La matriz completa de comandos y escenarios de escritura todavía debe convertirse en una checklist E2E antes de etiquetar el release.
 - MCP, `ToolExecutor` general y steps `command`/`script` permanecen fuera de la superficie estable; sus rutas experimentales fallan cerrado o requieren integración explícita.
 
+La matriz de comandos y efectos persistentes está en `Write-Command-Matrix.md`.
+
 ## Checklist de cierre
 
 - [x] Boundary de paths revisado, incluyendo paths relativos.
 - [x] Capabilities y confirmaciones revisadas en el materializer.
 - [x] Digest base y digest posterior revisados.
 - [x] Persistencia local versionada y atómica revisada.
-- [ ] Ejecutar matriz E2E de cada comando que escribe, incluyendo workspace externo.
+- [x] Alcance de comandos y efectos persistentes documentado.
+- [ ] Ejecutar matriz E2E de cada comando desde un proceso CLI limpio.
 - [ ] Decidir si el lock multiproceso entra en `v0.1.0` o queda formalmente fuera.

@@ -258,6 +258,10 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
             error: error instanceof Error ? error.message : String(error), occurredAt: new Date().toISOString(),
           }).catch(() => undefined);
           await transition.execute({ ...transitionInput, id: randomUUID(), requestedStatus: "apply-failed", reason: "La materialización falló.", changedAt: new Date().toISOString() }).catch(() => undefined);
+          const message = error instanceof Error ? error.message : String(error);
+          if (/Capability 'workspace\.write'|Execution workspace|Human confirmation/.test(message)) {
+            throw new CliCommandError(message, "CHANGE_APPLY_GUARDRAIL", CliExitCode.Guardrail);
+          }
           throw error;
         }
         const audit = await new RecordChangeMaterializationAuditUseCase(store.changeMaterializationAudits).execute({
