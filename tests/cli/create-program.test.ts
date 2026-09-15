@@ -142,6 +142,20 @@ describe("createCliProgram", () => {
       output.length = 0;
       await program.parseAsync(["node", "yh", "change", "review", "add-mfa", "--workspace", workspace, "--json"]);
       expect(JSON.parse(String(output.flat()[0]))).toMatchObject({ id: handoff.id, design: "# New design" });
+
+      output.length = 0;
+      await program.parseAsync(["node", "yh", "change", "approve", "add-mfa", "--stage", "proposal",
+        "--decision", "approve", "--by", "architect@example.com", "--role", "reviewer",
+        "--reason", "Proposal revisado", "--workspace", workspace, "--json"]);
+      expect(JSON.parse(String(output.flat()[0]))).toMatchObject({
+        changeId: "add-mfa", stage: "proposal", decision: "approve", changeDigest: handoff.proposedContentDigest,
+      });
+
+      output.length = 0;
+      await program.parseAsync(["node", "yh", "change", "approve", "add-mfa", "--stage", "design",
+        "--decision", "approve", "--by", "architect@example.com", "--role", "reviewer",
+        "--reason", "Design revisado", "--workspace", workspace, "--json"]);
+      expect(JSON.parse(String(output.flat()[0]))).toMatchObject({ stage: "design", decision: "approve" });
     } finally {
       await rm(workspace, { recursive: true, force: true });
     }

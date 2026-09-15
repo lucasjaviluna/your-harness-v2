@@ -27,8 +27,8 @@ Local operational persistence is now wired into the CLI: `work create` and `work
 18. Validate and optionally connect an official OpenSpec skill/command runner with capability discovery, output contract and failure recovery.
 19. Implement the high-level TaskOrchestrator as a consumer of SDD, HITM, materialization, execution and verification contracts.
 
-Current UX increment: `yh change inspect`, `yh change status`, `yh change propose` and `yh change review` are available; propose/review persist and display the exact draft snapshot without approval or provider writes. Next UX increment: expose staged HITM approvals before apply.
+Current UX increment: `yh change inspect`, `yh change status`, `yh change propose`, `yh change review` and `yh change approve` are available; propose/review persist and display the exact draft snapshot, while approve records staged HITM decisions without provider writes. Next UX increment: expose guarded apply.
 
-Handoff contract increment: `ChangeDraftHandoff`, its Application use case, local immutable repository and CLI propose/review integration are implemented. The next step is to expose staged HITM approvals without allowing agents to approve or apply them.
+Handoff contract increment: `ChangeDraftHandoff`, its Application use case, local immutable repository and CLI propose/review/approve integration are implemented. The next step is guarded apply consuming only a fully approved handoff.
 
 Roadmap items are directional, not commitments; accepted architectural changes belong in ADRs.

@@ -3,7 +3,14 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { Command } from "commander";
 import chalk from "chalk";
-import { CreateChangeDraftHandoffUseCase, findInvalidatedChangeStageApprovals } from "@your-harness/application";
+import {
+  ApproveChangeStageUseCase,
+  CreateChangeDraftHandoffUseCase,
+  findInvalidatedChangeStageApprovals,
+  type ChangeStage,
+  type ChangeStageApprovalDecision,
+  type ChangeStageApprovalRole,
+} from "@your-harness/application";
 import { createLocalOperationalStore } from "../../persistence/index.js";
 import { createProjectRuntimeEnvironment } from "../../runtime/index.js";
 import type { CliContext } from "../cli-context.js";
@@ -115,6 +122,58 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
         console.log("\n--- Tasks ---\n" + handoff.tasks);
       } catch (error) {
         console.log(chalk.red("✗ No se pudo cargar la revisión del Change:"));
+        console.log(chalk.red((error as Error).message));
+        io.setExitCode(1);
+      }
+    });
+
+  changeCommand.command("approve <changeId>")
+    .description("Registrar una decisión HITM sobre una etapa del handoff vigente")
+    .requiredOption("--stage <stage>", "proposal, design, task-plan, apply-readiness o verification-completion")
+    .requiredOption("--decision <decision>", "approve, request-rework o reject")
+    .requiredOption("-b, --by <actor>", "Usuario que toma la decisión")
+    .requiredOption("--role <role>", "Rol HITM del usuario")
+    .requiredOption("--reason <text>", "Motivo de la decisión")
+    .option("-w, --workspace <path>", "Workspace del proyecto", process.cwd())
+    .option("--json", "Imprimir la aprobación como JSON")
+    .action(async (changeId: string, options: {
+      stage: ChangeStage; decision: ChangeStageApprovalDecision; by: string; role: ChangeStageApprovalRole;
+      reason: string; workspace: string; json?: boolean;
+    }) => {
+      try {
+        const store = createLocalOperationalStore({ workspace: options.workspace });
+        const handoff = await store.changeDraftHandoffs.findCurrentByChangeId(changeId);
+        if (!handoff) throw new Error(`No existe un handoff para el Change '${changeId}'.`);
+        if (!["proposal", "design", "task-plan", "apply-readiness", "verification-completion"].includes(options.stage)) {
+          throw new Error(`Etapa inválida: '${options.stage}'.`);
+        }
+        if (!["approve", "request-rework", "reject"].includes(options.decision)) {
+          throw new Error(`Decisión inválida: '${options.decision}'.`);
+        }
+        if (!["engineer", "reviewer", "maintainer", "owner"].includes(options.role)) {
+          throw new Error(`Rol inválido: '${options.role}'.`);
+        }
+        const approval = await new ApproveChangeStageUseCase(store.changeStageApprovals).execute({
+          id: randomUUID(),
+          changeId,
+          stage: options.stage,
+          changeVersion: handoff.proposedVersion,
+          changeDigest: handoff.proposedContentDigest,
+          decision: options.decision,
+          approvedBy: options.by,
+          approvedByRole: options.role,
+          reason: options.reason,
+          approvedAt: new Date().toISOString(),
+        });
+        if (options.json) {
+          console.log(JSON.stringify(approval, null, 2));
+          return;
+        }
+        console.log(chalk.green(`✓ Decisión '${approval.decision}' registrada para ${approval.stage}`));
+        console.log(`Change: ${changeId} | Handoff: ${handoff.id}`);
+        console.log(`Versión: ${approval.changeVersion} | Digest: ${approval.changeDigest}`);
+      } catch (error) {
+        console.log(chalk.red("✗ No se pudo registrar la decisión HITM:"));
         console.log(chalk.red((error as Error).message));
         io.setExitCode(1);
       }
