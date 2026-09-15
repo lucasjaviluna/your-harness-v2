@@ -10,6 +10,12 @@
 
 Local operational persistence is now wired into the CLI: `work create` and `work bind` create durable state, `work execute` resolves current provider-owned SDD material and persists a trace, and the Evidence/VerificationPlan/VerificationReport cycle is available through CLI commands. `audit trace` now inspects an execution together with independently persisted tool invocations correlated by `executionTraceId`.
 
+### Persistencia versionada
+
+El estado operacional local ya utiliza un envelope `formatVersion: 1`, conserva lectura de registros legacy y rechaza formatos futuros. Las migraciones se agregan mediante un registro explícito y con pruebas de compatibilidad; no se reescribe estado existente automáticamente.
+
+La CLI de `version`, `config`, `mode`, `provider`, `change`, `work`, `audit` y `verification` normaliza errores JSON mediante `{ ok: false, error: { code, message } }` y exit code `1`, preservando los payloads exitosos existentes. Las familias experimentales (`plugin`, `skill`, `agent`, `workflow`, `spec`, `mcp`) quedan pendientes de una revisión de estabilidad y de sus mocks/stubs.
+
 ## Later
 
 6. ~~Connect `yh work-item execute` to persistent operational state and an authoritative Specification source.~~ **Completed:** the CLI reads persistent WorkItems/bindings, projects the configured SDD source, and writes traces. It intentionally does not mirror Specifications locally.

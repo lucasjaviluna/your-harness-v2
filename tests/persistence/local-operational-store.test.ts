@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -49,6 +49,42 @@ describe("LocalOperationalStore", () => {
         "utf8",
       ),
     ).resolves.toContain('"version": 1');
+    await expect(
+      readFile(
+        path.join(workspace, ".your-harness/state/work-items/persisted-work-item.json"),
+        "utf8",
+      ),
+    ).resolves.toContain('"formatVersion": 1');
+  });
+
+  it("lee registros legacy sin envelope y rechaza formatos futuros", async () => {
+    const workspace = await createWorkspace();
+    const statePath = path.join(workspace, ".your-harness/state/work-items");
+    await mkdir(statePath, { recursive: true });
+    await writeFile(
+      path.join(statePath, "legacy-item.json"),
+      JSON.stringify({
+        version: 1,
+        id: "legacy-item",
+        intentId: "legacy-intent",
+        title: "Registro legacy",
+        status: WorkItemStatus.InProgress,
+      }),
+      "utf8",
+    );
+    await writeFile(
+      path.join(statePath, "future-item.json"),
+      JSON.stringify({ formatVersion: 99, payload: {} }),
+      "utf8",
+    );
+
+    const store = createLocalOperationalStore({ workspace });
+    await expect(store.workItems.findById(new WorkItemId("legacy-item"))).resolves.toMatchObject({
+      id: new WorkItemId("legacy-item"),
+    });
+    await expect(store.workItems.findById(new WorkItemId("future-item"))).rejects.toThrow(
+      "newer than the supported version",
+    );
   });
 
   it("persists ExecutionTrace records and indexes them by WorkItem", async () => {

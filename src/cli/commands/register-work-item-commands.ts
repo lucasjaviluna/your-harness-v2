@@ -8,6 +8,7 @@ import { createProjectRuntimeEnvironment } from "../../runtime/index.js";
 import { assertSpecificationSnapshotMatchesBinding, resolveExecutionSource } from "../../sdd/index.js";
 import type { CliContext } from "../cli-context.js";
 import { createCliConsole } from "../presentation/cli-io.js";
+import { writeCliError } from "../presentation/cli-errors.js";
 
 type CompletionDecision = "authorize-completion" | "request-rework" | "require-further-review";
 
@@ -20,17 +21,17 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
     .requiredOption("-t, --title <text>", "Work item objective")
     .option("-i, --intent <id>", "Intent identifier", "default-intent")
     .option("-w, --workspace <path>", "Workspace state location", process.cwd())
-    .action(async (workItemId: string, options: { title: string; intent: string; workspace: string }) => {
+    .option("--json", "Imprimir WorkItem como JSON")
+    .action(async (workItemId: string, options: { title: string; intent: string; workspace: string; json?: boolean }) => {
       try {
         const store = createLocalOperationalStore({ workspace: options.workspace });
         const id = new WorkItemId(workItemId);
         if (await store.workItems.findById(id)) throw new Error(`Work item '${workItemId}' already exists.`);
         await store.workItems.save(new WorkItem(id, new IntentId(options.intent), new WorkItemTitle(options.title)));
-        console.log(chalk.green(`✓ Work item '${workItemId}' persisted`));
+        if (options.json) console.log(JSON.stringify({ workItemId, status: "created" }, null, 2));
+        else console.log(chalk.green(`✓ Work item '${workItemId}' persisted`));
       } catch (error) {
-        console.log(chalk.red("✗ Work item creation failed:"));
-        console.log(chalk.red((error as Error).message));
-        io.setExitCode(1);
+        writeCliError(io, error, { json: options.json, code: "WORK_ITEM_CREATE_FAILED", title: chalk.red("✗ Work item creation failed:") });
       }
     });
 
@@ -40,7 +41,8 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
     .option("-c, --change <id>", "SDD Change identifier")
     .option("-t, --task <id>", "SDD Change task identifier", (value, previous: string[] = []) => [...previous, value])
     .option("-w, --workspace <path>", "Workspace state location", process.cwd())
-    .action(async (workItemId: string, options: { specification: string; approveSpecification: boolean; change?: string; task?: string[]; workspace: string }) => {
+    .option("--json", "Imprimir el binding como JSON")
+    .action(async (workItemId: string, options: { specification: string; approveSpecification: boolean; change?: string; task?: string[]; workspace: string; json?: boolean }) => {
       try {
         const projectEnvironment = createProjectRuntimeEnvironment({ config, workspace: options.workspace });
         const store = createLocalOperationalStore({ workspace: options.workspace });
@@ -62,28 +64,27 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
           changeId: options.change,
           taskIds: options.task ?? [],
         });
-        console.log(chalk.green(`✓ Work item '${workItemId}' bound to SDD specification '${options.specification}'`));
+        if (options.json) console.log(JSON.stringify({ workItemId, specificationId: options.specification, changeId: options.change, taskIds: options.task ?? [] }, null, 2));
+        else console.log(chalk.green(`✓ Work item '${workItemId}' bound to SDD specification '${options.specification}'`));
       } catch (error) {
-        console.log(chalk.red("✗ Work item binding failed:"));
-        console.log(chalk.red((error as Error).message));
-        io.setExitCode(1);
+        writeCliError(io, error, { json: options.json, code: "WORK_ITEM_BIND_FAILED", title: chalk.red("✗ Work item binding failed:") });
       }
     });
 
   workItemCommand.command("start <workItemId>").description("Start a persisted WorkItem")
     .option("-w, --workspace <path>", "Workspace state location", process.cwd())
-    .action(async (workItemId: string, options: { workspace: string }) => {
+    .option("--json", "Imprimir WorkItem como JSON")
+    .action(async (workItemId: string, options: { workspace: string; json?: boolean }) => {
       try {
         const store = createLocalOperationalStore({ workspace: options.workspace });
         const id = new WorkItemId(workItemId);
         const workItem = await store.workItems.findById(id);
         if (!workItem) throw new Error(`Work item '${workItemId}' not found.`);
         await store.workItems.save(workItem.start());
-        console.log(chalk.green(`✓ Work item '${workItemId}' started`));
+        if (options.json) console.log(JSON.stringify({ workItemId, status: "in-progress" }, null, 2));
+        else console.log(chalk.green(`✓ Work item '${workItemId}' started`));
       } catch (error) {
-        console.log(chalk.red("✗ Work item start failed:"));
-        console.log(chalk.red((error as Error).message));
-        io.setExitCode(1);
+        writeCliError(io, error, { json: options.json, code: "WORK_ITEM_START_FAILED", title: chalk.red("✗ Work item start failed:") });
       }
     });
 
@@ -94,7 +95,8 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
     .requiredOption("--role <role>", "Rol HITM: reviewer, maintainer u owner")
     .requiredOption("--reason <text>", "Motivo de la confirmación")
     .option("-w, --workspace <path>", "Ubicación del estado del workspace", process.cwd())
-    .action(async (workItemId: string, options: { requirement?: string[]; scenario?: string[]; by: string; role: ExecutionScopeSelectionRole; reason: string; workspace: string }) => {
+    .option("--json", "Imprimir la selección como JSON")
+    .action(async (workItemId: string, options: { requirement?: string[]; scenario?: string[]; by: string; role: ExecutionScopeSelectionRole; reason: string; workspace: string; json?: boolean }) => {
       try {
         const store = createLocalOperationalStore({ workspace: options.workspace });
         const binding = await store.executionBindings.findByWorkItemId(new WorkItemId(workItemId));
@@ -117,11 +119,10 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
           requirementIds, scenarioIds, confirmedBy: options.by, confirmedByRole: options.role,
           reason: options.reason, confirmedAt: new Date().toISOString(),
         }));
-        console.log(chalk.green(`✓ Alcance confirmado para '${workItemId}' por '${options.by}' (${options.role})`));
+        if (options.json) console.log(JSON.stringify({ workItemId, requirementIds, scenarioIds, confirmedBy: options.by, confirmedByRole: options.role }, null, 2));
+        else console.log(chalk.green(`✓ Alcance confirmado para '${workItemId}' por '${options.by}' (${options.role})`));
       } catch (error) {
-        console.log(chalk.red("✗ Confirmación de alcance fallida:"));
-        console.log(chalk.red((error as Error).message));
-        io.setExitCode(1);
+        writeCliError(io, error, { json: options.json, code: "WORK_ITEM_SCOPE_FAILED", title: chalk.red("✗ Confirmación de alcance fallida:") });
       }
     });
 
@@ -132,7 +133,8 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
     .requiredOption("--role <role>", "Actor role: engineer, reviewer, maintainer or owner")
     .requiredOption("--reason <text>", "Reason for the decision")
     .option("-w, --workspace <path>", "Workspace state location", process.cwd())
-    .action(async (workItemId: string, options: { report: string; decision: CompletionDecision; by: string; role: "engineer" | "reviewer" | "maintainer" | "owner"; reason: string; workspace: string }) => {
+    .option("--json", "Imprimir la autorización como JSON")
+    .action(async (workItemId: string, options: { report: string; decision: CompletionDecision; by: string; role: "engineer" | "reviewer" | "maintainer" | "owner"; reason: string; workspace: string; json?: boolean }) => {
       try {
         const store = createLocalOperationalStore({ workspace: options.workspace });
         const report = await store.verificationReports.findById(options.report);
@@ -151,11 +153,10 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
               authorizedAt: new Date().toISOString(),
             },
           });
-        console.log(chalk.green(`✓ Decision '${options.decision}' recorded for '${workItemId}'`));
+        if (options.json) console.log(JSON.stringify({ workItemId, decision: options.decision, reportId: options.report }, null, 2));
+        else console.log(chalk.green(`✓ Decision '${options.decision}' recorded for '${workItemId}'`));
       } catch (error) {
-        console.log(chalk.red("✗ Completion authorization failed:"));
-        console.log(chalk.red((error as Error).message));
-        io.setExitCode(1);
+        writeCliError(io, error, { json: options.json, code: "WORK_ITEM_AUTHORIZE_FAILED", title: chalk.red("✗ Completion authorization failed:") });
       }
     });
 
@@ -163,7 +164,8 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
     .option("-w, --workspace <path>", "Workspace for the execution", process.cwd())
     .option("-c, --constraint <text>", "Execution constraint")
     .option("-r, --runtime <name>", "Runtime to use (fake by default; pi when selected)")
-    .action(async (workItemId: string, options: { workspace: string; constraint?: string; runtime?: string }) => {
+    .option("--json", "Imprimir el resultado como JSON")
+    .action(async (workItemId: string, options: { workspace: string; constraint?: string; runtime?: string; json?: boolean }) => {
       try {
         const store = createLocalOperationalStore({ workspace: options.workspace });
         const executionTraceId = randomUUID();
@@ -176,9 +178,11 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
         });
         const { runtimeEnvironment } = projectEnvironment;
         const selectedRuntime = runtimeEnvironment.resolveName(options.runtime);
-        console.log(chalk.cyan(`Executing work item through ${selectedRuntime}...`));
-        console.log(chalk.gray(`Work item: ${workItemId}`));
-        console.log(chalk.gray(`Workspace: ${options.workspace}`));
+        if (!options.json) {
+          console.log(chalk.cyan(`Executing work item through ${selectedRuntime}...`));
+          console.log(chalk.gray(`Work item: ${workItemId}`));
+          console.log(chalk.gray(`Workspace: ${options.workspace}`));
+        }
         const runtime = runtimeEnvironment.resolve(selectedRuntime);
         const workItemIdValue = new WorkItemId(workItemId);
         const binding = await store.executionBindings.findByWorkItemId(workItemIdValue);
@@ -218,18 +222,23 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
           },
         });
         if (result.status === "completed") {
-          console.log(chalk.green("✓ Work item completed"));
-          console.log(chalk.gray(`Runtime session: ${result.runtimeSessionId ?? "N/A"}`));
-          console.log(chalk.white(result.summary));
+          if (options.json) console.log(JSON.stringify(result, null, 2));
+          else {
+            console.log(chalk.green("✓ Work item completed"));
+            console.log(chalk.gray(`Runtime session: ${result.runtimeSessionId ?? "N/A"}`));
+            console.log(chalk.white(result.summary));
+          }
+          return;
+        }
+        if (options.json) {
+          writeCliError(io, { message: result.failure?.message ?? result.summary }, { json: true, code: "WORK_ITEM_EXECUTE_FAILED", title: "" });
           return;
         }
         console.log(chalk.red(`✗ Work item ${result.status}`));
         console.log(chalk.red(result.failure?.message ?? result.summary));
         io.setExitCode(1);
       } catch (error) {
-        console.log(chalk.red("✗ Work item execution failed:"));
-        console.log(chalk.red((error as Error).message));
-        io.setExitCode(1);
+        writeCliError(io, error, { json: options.json, code: "WORK_ITEM_EXECUTE_FAILED", title: chalk.red("✗ Work item execution failed:") });
       }
     });
 };

@@ -4,6 +4,7 @@ import { createLocalOperationalStore } from "../../persistence/index.js";
 import type { CliContext } from "../cli-context.js";
 import { createCliConsole } from "../presentation/cli-io.js";
 import type { ToolInvocationTrace } from "../../runtime/tool-invocation-trace.js";
+import { writeCliError } from "../presentation/cli-errors.js";
 
 interface AuditTimeOptions {
   readonly from?: string;
@@ -66,9 +67,7 @@ export const registerAuditCommands = (program: Command, { io }: CliContext): voi
 
         printTrace(console, executionTrace, toolInvocations);
       } catch (error) {
-        console.log(chalk.red("✗ Audit query failed:"));
-        console.log(chalk.red((error as Error).message));
-        io.setExitCode(1);
+        writeCliError(io, error, { json: options.json, code: "AUDIT_TRACE_FAILED", title: chalk.red("✗ Audit query failed:") });
       }
     });
 
@@ -96,9 +95,7 @@ export const registerAuditCommands = (program: Command, { io }: CliContext): voi
         console.log(`Ejecuciones encontradas: ${executions.length}`);
         for (const execution of executions) printTrace(console, execution.executionTrace, execution.toolInvocations);
       } catch (error) {
-        console.log(chalk.red("✗ Consulta de auditoría fallida:"));
-        console.log(chalk.red((error as Error).message));
-        io.setExitCode(1);
+        writeCliError(io, error, { json: options.json, code: "AUDIT_WORK_ITEM_FAILED", title: chalk.red("✗ Consulta de auditoría fallida:") });
       }
     });
 };

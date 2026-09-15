@@ -13,6 +13,7 @@ import {
 import { createLocalOperationalStore } from "../../persistence/index.js";
 import type { CliContext } from "../cli-context.js";
 import { createCliConsole } from "../presentation/cli-io.js";
+import { writeCliError } from "../presentation/cli-errors.js";
 
 const evidenceKinds: ReadonlyArray<EvidenceKind> = [
   "test-result",
@@ -77,7 +78,8 @@ export const registerVerificationCommands = (program: Command, { io }: CliContex
     .option("--locator <value>", "Optional artifact, command or test locator")
     .option("--digest <value>", "Optional observed digest")
     .option("-w, --workspace <path>", "Workspace state location", process.cwd())
-    .action(async (evidenceId: string, options: { trace: string; subjectKind: string; subjectId: string; kind: string; outcome: string; summary: string; locator?: string; digest?: string; workspace: string }) => {
+    .option("--json", "Imprimir Evidence como JSON")
+    .action(async (evidenceId: string, options: { trace: string; subjectKind: string; subjectId: string; kind: string; outcome: string; summary: string; locator?: string; digest?: string; workspace: string; json?: boolean }) => {
       try {
         const store = createLocalOperationalStore({ workspace: options.workspace });
         const item = await new RecordEvidenceUseCase(store.executionTraces, store.evidence).execute({
@@ -91,11 +93,10 @@ export const registerVerificationCommands = (program: Command, { io }: CliContex
           digest: options.digest,
           capturedAt: new Date().toISOString(),
         });
-        console.log(chalk.green(`✓ Evidence '${item.id}' recorded for trace '${item.executionTraceId}'`));
+        if (options.json) console.log(JSON.stringify(item, null, 2));
+        else console.log(chalk.green(`✓ Evidence '${item.id}' recorded for trace '${item.executionTraceId}'`));
       } catch (error) {
-        console.log(chalk.red("✗ Evidence recording failed:"));
-        console.log(chalk.red((error as Error).message));
-        io.setExitCode(1);
+        writeCliError(io, error, { json: options.json, code: "EVIDENCE_RECORD_FAILED", title: chalk.red("✗ Evidence recording failed:") });
       }
     });
 
@@ -106,7 +107,8 @@ export const registerVerificationCommands = (program: Command, { io }: CliContex
     .requiredOption("--digest <value>", "Approved Specification snapshot digest")
     .requiredOption("-c, --criterion <value>", "id:requirement|scenario:subject-id:evidence-kind[,evidence-kind]", (value, previous: string[] = []) => [...previous, value])
     .option("-w, --workspace <path>", "Workspace state location", process.cwd())
-    .action(async (planId: string, options: { trace: string; specification: string; digest: string; criterion?: string[]; workspace: string }) => {
+    .option("--json", "Imprimir VerificationPlan como JSON")
+    .action(async (planId: string, options: { trace: string; specification: string; digest: string; criterion?: string[]; workspace: string; json?: boolean }) => {
       try {
         const criteria = (options.criterion ?? []).map(parseCriterion);
         const item = createVerificationPlan({
@@ -119,18 +121,18 @@ export const registerVerificationCommands = (program: Command, { io }: CliContex
         });
         const store = createLocalOperationalStore({ workspace: options.workspace });
         await store.verificationPlans.save(item);
-        console.log(chalk.green(`✓ Verification plan '${item.id}' persisted with ${item.criteria.length} criterion/criteria`));
+        if (options.json) console.log(JSON.stringify(item, null, 2));
+        else console.log(chalk.green(`✓ Verification plan '${item.id}' persisted with ${item.criteria.length} criterion/criteria`));
       } catch (error) {
-        console.log(chalk.red("✗ Verification plan creation failed:"));
-        console.log(chalk.red((error as Error).message));
-        io.setExitCode(1);
+        writeCliError(io, error, { json: options.json, code: "VERIFICATION_PLAN_FAILED", title: chalk.red("✗ Verification plan creation failed:") });
       }
     });
 
   verification.command("evaluate <planId>")
     .option("-r, --report <id>", "VerificationReport identifier", randomUUID())
     .option("-w, --workspace <path>", "Workspace state location", process.cwd())
-    .action(async (planId: string, options: { report: string; workspace: string }) => {
+    .option("--json", "Imprimir VerificationReport como JSON")
+    .action(async (planId: string, options: { report: string; workspace: string; json?: boolean }) => {
       try {
         const store = createLocalOperationalStore({ workspace: options.workspace });
         const planItem = await store.verificationPlans.findById(planId);
@@ -146,11 +148,10 @@ export const registerVerificationCommands = (program: Command, { io }: CliContex
           createdAt: new Date().toISOString(),
         });
         await store.verificationReports.save(report);
-        console.log(chalk.green(`✓ Verification report '${report.id}' persisted with outcome '${report.outcome}'`));
+        if (options.json) console.log(JSON.stringify(report, null, 2));
+        else console.log(chalk.green(`✓ Verification report '${report.id}' persisted with outcome '${report.outcome}'`));
       } catch (error) {
-        console.log(chalk.red("✗ Verification evaluation failed:"));
-        console.log(chalk.red((error as Error).message));
-        io.setExitCode(1);
+        writeCliError(io, error, { json: options.json, code: "VERIFICATION_EVALUATE_FAILED", title: chalk.red("✗ Verification evaluation failed:") });
       }
     });
 };

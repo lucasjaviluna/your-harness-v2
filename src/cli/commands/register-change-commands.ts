@@ -19,6 +19,7 @@ import { createLocalOperationalStore } from "../../persistence/index.js";
 import { createProjectRuntimeEnvironment } from "../../runtime/index.js";
 import type { CliContext } from "../cli-context.js";
 import { createCliConsole } from "../presentation/cli-io.js";
+import { writeCliError } from "../presentation/cli-errors.js";
 
 const readChange = async (workspace: string, changeId: string, config: CliContext["config"]) => {
   const environment = createProjectRuntimeEnvironment({ config, workspace });
@@ -96,9 +97,7 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
         console.log(`Digest: ${handoff.proposedContentDigest}`);
         console.log("Siguiente paso: yh change review " + changeId);
       } catch (error) {
-        console.log(chalk.red("✗ No se pudo crear el handoff del Change:"));
-        console.log(chalk.red((error as Error).message));
-        io.setExitCode(1);
+        writeCliError(io, error, { json: options.json, code: "CHANGE_PROPOSE_FAILED", title: chalk.red("✗ No se pudo crear el handoff del Change:") });
       }
     });
 
@@ -125,9 +124,7 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
         console.log("\n--- Design ---\n" + handoff.design);
         console.log("\n--- Tasks ---\n" + handoff.tasks);
       } catch (error) {
-        console.log(chalk.red("✗ No se pudo cargar la revisión del Change:"));
-        console.log(chalk.red((error as Error).message));
-        io.setExitCode(1);
+        writeCliError(io, error, { json: options.json, code: "CHANGE_REVIEW_FAILED", title: chalk.red("✗ No se pudo cargar la revisión del Change:") });
       }
     });
 
@@ -177,9 +174,7 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
         console.log(`Change: ${changeId} | Handoff: ${handoff.id}`);
         console.log(`Versión: ${approval.changeVersion} | Digest: ${approval.changeDigest}`);
       } catch (error) {
-        console.log(chalk.red("✗ No se pudo registrar la decisión HITM:"));
-        console.log(chalk.red((error as Error).message));
-        io.setExitCode(1);
+        writeCliError(io, error, { json: options.json, code: "CHANGE_APPROVAL_FAILED", title: chalk.red("✗ No se pudo registrar la decisión HITM:") });
       }
     });
 
@@ -283,9 +278,7 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
         console.log(`Digest: ${result.contentDigest}`);
         console.log(`Auditoría: ${audit.id}`);
       } catch (error) {
-        console.log(chalk.red("✗ No se pudo aplicar el Change:"));
-        console.log(chalk.red((error as Error).message));
-        io.setExitCode(1);
+        writeCliError(io, error, { json: options.json, code: "CHANGE_APPLY_FAILED", title: chalk.red("✗ No se pudo aplicar el Change:") });
       }
     });
 
@@ -312,9 +305,7 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
         console.log(`Artefactos: ${change.artifacts.length}`);
         if (change.rationale) console.log(`Rationale: ${change.rationale}`);
       } catch (error) {
-        console.log(chalk.red("✗ No se pudo inspeccionar el Change:"));
-        console.log(chalk.red((error as Error).message));
-        io.setExitCode(1);
+        writeCliError(io, error, { json: options.json, code: "CHANGE_INSPECT_FAILED", title: chalk.red("✗ No se pudo inspeccionar el Change:") });
       }
     });
 
@@ -362,9 +353,7 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
           console.log(chalk.yellow(`- ${invalidated.stage}: ${invalidated.reason} (${invalidated.approvalId})`));
         }
       } catch (error) {
-        console.log(chalk.red("✗ No se pudo consultar el estado del Change:"));
-        console.log(chalk.red((error as Error).message));
-        io.setExitCode(1);
+        writeCliError(io, error, { json: options.json, code: "CHANGE_STATUS_FAILED", title: chalk.red("✗ No se pudo consultar el estado del Change:") });
       }
     });
 
@@ -473,9 +462,7 @@ export const registerChangeCommands = (program: Command, { config, io }: CliCont
         console.log(`Digest esperado: ${handoff.proposedContentDigest}`);
         console.log("Resolución persistente: requiere decisión HITM explícita.");
       } catch (error) {
-        console.log(chalk.red("✗ No se pudo reconciliar el Apply:"));
-        console.log(chalk.red((error as Error).message));
-        io.setExitCode(1);
+        writeCliError(io, error, { json: options.json, code: "CHANGE_RECOVER_FAILED", title: chalk.red("✗ No se pudo reconciliar el Apply:") });
       }
     });
 };

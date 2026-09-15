@@ -36,6 +36,7 @@ import type { ToolInvocationTrace } from "../../runtime/tool-invocation-trace.js
 import { changeDraftHandoffSchema } from "./schemas/change-draft-handoff-schema.js";
 import { changeMaterializationAuditSchema } from "./schemas/change-materialization-audit-schema.js";
 import { changeApplyTransitionSchema } from "./schemas/change-apply-transition-schema.js";
+import { decodePersistedRecord, encodePersistedRecord } from "./state-versioning.js";
 
 interface StoredWorkItem {
   readonly version: 1;
@@ -113,7 +114,7 @@ const fileNameFor = (id: string): string => {
 
 const readJson = async <T>(filePath: string): Promise<T | null> => {
   try {
-    return JSON.parse(await readFile(filePath, "utf8")) as T;
+    return decodePersistedRecord<T>(JSON.parse(await readFile(filePath, "utf8")));
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
     throw new Error(
@@ -127,7 +128,7 @@ const readJson = async <T>(filePath: string): Promise<T | null> => {
 const writeJson = async (filePath: string, value: unknown): Promise<void> => {
   await mkdir(path.dirname(filePath), { recursive: true });
   const temporaryPath = `${filePath}.${process.pid}.tmp`;
-  await writeFile(temporaryPath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+  await writeFile(temporaryPath, `${JSON.stringify(encodePersistedRecord(value), null, 2)}\n`, "utf8");
   await rename(temporaryPath, filePath);
 };
 

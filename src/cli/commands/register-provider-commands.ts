@@ -6,6 +6,7 @@ import { createAIRegistry } from "../../core/ai/registry.js";
 import type { ProviderType } from "../../types/index.js";
 import type { CliContext } from "../cli-context.js";
 import { createCliConsole } from "../presentation/cli-io.js";
+import { writeCliError } from "../presentation/cli-errors.js";
 
 /** Registra los comandos de consulta y diagnóstico de proveedores de IA. */
 export const registerProviderCommands = (
@@ -20,12 +21,21 @@ export const registerProviderCommands = (
   providerCommand
     .command("list")
     .description("List configured AI providers")
-    .action(() => {
+    .option("--json", "Imprimir proveedores como JSON")
+    .action((options: { json?: boolean }) => {
       console.log(chalk.cyan("Configured AI providers:\n"));
 
       const factory = createConnectorFactory();
       const connectors = factory.createAll(config);
       const defaultProvider = config.defaultProvider;
+
+      if (options.json) {
+        console.log(JSON.stringify(connectors.map((connector) => {
+          const name = connector.metadata.name as ProviderType;
+          return { name, enabled: config.providers[name]?.enabled ?? false, model: config.providers[name]?.model ?? "default", default: name === defaultProvider };
+        }), null, 2));
+        return;
+      }
 
       for (const connector of connectors) {
         const name = connector.metadata.name;
@@ -49,7 +59,8 @@ export const registerProviderCommands = (
   providerCommand
     .command("use <name>")
     .description("Set default AI provider")
-    .action((name: string) => {
+    .option("--json", "Imprimir el resultado como JSON")
+    .action((name: string, options: { json?: boolean }) => {
       const validProviders: ProviderType[] = [
         "copilot",
         "claude",
@@ -59,26 +70,32 @@ export const registerProviderCommands = (
       ];
 
       if (!validProviders.includes(name as ProviderType)) {
+        if (options.json) {
+          writeCliError(io, new Error(`Invalid provider: ${name}`), { json: true, code: "PROVIDER_INVALID", title: "" });
+          return;
+        }
         console.log(chalk.red(`Invalid provider: ${name}`));
         console.log(chalk.gray(`Valid providers: ${validProviders.join(", ")}`));
         return;
       }
 
-      console.log(
-        chalk.green(`✓ Switching default provider to ${name as ProviderType}...`),
-      );
+      if (options.json) console.log(JSON.stringify({ provider: name, changed: true }, null, 2));
+      else console.log(chalk.green(`✓ Switching default provider to ${name as ProviderType}...`));
     });
 
   providerCommand
     .command("test [name]")
     .description("Test an AI provider")
     .option("-p, --prompt <text>", "Test prompt", "Say hello in exactly 3 words.")
-    .action(async (name?: string, options?: { prompt?: string }) => {
+    .option("--json", "Imprimir el resultado como JSON")
+    .action(async (name?: string, options?: { prompt?: string; json?: boolean }) => {
       const providerName = name ?? config.defaultProvider;
       const testPrompt = options?.prompt ?? "Say hello in exactly 3 words.";
 
-      console.log(chalk.cyan(`Testing provider: ${providerName}`));
-      console.log(chalk.gray(`Prompt: "${testPrompt}"\n`));
+      if (!options?.json) {
+        console.log(chalk.cyan(`Testing provider: ${providerName}`));
+        console.log(chalk.gray(`Prompt: "${testPrompt}"\n`));
+      }
 
       try {
         const factory = createConnectorFactory();
@@ -86,6 +103,10 @@ export const registerProviderCommands = (
           config.providers[providerName as keyof typeof config.providers];
 
         if (!providerConfig || !providerConfig.enabled) {
+          if (options?.json) {
+            writeCliError(io, new Error(`Provider '${providerName}' is not enabled.`), { json: true, code: "PROVIDER_NOT_ENABLED", title: "" });
+            return;
+          }
           console.log(chalk.yellow(`Provider '${providerName}' is not enabled.`));
           return;
         }
@@ -95,12 +116,16 @@ export const registerProviderCommands = (
         registry.register(connector);
         const manager = createAIManager(registry);
 
-        console.log(chalk.gray("Sending request..."));
+        if (!options?.json) console.log(chalk.gray("Sending request..."));
         const response = await manager.complete({
           messages: [{ role: "user", content: testPrompt }],
           maxTokens: 50,
         });
 
+        if (options?.json) {
+          console.log(JSON.stringify({ provider: providerName, response }, null, 2));
+          return;
+        }
         console.log(chalk.green("✓ Response received:\n"));
         console.log(chalk.white(response.message.content));
         console.log();
@@ -108,8 +133,7 @@ export const registerProviderCommands = (
         console.log(chalk.gray(`Tokens: ${response.usage?.totalTokens ?? "N/A"}`));
         console.log(chalk.gray(`Finish reason: ${response.finishReason}`));
       } catch (error) {
-        console.log(chalk.red("✗ Test failed:"));
-        console.log(chalk.red((error as Error).message));
+        writeCliError(io, error, { json: options?.json, code: "PROVIDER_TEST_FAILED", title: chalk.red("✗ Test failed:") });
       }
     });
 };

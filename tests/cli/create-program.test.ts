@@ -35,6 +35,29 @@ const config: ValidatedConfig = {
 };
 
 describe("createCliProgram", () => {
+  it("emite errores JSON estables y marca fallo de proceso", async () => {
+    const output: unknown[][] = [];
+    let exitCode: number | undefined;
+    const { program } = createCliProgram({
+      context: {
+        config,
+        logger: createLogger("fatal"),
+        io: {
+          write: (...values) => output.push([...values]),
+          setExitCode: (code) => { exitCode = code; },
+        },
+      },
+    });
+
+    await program.parseAsync(["node", "yh", "change", "inspect", "missing", "--workspace", "C:/missing", "--json"]);
+
+    expect(JSON.parse(String(output.flat()[0]))).toEqual({
+      ok: false,
+      error: { code: "CHANGE_INSPECT_FAILED", message: expect.any(String) },
+    });
+    expect(exitCode).toBe(1);
+  });
+
   it("creates the root program from injected dependencies", async () => {
     const output: unknown[][] = [];
     const { program } = createCliProgram({
