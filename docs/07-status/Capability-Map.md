@@ -12,7 +12,7 @@
 | Core-independent verification | Implemented | Smoke flow uses public package APIs and a `FakeRuntimePort`; Pi is tested separately. |
 | First executable engineering slice | Implemented | Direct `ExecuteWorkItemUseCase` validation with `FakeRuntimeAdapter` and the real `PiRuntimeAdapter` test double. |
 | Runtime composition and selection | Implemented (project-configured) | `RuntimeRegistry` resolves explicitly registered adapters; `runtime.defaultRuntime` comes from `.your-harness/config.yml` and Pi is registered lazily when the resolved selection is `pi`. |
-| Execution environment contract | Implemented (runtime boundary enforcement) | `ExecutionEnvironmentGuard` enforces allowed workspace paths for every resolved runtime and exposes deny-by-default checks for capabilities, network, secrets and confirmations; tools still remain disabled. |
+| Execution environment contract | Implemented (runtime boundary enforcement) | `ExecutionEnvironmentGuard` enforces allowed workspace paths for every resolved runtime and exposes deny-by-default checks for capabilities, network, secrets and confirmations; only the guarded Pi `read` tool is enabled under explicit policy. |
 | SDD provider and OpenSpec materialization | Implemented (scoped) | `SddProvider` reads neutral projections; `SddMaterializer` creates or replaces draft Changes through HITM, environment guard, atomic staging and digest verification. Existing replacements require the current base digest. Governed Change transitions and durable history are available; provider CLI/skill invocation and `openspec/specs/**` updates remain pending. |
 | High-level Change CLI facade | Implemented (guarded apply slice) | `yh change inspect/status` expose SDD and HITM state and Apply history; `yh change propose/review` persist and display the complete handoff snapshot; `yh change approve` records immutable stage decisions; `yh change apply` requires full Apply Readiness, explicit confirmation and base-digest revalidation, and records a separate immutable audit plus transition history for every attempt; `yh change recover` classifies interrupted Apply and can persist an explicit HITM resolution with recovery audit, while repeated recovery keys replay the existing audit. Provider-specific crash diagnostics remain pending. |
 | Change draft handoff | Implemented (contract, persistence and guarded apply) | `ChangeDraftHandoff` preserves the complete Proposal/Design/Tasks snapshot, provenance, base digest and proposed revision; each new handoff is immutable and must explicitly supersede the current one. `change apply` records a separate immutable `ChangeMaterializationAudit`; Apply transition history is persisted separately. |
@@ -29,3 +29,16 @@
 | Workflow command/script steps | Explicitly unsupported | Steps fail with an explicit error until guarded process/script execution is implemented. |
 | Configuration persistence | Partial | YAML is read; save path behavior requires consolidation. |
 | Test suite | Early | Eighty-six focused tests cover configuration, context projection, Core smoke flows, Runtime composition/boundary, execution environment, OpenSpec read-only projection, SDD drift, operational persistence/bindings, in-process and process-level CLI execution, Evidence/Verification/evaluator/HITM authorization, eligibility, guarded Pi tool integration and Apply recovery; broad coverage is pending. |
+
+## Contrato de capabilities para v0.1.0
+
+| Capability | Estado en v0.1.0 | Condición y guardrail |
+| --- | --- | --- |
+| `workspace.read` | Habilitable | Requiere `allowedPaths`; Pi sólo expone `read`, valida cada ruta y limita el tamaño a 256 KiB. |
+| `workspace.write` | No habilitada por defecto | Requiere boundary `read-write`, capability explícita y confirmación HITM/risk class; sólo materialización gobernada consume escritura. |
+| `process.execute` | No habilitada | Requiere capability, confirmación y adapter explícito; los workflow `command/script` todavía fallan cerrado. |
+| `network.access` | No habilitada | Requiere allowlist de hosts y capability explícita; no hay tool estable que la consuma. |
+| `secrets.read` | No habilitada | Requiere allowlist de nombres y capability explícita; secretos nunca se guardan en YAML. |
+| `human.confirmation` | Requerida en operaciones de riesgo | `always` por defecto; no se infiere desde configuración para saltar HITM. |
+| Agent tools generales | Experimental | ToolExecutor no simula éxito; llamadas no implementadas devuelven error. |
+| MCP stdio/HTTP | Fuera de alcance | El cliente/servidor es skeleton; no debe seleccionarse como transporte operativo estable. |
