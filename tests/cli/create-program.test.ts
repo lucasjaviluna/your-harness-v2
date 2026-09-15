@@ -65,11 +65,45 @@ describe("createCliProgram", () => {
         "evidence",
         "verification",
         "audit",
+        "change",
       ]),
     );
 
     await program.parseAsync(["node", "yh", "mode"]);
     expect(output.flat().join(" ")).toContain("Current mode: custom");
+  });
+
+  it("expone inspect y status como fachada read-only de un Change", async () => {
+    const workspace = await mkdtemp(path.join(os.tmpdir(), "yh-change-cli-"));
+    try {
+      await (await import("node:fs/promises")).mkdir(path.join(workspace, "openspec/changes/add-mfa"), { recursive: true });
+      const { writeFile } = await import("node:fs/promises");
+      await writeFile(path.join(workspace, "openspec/changes/add-mfa/proposal.md"), "# Add MFA\n\n## Why\nProtect accounts.\n", "utf8");
+      await writeFile(path.join(workspace, "openspec/changes/add-mfa/design.md"), "# Design\n", "utf8");
+      await writeFile(path.join(workspace, "openspec/changes/add-mfa/tasks.md"), "- [ ] Implement\n", "utf8");
+      const output: unknown[][] = [];
+      const { program } = createCliProgram({
+        context: {
+          config,
+          logger: createLogger("fatal"),
+          io: { write: (...values) => output.push([...values]), setExitCode: () => undefined },
+        },
+      });
+
+      await program.parseAsync(["node", "yh", "change", "inspect", "add-mfa", "--workspace", workspace, "--json"]);
+      const inspected = JSON.parse(String(output.flat()[0]));
+      expect(inspected.change.id).toBe("add-mfa");
+      expect(inspected.change.provenance.providerId).toBe("openspec");
+
+      output.length = 0;
+      await program.parseAsync(["node", "yh", "change", "status", "add-mfa", "--workspace", workspace, "--json"]);
+      const status = JSON.parse(String(output.flat()[0]));
+      expect(status.change.contentDigest).toMatch(/^[a-f0-9]{64}$/);
+      expect(status.lifecycle).toBeUndefined();
+      expect(status.invalidatedApprovals).toEqual([]);
+    } finally {
+      await rm(workspace, { recursive: true, force: true });
+    }
   });
 
   it("consulta la auditoría de un WorkItem y aplica el rango temporal", async () => {

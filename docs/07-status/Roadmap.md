@@ -27,4 +27,6 @@ Local operational persistence is now wired into the CLI: `work create` and `work
 18. Validate and optionally connect an official OpenSpec skill/command runner with capability discovery, output contract and failure recovery.
 19. Implement the high-level TaskOrchestrator as a consumer of SDD, HITM, materialization, execution and verification contracts.
 
+Current UX increment: `yh change inspect` and `yh change status` are available as read-only high-level views. Next UX increment: define the persisted draft/review handoff for `propose` and `review` before exposing approvals and apply.
+
 Roadmap items are directional, not commitments; accepted architectural changes belong in ADRs.

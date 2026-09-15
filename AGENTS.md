@@ -93,6 +93,7 @@ Shared, Domain and Application are composite TypeScript projects connected with 
 - **Execution eligibility has two rules** — Application requires an approved Specification and can require normalized Change provenance; `runtime.requireSddChangeTraceability` configures the second rule at composition time.
 - **Verification/Evidence contracts are scoped and durable** — ADR-009 treats RuntimeResult as an observation; VerificationPlan binds one ExecutionTrace and Specification digest, Evidence is filtered to that execution, local JSON repositories persist records, evaluation is conservative/deterministic, and CompletionAuthorization gates `WorkItem.complete()` through `work authorize` with a role-based HITM policy.
 - **Application public exports are complete for the current modules** — specification, work-item, review, release, runtime and context APIs are re-exported from the package root.
+- **High-level Change CLI facade has started** — `yh change inspect` and `yh change status` are read-only views over the configured SDD provider and local HITM/lifecycle state; internal OpenSpec commands remain hidden. Propose, review, approve and apply commands remain pending.
 - **Workspace installation is reproducible with npm** — `package-lock.json` is committed, local package links use `file:`, and `rimraf@^6` is declared at the root and packages; verify with `npm ci` followed by `npm ls`.
 
 ## Working in this repo

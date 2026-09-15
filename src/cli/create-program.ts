@@ -13,6 +13,7 @@ import { registerWorkflowCommands } from "./commands/register-workflow-commands.
 import { registerWorkItemCommands } from "./commands/register-work-item-commands.js";
 import { registerVerificationCommands } from "./commands/register-verification-commands.js";
 import { registerAuditCommands } from "./commands/register-audit-commands.js";
+import { registerChangeCommands } from "./commands/register-change-commands.js";
 import type { CliContext } from "./cli-context.js";
 import { createCliAgentRuntime } from "./composition/create-agent-runtime.js";
 import { createPluginLoader } from "../plugins/loader.js";
@@ -58,6 +59,7 @@ export const createCliProgram = (
   registerWorkItemCommands(program, context);
   registerVerificationCommands(program, context);
   registerAuditCommands(program, context);
+  registerChangeCommands(program, context);
 
   const pluginManager = createPluginManager(createPluginLoader());
   registerPluginCommands(program, context, pluginManager);
