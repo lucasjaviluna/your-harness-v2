@@ -60,5 +60,5 @@ El release estable debe optimizar por confiabilidad del flujo gobernado, no por 
 3. ~~Consolidar CLI/JSON/errores y matriz de capabilities.~~ **Completado en la superficie soportada:** contrato JSON/errores y matriz inicial publicados; las familias experimentales permanecen fuera del alcance estable.
 4. ~~Incorporar CI/CD y prueba de instalación limpia.~~ **Completado:** GitHub Actions ejecuta `npm ci`, build, tests, lint, documentación y empaquetado en Node 22.19/24.
 5. ~~Ejecutar la matriz E2E de seguridad, completar la checklist de `Security-Review.md` y congelar el alcance v0.1.0.~~ **Completado para release:** los flujos críticos, el guardrail de escritura desde instalación empaquetada y los riesgos aceptados están documentados; la matriz exhaustiva de todos los comandos queda como hardening posterior.
-6. Consolidar el release candidate: commit final, CI verde, etiqueta y publicación de `v0.1.0`.
-7. Después iniciar el diseño de `TaskOrchestrator` como consumidor de estos contratos.
+6. ~~Consolidar el release candidate: commit final, CI verde, etiqueta y publicación de `v0.1.0`.~~ **Completado:** `v0.1.0` fue etiquetada y publicada con CI verde.
+7. ~~Después iniciar el diseño de `TaskOrchestrator` como consumidor de estos contratos.~~ **Primer incremento implementado:** ADR-013 y el planner read-only de Application preservan todos los gates HITM; integrar el snapshot durable y una consulta CLI queda como trabajo posterior al release.
