@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
@@ -40,6 +40,64 @@ try {
   }));
   if (result?.version !== "0.1.0" || typeof result?.node !== "string") {
     throw new Error("La respuesta de yh version no corresponde al paquete instalado.");
+  }
+
+  const securityWorkspace = path.join(temporaryRoot, "security-workspace");
+  const changeDirectory = path.join(securityWorkspace, "openspec", "changes", "add-login");
+  mkdirSync(changeDirectory, { recursive: true });
+  mkdirSync(path.join(securityWorkspace, ".your-harness"));
+  writeFileSync(path.join(securityWorkspace, ".your-harness", "config.yml"), [
+    "runtime:",
+    "  executionEnvironment:",
+    "    workspace:",
+    "      mode: read-only",
+    "    capabilities: []",
+    "",
+  ].join("\n"));
+  writeFileSync(path.join(changeDirectory, "proposal.md"), "# Existing proposal\n");
+  writeFileSync(path.join(changeDirectory, "design.md"), "# Existing design\n");
+  writeFileSync(path.join(changeDirectory, "tasks.md"), "- [ ] Existing task\n");
+  const proposalPath = path.join(securityWorkspace, "proposal.md");
+  const designPath = path.join(securityWorkspace, "design.md");
+  const tasksPath = path.join(securityWorkspace, "tasks.md");
+  writeFileSync(proposalPath, "# Add login\n");
+  writeFileSync(designPath, "# Login design\n");
+  writeFileSync(tasksPath, "- [ ] Implement login\n");
+
+  const runYh = (args) => execFileSync(process.execPath, [cliEntryPoint, ...args], {
+    cwd: securityWorkspace,
+    encoding: "utf8",
+  });
+  runYh([
+    "change", "propose", "add-login", "--workspace", securityWorkspace,
+    "--proposal-file", proposalPath, "--design-file", designPath, "--tasks-file", tasksPath,
+    "--by", "user@example.com", "--role", "reviewer", "--json",
+  ]);
+  for (const stage of ["proposal", "design", "task-plan", "apply-readiness"]) {
+    runYh([
+      "change", "approve", "add-login", "--workspace", securityWorkspace,
+      "--stage", stage, "--decision", "approve", "--by", "architect@example.com",
+      "--role", "reviewer", "--reason", `Aprobado: ${stage}`, "--json",
+    ]);
+  }
+  try {
+    runYh([
+      "change", "apply", "add-login", "--workspace", securityWorkspace,
+      "--confirm", "--by", "architect@example.com", "--role", "maintainer",
+      "--idempotency-key", "packed-install-no-write", "--json",
+    ]);
+    throw new Error("El paquete instalado permitió materializar un Change sin workspace.write.");
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("permitió materializar")) throw error;
+    const failure = error;
+    if (failure?.status !== 3) throw error;
+    const payload = JSON.parse(String(failure.stdout));
+    if (payload?.error?.code !== "CHANGE_APPLY_GUARDRAIL" || payload?.error?.exitCode !== 3) {
+      throw new Error("El paquete instalado no devolvió el guardrail esperado para change apply.");
+    }
+  }
+  if (readFileSync(path.join(changeDirectory, "proposal.md"), "utf8") !== "# Existing proposal\n") {
+    throw new Error("El paquete instalado modificó el Change pese a no tener workspace.write.");
   }
   console.log(`Instalación empaquetada verificada en ${externalWorkspace}`);
 } catch (error) {

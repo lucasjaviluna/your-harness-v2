@@ -42,3 +42,16 @@
 | `human.confirmation` | Requerida en operaciones de riesgo | `always` por defecto; no se infiere desde configuración para saltar HITM. |
 | Agent tools generales | Experimental | ToolExecutor no simula éxito; llamadas no implementadas devuelven error. |
 | MCP stdio/HTTP | Fuera de alcance | El cliente/servidor es skeleton; no debe seleccionarse como transporte operativo estable. |
+
+## Superficie estable de v0.1.0
+
+La superficie estable se limita a `version`, `config`, `mode`, `provider`, `change`, `work`, `evidence`, `verification` y `audit`, con sus contratos documentados de salida, guardrails y persistencia. Que una familia aparezca en `yh --help` no la convierte en parte de este contrato.
+
+| Familia excluida | Estado y motivo |
+| --- | --- |
+| `plugin` | Gestión local sin contrato JSON/códigos de salida ni política de seguridad consolidada. |
+| `skill` | Registro en proceso; no hay ciclo de invocación ni persistencia operacional estable. |
+| `agent` | Requiere proveedor directo y sus tools fallan cerrado; no es una ruta de ejecución gobernada. |
+| `workflow` | Las steps `command`/`script` no son soportadas y las tools no implementadas fallan cerrado. |
+| `spec` | Parser/generador de prototipo sin contrato de materialización ni guardrails de salida. |
+| `mcp` | Cliente/servidor JSON-RPC skeleton con respuestas mock; no existe transporte operativo real. |

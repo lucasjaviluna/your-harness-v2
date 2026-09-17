@@ -76,7 +76,11 @@ export const registerWorkflowCommands = (
         const toolExecutor: ToolExecutor = {
           execute: async (toolName: string, args: Record<string, unknown>): Promise<ToolResult> => {
             console.log(chalk.blue(`  🔧 Tool: ${toolName}`), chalk.gray(JSON.stringify(args)));
-            return { toolCallId: toolName, content: `Tool '${toolName}' executed` };
+            return {
+              toolCallId: toolName,
+              content: `Tool '${toolName}' no está implementada en el workflow experimental; no se ejecutó ninguna operación.`,
+              isError: true,
+            };
           },
           listTools: () => [],
         };

@@ -43,7 +43,7 @@ src/cli
 - `audit work-item <work-item-id>` permite consultar todas las ejecuciones del WorkItem; ambos comandos aceptan `--from`, `--to` y `--json`.
 - Los comandos `change` soportados mantienen payloads JSON de éxito y emiten errores JSON con `{ ok: false, error: { code, message } }` y exit code `1` cuando se usa `--json`.
 - Las operaciones `work` y `verification` también aceptan `--json`; `audit` ya ofrece payloads JSON y ahora normaliza sus errores con el mismo contrato.
-- `version`, `config`, `mode` y `provider` ofrecen JSON para consultas y validaciones básicas; los comandos experimentales de extensiones, agentes, workflows y MCP aún requieren una revisión de estabilidad independiente.
+- `version`, `config`, `mode` y `provider` ofrecen JSON para consultas y validaciones básicas. `plugin`, `skill`, `agent`, `workflow`, `spec` y `mcp` permanecen explícitamente fuera de la superficie estable v0.1.0; no se deben automatizar contra sus salidas ni asumir ejecución de tools, scripts o transporte MCP.
 - Los errores JSON incluyen `error.exitCode`; la taxonomía reservada es `1` inesperado, `2` uso, `3` guardrail/HITM, `4` no encontrado, `5` conflicto y `6` proveedor externo. La clasificación fina se incorpora progresivamente.
 - Los errores de uso generados por Commander se emiten como `CLI_USAGE_ERROR` con exit code `2`, incluyendo comandos u opciones desconocidas y opciones obligatorias ausentes.
 - `work select <work-item-id>` registra el alcance HITM confirmado de Requirements y Scenarios; `work execute` exige esa selección y rechaza su digest si quedó obsoleto.

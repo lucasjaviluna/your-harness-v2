@@ -30,4 +30,5 @@ Esta matriz delimita la superficie de escritura que puede incluir `v0.1.0`. La p
 - [x] Recovery con provider divergente (`recovery-required`) sin resolución automática.
 - [x] Retry explícito después de `apply-failed`, con nueva clave y `retryOfAttemptId`.
 - [x] Ejecución `work execute` autorizada y rechazo por ausencia de scope HITM desde proceso CLI.
+- [x] Instalación empaquetada: `change apply` sin `workspace.write` devuelve `CHANGE_APPLY_GUARDRAIL`/exit code `3` y conserva el Change original.
 - [ ] Ejecutar cada caso desde un proceso CLI limpio y verificar código de salida, archivos y registros.

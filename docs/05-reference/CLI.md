@@ -6,8 +6,7 @@ The executable name is `yh`.
 | --- | --- |
 | General | `version`, `config`, `mode` |
 | Providers | `provider list`, `provider use`, `provider test` |
-| Extensions | `plugin`, `skill`, `agent` |
-| Integration | `mcp`, `workflow`, `spec` |
+| Experimental (fuera de v0.1.0) | `plugin`, `skill`, `agent`, `mcp`, `workflow`, `spec` |
 | Execution | `work-item create <work-item-id>`, `work-item bind <work-item-id>`, `work-item select <work-item-id>`, `work-item start <work-item-id>`, `work-item execute <work-item-id>`, `work-item authorize <work-item-id>` (`work` alias) |
 | Verification | `evidence record <evidence-id>`, `verification plan create <plan-id>`, `verification evaluate <plan-id>` |
 | Audit | `audit trace <execution-trace-id>`, `audit work-item <work-item-id>` |
@@ -35,4 +34,4 @@ La taxonomía reservada de exit codes es: `0` éxito, `1` error inesperado, `2` 
 
 Los errores de parseo de Commander —comando desconocido, opción desconocida u opción obligatoria ausente— se normalizan como `CLI_USAGE_ERROR` con exit code `2`. El entrypoint captura estos errores antes de que Commander termine el proceso, manteniendo la posibilidad de consumir JSON desde un agente o script.
 
-En los flujos críticos y administrativos ya se clasifican explícitamente los casos conocidos: Change/WorkItem/binding inexistente usa `4`; argumentos, modo o proveedor inválidos, o retry mal formado, usa `2`; HITM/scope/recovery requerido usa `3`; duplicados, materialización ya realizada, estado Apply incompatible, scope obsoleto o proveedor deshabilitado usa `5`. Las familias experimentales mantienen revisión pendiente.
+En los flujos críticos y administrativos ya se clasifican explícitamente los casos conocidos: Change/WorkItem/binding inexistente usa `4`; argumentos, modo o proveedor inválidos, o retry mal formado, usa `2`; HITM/scope/recovery requerido usa `3`; duplicados, materialización ya realizada, estado Apply incompatible, scope obsoleto o proveedor deshabilitado usa `5`. Las familias `plugin`, `skill`, `agent`, `workflow`, `spec` y `mcp` están explícitamente fuera de la superficie estable v0.1.0: no se deben automatizar contra sus salidas ni asumir ejecución de tools, scripts o transporte MCP.

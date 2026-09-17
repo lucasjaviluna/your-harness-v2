@@ -25,7 +25,7 @@ La superficie estable puede declararse gobernada para operaciones locales porque
 
 - No hay lock multiproceso: dos procesos concurrentes podrían competir por el mismo Change. La mitigación actual es la revalidación de digest, la atomicidad y la recuperación explícita; el lock queda para hardening posterior.
 - Un runner externo no está sandboxeado por el sistema operativo. Sólo se habilita mediante capability, confirmación, `cwd` explícito, `shell: false` y timeout; no debe considerarse aislamiento contra un proceso malicioso.
-- La matriz de comandos está documentada y sus flujos críticos tienen cobertura E2E; queda verificar la instalación empaquetada y los últimos escenarios secundarios antes de etiquetar el release.
+- La matriz de comandos está documentada y sus flujos críticos tienen cobertura E2E. La instalación empaquetada ejecuta además un Apply completo hasta el guardrail de escritura y verifica que no modifica el Change.
 - MCP, `ToolExecutor` general y steps `command`/`script` permanecen fuera de la superficie estable; sus rutas experimentales fallan cerrado o requieren integración explícita.
 
 La matriz de comandos y efectos persistentes está en `Write-Command-Matrix.md`.
@@ -37,5 +37,6 @@ La matriz de comandos y efectos persistentes está en `Write-Command-Matrix.md`.
 - [x] Digest base y digest posterior revisados.
 - [x] Persistencia local versionada y atómica revisada.
 - [x] Alcance de comandos y efectos persistentes documentado.
-- [ ] Ejecutar matriz E2E de cada comando desde un proceso CLI limpio.
-- [ ] Decidir si el lock multiproceso entra en `v0.1.0` o queda formalmente fuera.
+- [ ] Ejecutar matriz E2E exhaustiva de cada comando desde un proceso CLI limpio (hardening posterior; los flujos críticos ya tienen E2E dedicado).
+- [x] Decidir si el lock multiproceso entra en `v0.1.0` o queda formalmente fuera: queda fuera como riesgo aceptado; digest, atomicidad y recovery reducen el riesgo, sin reemplazar un lock.
+- [x] Verificar desde una instalación empaquetada que `change apply` sin `workspace.write` devuelve el guardrail, código de salida 3 y no modifica el Change.
