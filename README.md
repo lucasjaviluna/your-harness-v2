@@ -2,6 +2,8 @@
 
 `your-harness` (`yh`) es un harness CLI para trabajo de ingeniería asistido por IA. Separa el estado y conocimiento de ingeniería del runtime concreto que ejecuta una tarea.
 
+La propuesta de contenido de `v0.1.0 Governed Change Foundation` está resumida en [CHANGELOG.md](./CHANGELOG.md).
+
 ## Estado
 
 Prototipo temprano — Stage 1. El Engineering Core, el contrato de ejecución, el adapter inicial de Pi, el provider read-only de OpenSpec con materialización gobernada de Changes, la composición configurable por proyecto, la integración persistente de la CLI y el ciclo CLI acotado de verification/evidence están implementados.

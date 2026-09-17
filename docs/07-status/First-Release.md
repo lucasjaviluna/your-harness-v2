@@ -47,7 +47,7 @@ La estimación es cualitativa y depende de mantener este alcance:
 - **Hardening de release:** avanzado pero incompleto; CI, versionado, seguridad, instalación empaquetada y E2E críticos están cubiertos; quedan escenarios secundarios y decisión final sobre lock multiproceso.
 - **Visión completa de your-harness:** temprana; TaskOrchestrator, agente de ejecución, MCP y workflows reales aún son fases posteriores.
 
-Como orientación de planificación, el proyecto está aproximadamente en **65–75% del v0.1.0 acotado** y en **35–45% de la visión completa**. Son rangos de trabajo, no una métrica de calidad ni una promesa de calendario.
+Como orientación de planificación, el proyecto está aproximadamente en **90–95% del v0.1.0 acotado** y en **35–45% de la visión completa**. El alcance funcional y de hardening está cerrado; resta consolidar el release candidate, confirmar CI sobre el commit final y crear la etiqueta/publicación. Son rangos de trabajo, no una métrica de calidad ni una promesa de calendario.
 
 ## Regla de release
 
@@ -55,9 +55,10 @@ El release estable debe optimizar por confiabilidad del flujo gobernado, no por 
 
 ## Próxima secuencia propuesta
 
-1. Cerrar E2E y contrato final de `recover`.
+1. ~~Cerrar E2E y contrato final de `recover`.~~ **Completado:** Apply/Recover cubren éxito, fallos, recovery, idempotencia, retry y colisión real de escritura desde proceso CLI.
 2. ~~Definir formato versionado y estrategia de migración de persistencia local.~~ **Completado:** contrato v1 y registro explícito de migraciones implementados y documentados.
 3. ~~Consolidar CLI/JSON/errores y matriz de capabilities.~~ **Completado en la superficie soportada:** contrato JSON/errores y matriz inicial publicados; las familias experimentales permanecen fuera del alcance estable.
 4. ~~Incorporar CI/CD y prueba de instalación limpia.~~ **Completado:** GitHub Actions ejecuta `npm ci`, build, tests, lint, documentación y empaquetado en Node 22.19/24.
-5. Ejecutar la matriz E2E de seguridad, completar la checklist de `Security-Review.md` y congelar el alcance v0.1.0.
-6. Recién después iniciar el diseño de `TaskOrchestrator` como consumidor de estos contratos.
+5. ~~Ejecutar la matriz E2E de seguridad, completar la checklist de `Security-Review.md` y congelar el alcance v0.1.0.~~ **Completado para release:** los flujos críticos, el guardrail de escritura desde instalación empaquetada y los riesgos aceptados están documentados; la matriz exhaustiva de todos los comandos queda como hardening posterior.
+6. Consolidar el release candidate: commit final, CI verde, etiqueta y publicación de `v0.1.0`.
+7. Después iniciar el diseño de `TaskOrchestrator` como consumidor de estos contratos.
