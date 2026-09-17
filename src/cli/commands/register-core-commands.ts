@@ -31,7 +31,7 @@ export const registerCoreCommands = (
     .option("--show", "Show current configuration")
     .option("--json", "Imprimir la configuración como JSON")
     .action((options: { show?: boolean; json?: boolean }) => {
-      if (options.show || Object.keys(options).length === 0) {
+      if (options.show || options.json || Object.keys(options).length === 0) {
         if (options.json) {
           console.log(JSON.stringify(config, null, 2));
           return;

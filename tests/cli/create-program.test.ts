@@ -121,6 +121,35 @@ describe("createCliProgram", () => {
     expect(exitCode).toBe(2);
   });
 
+  it("trata --json como solicitud de configuración y conserva el contrato de error", async () => {
+    const output: unknown[][] = [];
+    let exitCode: number | undefined;
+    const { program } = createCliProgram({
+      context: {
+        config,
+        logger: createLogger("fatal"),
+        io: {
+          write: (...values) => output.push([...values]),
+          setExitCode: (code) => { exitCode = code; },
+        },
+      },
+    });
+
+    await program.parseAsync(["node", "yh", "config", "--json"]);
+    expect(JSON.parse(String(output[0]?.[0]))).toMatchObject({
+      version: "test-version",
+      runtime: { defaultRuntime: "fake" },
+    });
+
+    output.length = 0;
+    await program.parseAsync(["node", "yh", "provider", "use", "unknown", "--json"]);
+    expect(JSON.parse(String(output[0]?.[0]))).toMatchObject({
+      ok: false,
+      error: { code: "PROVIDER_INVALID", exitCode: 2 },
+    });
+    expect(exitCode).toBe(2);
+  });
+
   it("expone inspect y status como fachada read-only de un Change", async () => {
     const workspace = await mkdtemp(path.join(os.tmpdir(), "yh-change-cli-"));
     try {

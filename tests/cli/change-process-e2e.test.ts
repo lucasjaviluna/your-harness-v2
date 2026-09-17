@@ -2,6 +2,7 @@ import { execFile } from "node:child_process";
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import { afterEach, describe, expect, it } from "vitest";
 import { createLocalOperationalStore } from "../../src/persistence/index.js";
@@ -13,6 +14,21 @@ const workspaces: string[] = [];
 
 const runYh = async (workspace: string, ...arguments_: string[]) =>
   executeFile(process.execPath, [cli, ...arguments_], { cwd: workspace });
+
+const runYhWithMaterializationCollision = async (workspace: string, ...arguments_: string[]) => {
+  const script = `
+    import { writeFileSync } from "node:fs";
+    import path from "node:path";
+    const workspace = process.env.YH_TEST_WORKSPACE;
+    writeFileSync(path.join(workspace, "openspec", "changes", ".yh-materialize-add-login-" + process.pid), "collision");
+    process.argv = ["node", "yh", ...JSON.parse(process.env.YH_TEST_ARGS)];
+    await import(${JSON.stringify(pathToFileURL(cli).href)});
+  `;
+  return executeFile(process.execPath, ["--input-type=module", "-e", script], {
+    cwd: workspace,
+    env: { ...process.env, YH_TEST_WORKSPACE: workspace, YH_TEST_ARGS: JSON.stringify(arguments_) },
+  });
+};
 
 const createWorkspace = async (withWriteCapability: boolean): Promise<string> => {
   const workspace = await mkdtemp(path.join(os.tmpdir(), "yh-change-process-e2e-"));
@@ -149,6 +165,39 @@ describe("yh change como proceso", () => {
       .resolves.toMatchObject({ outcome: "failed" });
     await expect(state.changeApplyTransitions.findCurrentByChangeId("add-login"))
       .resolves.toMatchObject({ toStatus: "apply-failed" });
+  }, 60_000);
+
+  it("persiste un fallo real de escritura del materializer", async () => {
+    const workspace = await createWorkspace(true);
+    const { handoff } = await prepareApprovedHandoff(workspace);
+    const failed = await runYhWithMaterializationCollision(
+      workspace, "change", "apply", "add-login", "--workspace", workspace,
+      "--confirm", "--by", "architect@example.com", "--role", "maintainer",
+      "--idempotency-key", "apply-write-failure-process", "--json",
+    ).catch((error: unknown) => error as { stdout: string; code: number });
+
+    expect(failed.code).toBe(1);
+    if (!failed.stdout) throw new Error("El wrapper de colisión no produjo JSON: " + (failed as { stderr?: string }).stderr);
+    expect(JSON.parse(failed.stdout)).toMatchObject({
+      ok: false, error: { code: "CHANGE_APPLY_FAILED", exitCode: 1 },
+    });
+    await expect(readFile(path.join(workspace, "openspec/changes/add-login/proposal.md"), "utf8"))
+      .resolves.toBe("# Existing proposal\n");
+
+    const store = createLocalOperationalStore({ workspace });
+    const audit = await store.changeMaterializationAudits.findByIdempotencyKey("apply-write-failure-process");
+    expect(audit).toMatchObject({
+      handoffId: handoff.id, outcome: "failed", idempotencyKey: "apply-write-failure-process",
+    });
+    expect(audit?.error).toContain("already exists");
+    const failedAttempt = await store.changeApplyTransitions.findCurrentByChangeId("add-login");
+    expect(failedAttempt).toMatchObject({ toStatus: "apply-failed" });
+
+    const changeEntries = await readdir(path.join(workspace, "openspec/changes"));
+    await Promise.all(changeEntries
+      .filter((entry) => entry.startsWith(".yh-materialize-add-login-"))
+      .map((entry) => rm(path.join(workspace, "openspec/changes", entry), { recursive: true, force: true })));
+
   }, 60_000);
 
   it("observa y resuelve un Apply interrumpido con HITM e idempotencia", async () => {

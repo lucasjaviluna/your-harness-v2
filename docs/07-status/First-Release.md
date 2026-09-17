@@ -30,8 +30,8 @@ La propuesta es tratarlo como un **v0.1.0 Governed Change Foundation**: una vers
 
 ## Gaps para declarar el release estable
 
-1. Completar la matriz E2E con todos los resultados de `change recover` — `apply-failed`, replay idempotente, `materialized`, `recovery-required` y retry explícito ya están cubiertos desde proceso CLI; queda consolidar el escenario de fallo de escritura completo.
-2. Definir versionado/migración de los JSON bajo `.your-harness/state` — contrato v1 implementado; quedan migraciones futuras sólo cuando cambie el formato.
+1. ~~Completar la matriz E2E con todos los resultados de `change recover`.~~ **Completado:** el proceso CLI cubre `apply-failed`, replay idempotente, `materialized`, `recovery-required`, retry explícito y una colisión real de escritura que conserva el Change original y persiste la auditoría fallida.
+2. ~~Definir versionado/migración de los JSON bajo `.your-harness/state`.~~ **Completado:** envelope v1, compatibilidad con registros legacy, rechazo explícito de formatos futuros, registro de migraciones y pruebas de compatibilidad; las migraciones futuras se agregan sólo cuando cambie el formato.
 3. Consolidar el contrato de configuración, errores CLI, códigos de salida y salida JSON — envelope y taxonomía definidos; implementado para `version`, `config`, `mode`, `provider`, `change`, `work`, `audit` y `verification`, con clasificación fina en los flujos críticos y administrativos y errores de parseo Commander normalizados. La matriz de capabilities ya está publicada; quedan casos secundarios y comandos experimentales.
 4. Agregar CI/CD mínimo: build, tests, lint, validación documental y empaquetado — completado; GitHub Actions pasó en runner limpio con Node 22.19/24.
 5. Reemplazar o aislar explícitamente los mocks/stubs que queden visibles en la superficie soportada — ToolExecutor y steps `command`/`script` ahora fallan cerrados; MCP y otras familias experimentales siguen fuera del alcance estable.
@@ -56,7 +56,7 @@ El release estable debe optimizar por confiabilidad del flujo gobernado, no por 
 ## Próxima secuencia propuesta
 
 1. Cerrar E2E y contrato final de `recover`.
-2. Definir formato versionado y estrategia de migración de persistencia local.
+2. ~~Definir formato versionado y estrategia de migración de persistencia local.~~ **Completado:** contrato v1 y registro explícito de migraciones implementados y documentados.
 3. ~~Consolidar CLI/JSON/errores y matriz de capabilities.~~ **Completado en la superficie soportada:** contrato JSON/errores y matriz inicial publicados; las familias experimentales permanecen fuera del alcance estable.
 4. ~~Incorporar CI/CD y prueba de instalación limpia.~~ **Completado:** GitHub Actions ejecuta `npm ci`, build, tests, lint, documentación y empaquetado en Node 22.19/24.
 5. Ejecutar la matriz E2E de seguridad, completar la checklist de `Security-Review.md` y congelar el alcance v0.1.0.

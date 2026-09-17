@@ -28,7 +28,7 @@
 | Agent tools | Experimental / fail-closed | CLI ToolExecutor records an attempted call but returns `isError: true`; it never claims simulated success. |
 | Workflow command/script steps | Explicitly unsupported | Steps fail with an explicit error until guarded process/script execution is implemented. |
 | Configuration persistence | Partial | YAML is read; save path behavior requires consolidation. |
-| Test suite | Early | Eighty-six focused tests cover configuration, context projection, Core smoke flows, Runtime composition/boundary, execution environment, OpenSpec read-only projection, SDD drift, operational persistence/bindings, in-process and process-level CLI execution, Evidence/Verification/evaluator/HITM authorization, eligibility, guarded Pi tool integration and Apply recovery; broad coverage is pending. |
+| Test suite | Early | Ninety-nine focused tests cover configuration, context projection, Core smoke flows, Runtime composition/boundary, execution environment, OpenSpec read-only projection, SDD drift, operational persistence/bindings, in-process and process-level CLI execution, Evidence/Verification/evaluator/HITM authorization, eligibility, guarded Pi tool integration and Apply recovery; broad coverage is pending. |
 
 ## Contrato de capabilities para v0.1.0
 

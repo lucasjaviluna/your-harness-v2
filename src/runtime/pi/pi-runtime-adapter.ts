@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { access, readFile } from "node:fs/promises";
-import { createAgentSession, createReadToolDefinition, SessionManager } from "@earendil-works/pi-coding-agent";
 import type { ExecutionRequest, RuntimePort, RuntimeResult } from "@your-harness/application";
 import { buildPiExecutionPrompt } from "./pi-execution-prompt.js";
 import { createExecutionEnvironmentGuard, type ExecutionEnvironment, type ExecutionEnvironmentGuard } from "../execution-environment.js";
@@ -47,6 +46,7 @@ export class PiRuntimeAdapter implements RuntimePort {
   async execute(request: ExecutionRequest): Promise<RuntimeResult> {
     this.guard?.assertWorkspacePath(request.workspace, "read");
     const startedAt = new Date().toISOString();
+    const { createAgentSession, createReadToolDefinition, SessionManager } = await import("@earendil-works/pi-coding-agent");
     let session: Awaited<ReturnType<typeof createAgentSession>>["session"] | undefined;
 
     try {
