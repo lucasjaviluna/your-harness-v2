@@ -35,7 +35,7 @@ La propuesta es tratarlo como un **v0.1.0 Governed Change Foundation**: una vers
 3. Consolidar el contrato de configuración, errores CLI, códigos de salida y salida JSON — envelope y taxonomía definidos; implementado para `version`, `config`, `mode`, `provider`, `change`, `work`, `audit` y `verification`, con clasificación fina en los flujos críticos y administrativos y errores de parseo Commander normalizados. La matriz de capabilities ya está publicada; quedan casos secundarios y comandos experimentales.
 4. Agregar CI/CD mínimo: build, tests, lint, validación documental y empaquetado — completado; GitHub Actions pasó en runner limpio con Node 22.19/24.
 5. Reemplazar o aislar explícitamente los mocks/stubs que queden visibles en la superficie soportada — ToolExecutor y steps `command`/`script` ahora fallan cerrados; MCP y otras familias experimentales siguen fuera del alcance estable.
-6. Probar instalación limpia y ejecución desde un workspace externo al repositorio.
+6. ~~Probar instalación limpia y ejecución desde un workspace externo al repositorio.~~ **Completado:** `npm run verify:packed-install` genera el tarball, instala sus dependencias en un workspace temporal externo y ejecuta `yh version --json`; `prepack` construye los artefactos de los paquetes locales.
 7. Cerrar la revisión de seguridad de paths, capabilities y confirmaciones en todos los comandos que escriben — boundary y materializer revisados; la evidencia está en `Security-Review.md` y la matriz de efectos en `Write-Command-Matrix.md`; los flujos principales ya tienen E2E de proceso, queda la verificación final desde instalación empaquetada.
 8. Publicar una matriz de capabilities y limitaciones para evitar prometer orquestación aún no implementada — matriz inicial publicada; queda mantenerla sincronizada con cada capability nueva.
 
@@ -44,7 +44,7 @@ La propuesta es tratarlo como un **v0.1.0 Governed Change Foundation**: una vers
 La estimación es cualitativa y depende de mantener este alcance:
 
 - **Base gobernada/CLI:** avanzada; la mayor parte del flujo está implementada.
-- **Hardening de release:** avanzado pero incompleto; CI, versionado, seguridad y E2E críticos están cubiertos; falta instalación empaquetada, escenarios secundarios y decisión final sobre lock multiproceso.
+- **Hardening de release:** avanzado pero incompleto; CI, versionado, seguridad, instalación empaquetada y E2E críticos están cubiertos; quedan escenarios secundarios y decisión final sobre lock multiproceso.
 - **Visión completa de your-harness:** temprana; TaskOrchestrator, agente de ejecución, MCP y workflows reales aún son fases posteriores.
 
 Como orientación de planificación, el proyecto está aproximadamente en **65–75% del v0.1.0 acotado** y en **35–45% de la visión completa**. Son rangos de trabajo, no una métrica de calidad ni una promesa de calendario.

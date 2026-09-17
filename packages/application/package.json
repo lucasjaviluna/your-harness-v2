@@ -1,7 +1,7 @@
 {
   "name": "@your-harness/application",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -20,7 +20,7 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@your-harness/domain": "file:../domain"
+    "@your-harness/domain": "^0.1.0"
   },
   "devDependencies": {
     "rimraf": "^6.0.1"

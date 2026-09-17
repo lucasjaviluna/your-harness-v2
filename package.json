@@ -7,12 +7,20 @@
   "bin": {
     "yh": "./dist/src/cli/index.js"
   },
+  "files": [
+    "dist",
+    "packages/*/package.json",
+    "README.md",
+    "LICENSE"
+  ],
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
     "dev": "tsx watch src/cli/index.ts",
     "build": "tsc -b",
+    "build:package-artifacts": "npm run build --workspace @your-harness/shared && npm run build --workspace @your-harness/domain && npm run build --workspace @your-harness/application",
+    "prepack": "npm run build:package-artifacts && npm run build",
     "build:core": "tsc -b packages/shared packages/domain packages/application",
     "start": "node dist/src/cli/index.js",
     "test": "vitest",
@@ -20,6 +28,7 @@
     "test:pi": "vitest run tests/pi-runtime-integration.test.ts",
     "verify:core": "npm run build:core && npm run test:core",
     "verify:pi": "npm run build && npm run test:pi",
+    "verify:packed-install": "node scripts/verify-packed-install.mjs",
     "test:watch": "vitest watch",
     "lint": "eslint \"src/**/*.ts\"",
     "check:docs": "node scripts/verify-docs.mjs",
@@ -51,8 +60,8 @@
     "rimraf": "^6.0.1"
   },
   "dependencies": {
-    "@your-harness/application": "file:./packages/application",
-    "@your-harness/domain": "file:./packages/domain",
+    "@your-harness/application": "^0.1.0",
+    "@your-harness/domain": "^0.1.0",
     "@earendil-works/pi-coding-agent": "^0.85.1",
     "commander": "^12.0.0",
     "chalk": "^5.3.0",

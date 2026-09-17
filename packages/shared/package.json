@@ -1,7 +1,7 @@
 {
   "name": "@your-harness/shared",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "description": "Shared types, contracts and utilities for Your Harness.",
 
   "type": "module",

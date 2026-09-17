@@ -1,7 +1,7 @@
 {
   "name": "@your-harness/domain",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "description": "Core engineering domain model for Your Harness.",
 
   "type": "module",
@@ -27,7 +27,7 @@
   },
 
   "dependencies": {
-    "@your-harness/shared": "file:../shared"
+    "@your-harness/shared": "^0.1.0"
   },
 
   "devDependencies": {
