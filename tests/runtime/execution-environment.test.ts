@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import path from "node:path";
 
 import { createExecutionEnvironment, createExecutionEnvironmentGuard } from "../../src/runtime/index.js";
 
@@ -30,16 +31,19 @@ describe("ExecutionEnvironment", () => {
   });
 
   it("no permite escapar del workspace permitido", () => {
+    const workspaceRoot = path.resolve("execution-workspace");
+    const otherWorkspace = path.resolve("other-workspace");
     expect(() =>
       createExecutionEnvironment({
-        workspace: { root: "C:/workspace", allowedPaths: ["C:/workspace", "C:/other"] },
+        workspace: { root: workspaceRoot, allowedPaths: [workspaceRoot, otherWorkspace] },
       }),
     ).toThrow("inside the workspace root");
   });
 
   it("enforces workspace writes, capabilities, network, secrets and confirmations", () => {
+    const workspaceRoot = path.resolve("execution-workspace");
     const environment = createExecutionEnvironment({
-      workspace: { root: "C:/workspace", mode: "read-write" },
+      workspace: { root: workspaceRoot, mode: "read-write" },
       capabilities: ["workspace.write", "network.access", "secrets.read"],
       network: { mode: "allowlist", allowedHosts: ["api.example.com"] },
       secrets: { mode: "allowlist", allowedNames: ["API_KEY"] },
@@ -47,8 +51,8 @@ describe("ExecutionEnvironment", () => {
     });
     const guard = createExecutionEnvironmentGuard(environment);
 
-    expect(() => guard.assertWorkspacePath("C:/workspace/src", "write")).not.toThrow();
-    expect(() => guard.assertWorkspacePath("C:/outside", "read")).toThrow("outside");
+    expect(() => guard.assertWorkspacePath(path.join(workspaceRoot, "src"), "write")).not.toThrow();
+    expect(() => guard.assertWorkspacePath(path.resolve("outside-workspace"), "read")).toThrow("outside");
     expect(() => guard.assertNetworkHost("other.example.com")).toThrow("not allowed");
     expect(() => guard.assertSecret("OTHER_KEY")).toThrow("not allowed");
     expect(() => guard.requireConfirmation("workspace.write", false)).toThrow("confirmation is required");
@@ -56,21 +60,23 @@ describe("ExecutionEnvironment", () => {
   });
 
   it("resuelve allowedPaths relativos contra la raíz del workspace", () => {
+    const workspaceRoot = path.resolve("execution-workspace");
     const environment = createExecutionEnvironment({
-      workspace: { root: "C:/workspace", allowedPaths: ["src"] },
+      workspace: { root: workspaceRoot, allowedPaths: ["src"] },
     });
     const guard = createExecutionEnvironmentGuard(environment);
 
-    expect(() => guard.assertWorkspacePath("C:/workspace/src/index.ts", "read")).not.toThrow();
-    expect(() => guard.assertWorkspacePath("C:/workspace/packages/index.ts", "read")).toThrow("outside");
+    expect(() => guard.assertWorkspacePath(path.join(workspaceRoot, "src/index.ts"), "read")).not.toThrow();
+    expect(() => guard.assertWorkspacePath(path.join(workspaceRoot, "packages/index.ts"), "read")).toThrow("outside");
   });
 
   it("rejects a write when the capability is missing even in read-write mode", () => {
+    const workspaceRoot = path.resolve("execution-workspace");
     const environment = createExecutionEnvironment({
-      workspace: { root: "C:/workspace", mode: "read-write" },
+      workspace: { root: workspaceRoot, mode: "read-write" },
     });
     const guard = createExecutionEnvironmentGuard(environment);
 
-    expect(() => guard.assertWorkspacePath("C:/workspace/file.txt", "write")).toThrow("workspace.write");
+    expect(() => guard.assertWorkspacePath(path.join(workspaceRoot, "file.txt"), "write")).toThrow("workspace.write");
   });
 });
