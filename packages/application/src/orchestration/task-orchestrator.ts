@@ -20,6 +20,8 @@ export interface TaskOrchestrationSnapshot {
   readonly specification?: {
     readonly id: string;
     readonly status: SpecificationStatus;
+    readonly approvedSnapshotDigest?: string;
+    readonly currentSnapshotDigest?: string;
   };
   readonly change?: {
     readonly id: string;
@@ -28,6 +30,9 @@ export interface TaskOrchestrationSnapshot {
     readonly approvals: ReadonlyArray<ChangeStageApproval>;
     /** El caller debe obtenerlo de la auditoría/materialización durable. */
     readonly materialization: "not-materialized" | "materialized" | "recovery-required";
+    /** Tasks SDD vigentes y subset explícitamente asociado al WorkItem. */
+    readonly providerTaskIds?: ReadonlyArray<string>;
+    readonly selectedTaskIds?: ReadonlyArray<string>;
   };
   readonly execution?: {
     readonly traceId: string;
@@ -50,6 +55,7 @@ export type TaskOrchestrationPhase =
   | "completed";
 
 export type TaskOrchestrationAction =
+  | { readonly kind: "rebind-work-item"; readonly reason: "specification-drift" | "change-task-drift" }
   | { readonly kind: "approve-change-stage"; readonly stage: ChangeStage }
   | { readonly kind: "apply-change" }
   | { readonly kind: "execute-work-item" }
@@ -60,8 +66,10 @@ export interface TaskOrchestrationBlocker {
   readonly code:
     | "SPECIFICATION_MISSING"
     | "SPECIFICATION_NOT_APPROVED"
+    | "SPECIFICATION_SNAPSHOT_DRIFTED"
     | "CHANGE_MISSING"
     | "CHANGE_REQUIRES_RECOVERY"
+    | "CHANGE_TASKS_DRIFTED"
     | "WORK_ITEM_NOT_EXECUTABLE"
     | "EXECUTION_REQUIRES_INVESTIGATION"
     | "VERIFICATION_NOT_SUFFICIENT";
@@ -118,10 +126,27 @@ export class TaskOrchestrator {
         message: `Specification '${snapshot.specification.id}' is not approved.`,
       }]);
     }
+    if (snapshot.specification.currentSnapshotDigest !== undefined
+      && snapshot.specification.approvedSnapshotDigest !== snapshot.specification.currentSnapshotDigest) {
+      return plan(snapshot, "needs-context", [{ kind: "rebind-work-item", reason: "specification-drift" }], [{
+        code: "SPECIFICATION_SNAPSHOT_DRIFTED",
+        message: `Specification '${snapshot.specification.id}' changed since the WorkItem binding was approved.`,
+      }]);
+    }
     if (!snapshot.change) {
       return plan(snapshot, "needs-context", [], [{
         code: "CHANGE_MISSING",
         message: "A governed Change snapshot is required before execution.",
+      }]);
+    }
+    const providerTaskIds = snapshot.change.providerTaskIds;
+    const missingTaskIds = providerTaskIds === undefined
+      ? []
+      : snapshot.change.selectedTaskIds?.filter((id) => !providerTaskIds.includes(id)) ?? [];
+    if (missingTaskIds.length > 0) {
+      return plan(snapshot, "needs-context", [{ kind: "rebind-work-item", reason: "change-task-drift" }], [{
+        code: "CHANGE_TASKS_DRIFTED",
+        message: `Selected SDD task(s) no longer exist in Change '${snapshot.change.id}': ${missingTaskIds.join(", ")}.`,
       }]);
     }
 

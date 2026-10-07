@@ -453,6 +453,16 @@ export const createLocalOperationalStore = (
         if (!isVerificationPlan(value)) throw new Error("Persisted VerificationPlan has an unsupported format.");
         return createVerificationPlan(value);
       },
+      async findByExecutionTraceId(executionTraceId) {
+        try {
+          const entries = await readdir(verificationPlansDirectory);
+          const values = await Promise.all(entries.filter((entry) => entry.endsWith(".json")).map((entry) => readJson<unknown>(path.join(verificationPlansDirectory, entry))));
+          return values.filter(isVerificationPlan).filter((plan) => plan.executionTraceId === executionTraceId).map(createVerificationPlan);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+          throw error;
+        }
+      },
     },
     verificationReports: {
       async save(report) {

@@ -70,4 +70,32 @@ describe("TaskOrchestrator", () => {
       actions: [{ kind: "record-evidence-and-verify", executionTraceId: "trace-1" }],
     });
   });
+
+  it("detecta drift de la Specification y solicita un rebind explícito", () => {
+    const input = snapshot();
+    input.specification = {
+      id: "spec-1",
+      status: SpecificationStatus.Approved,
+      approvedSnapshotDigest: "old-digest",
+      currentSnapshotDigest: "new-digest",
+    };
+
+    expect(new TaskOrchestrator().plan(input)).toMatchObject({
+      phase: "needs-context",
+      actions: [{ kind: "rebind-work-item", reason: "specification-drift" }],
+      blockers: [{ code: "SPECIFICATION_SNAPSHOT_DRIFTED" }],
+    });
+  });
+
+  it("detecta tareas seleccionadas que ya no existen en el Change SDD", () => {
+    const input = snapshot();
+    input.change!.selectedTaskIds = ["task-removed"];
+    input.change!.providerTaskIds = ["task-current"];
+
+    expect(new TaskOrchestrator().plan(input)).toMatchObject({
+      phase: "needs-context",
+      actions: [{ kind: "rebind-work-item", reason: "change-task-drift" }],
+      blockers: [{ code: "CHANGE_TASKS_DRIFTED" }],
+    });
+  });
 });

@@ -7,6 +7,7 @@ import { createCliProgram } from "../../src/cli/create-program.js";
 import type { ValidatedConfig } from "../../src/core/config.js";
 import { createLocalOperationalStore } from "../../src/persistence/index.js";
 import { TransitionChangeApplyUseCase } from "@your-harness/application";
+import { WorkItemId } from "@your-harness/domain";
 
 const config: ValidatedConfig = {
   version: "test-version",
@@ -90,11 +91,33 @@ describe("createCliProgram", () => {
         "verification",
         "audit",
         "change",
+        "task",
       ]),
     );
 
     await program.parseAsync(["node", "yh", "mode"]);
     expect(output.flat().join(" ")).toContain("Current mode: custom");
+  });
+
+  it("calcula un plan read-only desde el estado persistido del WorkItem", async () => {
+    const workspace = await mkdtemp(path.join(os.tmpdir(), "yh-task-plan-"));
+    const output: unknown[][] = [];
+    const { program } = createCliProgram({
+      context: {
+        config,
+        logger: createLogger("fatal"),
+        io: { write: (...values) => output.push([...values]), setExitCode: () => undefined },
+      },
+    });
+    try {
+      await program.parseAsync(["node", "yh", "work", "create", "plan-target", "--title", "Plan target", "--workspace", workspace]);
+      await program.parseAsync(["node", "yh", "work", "start", "plan-target", "--workspace", workspace]);
+      await program.parseAsync(["node", "yh", "task", "plan", "plan-target", "--workspace", workspace, "--json"]);
+      expect(output.flat().map(String).join(" ")).toContain('"phase": "needs-context"');
+      expect((await createLocalOperationalStore({ workspace }).workItems.findById(new WorkItemId("plan-target")))?.status).toBe("in-progress");
+    } finally {
+      await rm(workspace, { recursive: true, force: true });
+    }
   });
 
   it("mantiene stdout JSON puro y códigos de uso en comandos administrativos", async () => {

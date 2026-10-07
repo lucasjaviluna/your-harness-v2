@@ -24,11 +24,12 @@
 | Pi workspace tools | Controlled read-only | Pi enables a guarded `read` tool only when `workspace.read` is explicitly configured; every path is checked, files over 256 KiB are rejected and invocations are auditable. Edit/write/process/network/secret tools remain disabled. |
 | Operational audit queries | Implemented (execution trace + tool correlation) | `audit trace` shows an `ExecutionTrace` and independently persisted `ToolInvocationTrace` records correlated by `executionTraceId`; it does not promote tool traces to Evidence. |
 | HITM execution scope | Implemented (initial hybrid contract) | `work select` persists a human-confirmed Requirement/Scenario scope and `work execute` validates its Specification digest before execution. |
+| Task orchestration plan | Implemented (read-only) | `task plan <work-item-id>` composes durable operational state with the current SDD projection, reports the next governed action and detects Specification digest drift or selected task references missing from the current Change. It recommends a WorkItem rebind but does not modify provider artifacts. |
 | MCP transport | Stub | Client/server interfaces and JSON-RPC skeleton exist; real stdio/HTTP transport is pending. |
 | Agent tools | Experimental / fail-closed | CLI ToolExecutor records an attempted call but returns `isError: true`; it never claims simulated success. |
 | Workflow command/script steps | Explicitly unsupported | Steps fail with an explicit error until guarded process/script execution is implemented. |
 | Configuration persistence | Partial | YAML is read; save path behavior requires consolidation. |
-| Test suite | Early | Ninety-nine focused tests cover configuration, context projection, Core smoke flows, Runtime composition/boundary, execution environment, OpenSpec read-only projection, SDD drift, operational persistence/bindings, in-process and process-level CLI execution, Evidence/Verification/evaluator/HITM authorization, eligibility, guarded Pi tool integration and Apply recovery; broad coverage is pending. |
+| Test suite | Early | Focused tests cover configuration, context projection, Core smoke flows, Runtime composition/boundary, execution environment, OpenSpec read-only projection, SDD drift, operational persistence/bindings, TaskOrchestrator planning, in-process and process-level CLI execution, Evidence/Verification/evaluator/HITM authorization, eligibility, guarded Pi tool integration and Apply recovery; broad coverage is pending. |
 
 ## Contrato de capabilities para v0.1.0
 

@@ -4,6 +4,7 @@ import type { VerificationReport } from "./verification-report.js";
 export interface VerificationPlanRepository {
   save(plan: VerificationPlan): Promise<void>;
   findById(id: string): Promise<VerificationPlan | null>;
+  findByExecutionTraceId(executionTraceId: string): Promise<ReadonlyArray<VerificationPlan>>;
 }
 
 export interface VerificationReportRepository {
