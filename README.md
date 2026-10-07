@@ -42,6 +42,7 @@ src/cli
 - `CompletionAuthorization` es la única ruta de Application que puede completar un WorkItem; la CLI exige report, actor, rol y motivo explícitos, y aplica una política HITM de decisiones permitidas por rol.
 - La CLI ya expone `work start` y `work authorize`; la autorización exige un VerificationReport y registra actor, motivo y decisión antes de completar.
 - `yh task plan <work-item-id>` presenta el siguiente paso gobernado en modo read-only; detecta drift del digest de Specification y referencias a tareas SDD que ya no están en el Change, y recomienda un rebind explícito.
+- `work bind` guarda también el digest del Change SDD asociado; `work execute` y `task plan` exigen que ese snapshot siga vigente para que los task references no cambien silenciosamente tras una edición.
 - `audit trace <execution-trace-id>` inspecciona una ejecución junto con sus `ToolInvocationTrace` correlacionadas; la auditoría sigue separada de Evidence.
 - `audit work-item <work-item-id>` permite consultar todas las ejecuciones del WorkItem; ambos comandos aceptan `--from`, `--to` y `--json`.
 - Los comandos `change` soportados mantienen payloads JSON de éxito y emiten errores JSON con `{ ok: false, error: { code, message } }` y exit code `1` cuando se usa `--json`.

@@ -45,6 +45,25 @@ export const assertSpecificationSnapshotMatchesBinding = (
   }
 };
 
+/** Evita reutilizar task references cuando cambió la revisión del Change asociado. */
+export const assertChangeSnapshotMatchesBinding = (
+  binding: WorkItemExecutionBinding,
+  change: SddChangeProjection | undefined,
+): void => {
+  if (!binding.changeId) return;
+  if (!change) {
+    throw new Error(`SDD Change '${binding.changeId}' was not found; rebind the WorkItem before execution.`);
+  }
+  if (!binding.changeSnapshotDigest) {
+    throw new Error(`Work item '${binding.workItemId}' has no approved SDD Change digest; rebind the WorkItem before execution.`);
+  }
+  if (binding.changeSnapshotDigest !== change.contentDigest) {
+    throw new Error(
+      `SDD Change '${binding.changeId}' changed since binding (approved digest '${binding.changeSnapshotDigest}', current '${change.contentDigest}'); rebind the WorkItem before execution.`,
+    );
+  }
+};
+
 const requiredSpecification = (project: SddProjectProjection, id: string): SddSpecificationProjection => {
   const specification = project.specifications.find((item) => item.id === id);
   if (!specification) throw new Error(`Configured SDD specification '${id}' was not found.`);

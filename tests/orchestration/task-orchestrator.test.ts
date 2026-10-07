@@ -98,4 +98,29 @@ describe("TaskOrchestrator", () => {
       blockers: [{ code: "CHANGE_TASKS_DRIFTED" }],
     });
   });
+
+  it("solicita un rebind cuando cambia el snapshot del Change asociado", () => {
+    const input = snapshot();
+    input.change!.approvedSnapshotDigest = "previous-digest";
+    input.change!.currentSnapshotDigest = "current-digest";
+
+    expect(new TaskOrchestrator().plan(input)).toMatchObject({
+      phase: "needs-context",
+      actions: [{ kind: "rebind-work-item", reason: "change-snapshot-drift" }],
+      blockers: [{ code: "CHANGE_SNAPSHOT_DRIFTED" }],
+    });
+  });
+
+  it("prioriza la recuperación HITM sobre un rebind cuando el Apply está incierto", () => {
+    const input = snapshot();
+    input.change!.materialization = "recovery-required";
+    input.change!.approvedSnapshotDigest = "previous-digest";
+    input.change!.currentSnapshotDigest = "current-digest";
+
+    expect(new TaskOrchestrator().plan(input)).toMatchObject({
+      phase: "blocked",
+      actions: [],
+      blockers: [{ code: "CHANGE_REQUIRES_RECOVERY" }],
+    });
+  });
 });

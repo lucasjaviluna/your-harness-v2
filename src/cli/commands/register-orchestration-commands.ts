@@ -61,6 +61,8 @@ export const registerOrchestrationCommands = (program: Command, { config, io }: 
             version: handoff?.proposedVersion ?? providerChange.version,
             digest: handoff?.proposedContentDigest ?? providerChange.contentDigest,
             approvals,
+            approvedSnapshotDigest: binding.changeSnapshotDigest,
+            currentSnapshotDigest: providerChange.contentDigest,
             providerTaskIds: providerChange.tasks.map((item) => item.id),
             selectedTaskIds: binding.taskIds,
             materialization: transition?.toStatus === "recovery-required" || providerDriftedAfterMaterialization

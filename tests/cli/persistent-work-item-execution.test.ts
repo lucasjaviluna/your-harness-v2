@@ -199,4 +199,18 @@ describe("yh work execute", () => {
       error: { code: "WORK_ITEM_SCOPE_REQUIRED", exitCode: 3 },
     });
   }, 60_000);
+
+  it("rechaza la ejecución si cambió el Change desde el binding del WorkItem", async () => {
+    const workspace = await createWorkspace();
+    await runYh(workspace, "work", "create", "stale-change-work", "--title", "Requires current Change");
+    await runYh(workspace, "work", "bind", "stale-change-work", "--specification", "authentication", "--approve-specification", "--change", "add-login", "--task", "openspec/changes/add-login/tasks.md#1");
+    await runYh(workspace, "work", "select", "stale-change-work", "--requirement", "authenticate-users", "--by", "reviewer", "--role", "reviewer", "--reason", "Scope approved");
+    await writeFile(path.join(workspace, "openspec/changes/add-login/tasks.md"), "- [ ] Implement login\n- [ ] Add token refresh\n");
+
+    const result = await runYhResult(workspace, "work", "execute", "stale-change-work", "--runtime", "fake", "--json")
+      .catch((error: unknown) => error as { stdout: string; code: number });
+    expect(result.code).toBe(1);
+    expect(result.stdout).toContain("changed since binding");
+    await expect(createLocalOperationalStore({ workspace }).executionTraces.findByWorkItemId("stale-change-work")).resolves.toHaveLength(0);
+  }, 60_000);
 });

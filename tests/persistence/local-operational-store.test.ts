@@ -129,7 +129,9 @@ describe("LocalOperationalStore", () => {
       workItemId: "persisted-work-item",
       specificationId: "authentication",
       specificationApproved: true,
+      specificationSnapshotDigest: "spec-digest",
       changeId: "add-login",
+      changeSnapshotDigest: "change-digest",
       taskIds: ["task-1"],
     });
 
@@ -141,7 +143,9 @@ describe("LocalOperationalStore", () => {
       workItemId: "persisted-work-item",
       specificationId: "authentication",
       specificationApproved: true,
+      specificationSnapshotDigest: "spec-digest",
       changeId: "add-login",
+      changeSnapshotDigest: "change-digest",
       taskIds: ["task-1"],
     });
   });

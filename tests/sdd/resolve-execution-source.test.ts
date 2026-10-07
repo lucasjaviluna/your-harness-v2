@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { evaluateSddDrift } from "@your-harness/application";
 import type { SddProjectProjection } from "@your-harness/application";
-import { assertSpecificationSnapshotMatchesBinding, resolveExecutionSource } from "../../src/sdd/index.js";
+import { assertChangeSnapshotMatchesBinding, assertSpecificationSnapshotMatchesBinding, resolveExecutionSource } from "../../src/sdd/index.js";
 
 const project: SddProjectProjection = {
   providerId: "test-sdd",
@@ -124,5 +124,24 @@ describe("resolveExecutionSource", () => {
       },
       source.specificationSnapshot,
     )).toThrow("rebind the WorkItem");
+  });
+
+  it("requires the bound Change digest to remain current before execution", () => {
+    expect(() => assertChangeSnapshotMatchesBinding({
+      workItemId: "work-1",
+      specificationId: "authentication",
+      specificationApproved: true,
+      changeId: "add-login",
+      changeSnapshotDigest: "old-change-digest",
+      taskIds: ["task-1"],
+    }, project.changes[0])).toThrow("changed since binding");
+
+    expect(() => assertChangeSnapshotMatchesBinding({
+      workItemId: "work-1",
+      specificationId: "authentication",
+      specificationApproved: true,
+      changeId: "add-login",
+      taskIds: ["task-1"],
+    }, project.changes[0])).toThrow("no approved SDD Change digest");
   });
 });

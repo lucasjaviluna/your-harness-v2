@@ -5,7 +5,7 @@ import { CompleteWorkItemUseCase, createExecutionScopeSelection, ExecuteStoredWo
 import { IntentId, Specification, SpecificationId, WorkItem, WorkItemId, WorkItemTitle } from "@your-harness/domain";
 import { createLocalOperationalStore } from "../../persistence/index.js";
 import { createProjectRuntimeEnvironment } from "../../runtime/index.js";
-import { assertSpecificationSnapshotMatchesBinding, resolveExecutionSource } from "../../sdd/index.js";
+import { assertChangeSnapshotMatchesBinding, assertSpecificationSnapshotMatchesBinding, resolveExecutionSource } from "../../sdd/index.js";
 import type { CliContext } from "../cli-context.js";
 import { createCliConsole } from "../presentation/cli-io.js";
 import { CliCommandError, CliExitCode, writeCliError } from "../presentation/cli-errors.js";
@@ -62,6 +62,7 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
           specificationApproved: options.approveSpecification,
           specificationSnapshotDigest: source.specificationSnapshot.contentDigest,
           changeId: options.change,
+          changeSnapshotDigest: source.change?.contentDigest,
           taskIds: options.task ?? [],
         });
         if (options.json) console.log(JSON.stringify({ workItemId, specificationId: options.specification, changeId: options.change, taskIds: options.task ?? [] }, null, 2));
@@ -192,6 +193,7 @@ export const registerWorkItemCommands = (program: Command, { config, io }: CliCo
         const sddProject = await projectEnvironment.sddProvider.readProject({ root: options.workspace });
         const source = resolveExecutionSource(sddProject, binding);
         assertSpecificationSnapshotMatchesBinding(binding, source.specificationSnapshot);
+        assertChangeSnapshotMatchesBinding(binding, source.change);
         if (selection.specificationId !== source.specification.id.value || selection.specificationSnapshotDigest !== source.specificationSnapshot.contentDigest) {
           throw new CliCommandError(`Execution scope for '${workItemId}' is stale; confirm a new scope before execution.`, "WORK_ITEM_SCOPE_STALE", CliExitCode.Conflict);
         }

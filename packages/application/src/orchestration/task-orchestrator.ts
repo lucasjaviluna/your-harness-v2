@@ -30,6 +30,8 @@ export interface TaskOrchestrationSnapshot {
     readonly approvals: ReadonlyArray<ChangeStageApproval>;
     /** El caller debe obtenerlo de la auditoría/materialización durable. */
     readonly materialization: "not-materialized" | "materialized" | "recovery-required";
+    readonly approvedSnapshotDigest?: string;
+    readonly currentSnapshotDigest?: string;
     /** Tasks SDD vigentes y subset explícitamente asociado al WorkItem. */
     readonly providerTaskIds?: ReadonlyArray<string>;
     readonly selectedTaskIds?: ReadonlyArray<string>;
@@ -55,7 +57,7 @@ export type TaskOrchestrationPhase =
   | "completed";
 
 export type TaskOrchestrationAction =
-  | { readonly kind: "rebind-work-item"; readonly reason: "specification-drift" | "change-task-drift" }
+  | { readonly kind: "rebind-work-item"; readonly reason: "specification-drift" | "change-snapshot-drift" | "change-task-drift" }
   | { readonly kind: "approve-change-stage"; readonly stage: ChangeStage }
   | { readonly kind: "apply-change" }
   | { readonly kind: "execute-work-item" }
@@ -68,6 +70,7 @@ export interface TaskOrchestrationBlocker {
     | "SPECIFICATION_NOT_APPROVED"
     | "SPECIFICATION_SNAPSHOT_DRIFTED"
     | "CHANGE_MISSING"
+    | "CHANGE_SNAPSHOT_DRIFTED"
     | "CHANGE_REQUIRES_RECOVERY"
     | "CHANGE_TASKS_DRIFTED"
     | "WORK_ITEM_NOT_EXECUTABLE"
@@ -139,6 +142,19 @@ export class TaskOrchestrator {
         message: "A governed Change snapshot is required before execution.",
       }]);
     }
+    if (snapshot.change.materialization === "recovery-required") {
+      return plan(snapshot, "blocked", [], [{
+        code: "CHANGE_REQUIRES_RECOVERY",
+        message: `Change '${snapshot.change.id}' requires explicit HITM recovery.`,
+      }]);
+    }
+    if (snapshot.change.currentSnapshotDigest !== undefined
+      && snapshot.change.approvedSnapshotDigest !== snapshot.change.currentSnapshotDigest) {
+      return plan(snapshot, "needs-context", [{ kind: "rebind-work-item", reason: "change-snapshot-drift" }], [{
+        code: "CHANGE_SNAPSHOT_DRIFTED",
+        message: `Change '${snapshot.change.id}' changed since the WorkItem binding was approved.`,
+      }]);
+    }
     const providerTaskIds = snapshot.change.providerTaskIds;
     const missingTaskIds = providerTaskIds === undefined
       ? []
@@ -163,12 +179,6 @@ export class TaskOrchestrator {
       }
     }
 
-    if (snapshot.change.materialization === "recovery-required") {
-      return plan(snapshot, "blocked", [], [{
-        code: "CHANGE_REQUIRES_RECOVERY",
-        message: `Change '${snapshot.change.id}' requires explicit HITM recovery.`,
-      }]);
-    }
     if (snapshot.change.materialization === "not-materialized") {
       return plan(snapshot, "ready-for-apply", [{ kind: "apply-change" }]);
     }
